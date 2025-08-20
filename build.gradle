@@ -1,0 +1,95 @@
+plugins {
+    id 'org.springframework.boot' version '3.5.4'
+    id 'io.spring.dependency-management' version '1.1.5' // recommandé avec Boot 3.5.x
+    id 'java'
+}
+
+group = 'school'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+
+    all {
+        exclude group: 'commons-logging', module: 'commons-logging' // éviter conflit avec spring-boot
+    }
+}
+
+dependencies {
+    // Spring Boot Starters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Base de données
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // Sécurité - JWT (JJWT)
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    // Validation Jakarta (optionnel : déjà inclus partiellement dans starter-validation)
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+
+    // Excel
+    implementation 'org.apache.poi:poi:5.2.3'
+    implementation 'org.apache.poi:poi-ooxml:5.2.3'
+
+    // PDF avec iText 7 (dépendances groupées ici)
+    implementation 'com.itextpdf:itext7-core:7.2.5'
+
+    // Firebase Admin SDK
+    implementation 'com.google.firebase:firebase-admin:9.1.1'
+
+    // Redis Pool (nécessaire pour Lettuce ou Jedis)
+    // implementation 'org.apache.commons:commons-pool2'
+
+    // OpenAPI (Swagger avec Springdoc)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    implementation 'io.swagger.core.v3:swagger-annotations:2.2.8'
+
+    // Monitoring / Prometheus
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.micrometer:micrometer-core'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Tests
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testImplementation 'org.assertj:assertj-core:3.25.3'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.5'
+    testImplementation 'org.testcontainers:testcontainers:1.19.5'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// tasks.register('wrapper', Wrapper) {
+//     gradleVersion = '8.13'
+//     distributionType = Wrapper.DistributionType.BIN
+// }
