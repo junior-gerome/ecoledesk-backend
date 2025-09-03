@@ -5,7 +5,7 @@ import lombok.*;
 import com.school.management.model.Grade;
 import com.school.management.model.Sequence;
 import com.school.management.model.Subject;
-import com.school.management.model.Classe;
+import com.school.management.model.ClasseRoom;
 import com.school.management.model.Trimestre;
 
 @Data
@@ -17,7 +17,7 @@ public class SubjectGradeDTO {
 
     private Subject subject;
     private Sequence sequence;
-    private Classe classe;
+    private ClasseRoom classe;
     private Trimestre trimestre;
     private Grade grade;
 

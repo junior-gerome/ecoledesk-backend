@@ -10,7 +10,7 @@ import com.school.management.dto.AffectationDTO;
 import com.school.management.model.Affectation;
 import com.school.management.repository.AffectationRepository;
 import com.school.management.repository.AnneeScolaireRepository;
-import com.school.management.repository.ClasseRepository;
+import com.school.management.repository.ClasseRoomRepository;
 import com.school.management.repository.TeacherRepository;
 import com.school.management.repository.SubjectRepository;
 import com.school.management.repository.TypeAffectationRepository;
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AffectationService {
     private final AffectationRepository affectationRepository;
     private final TeacherRepository enseignantRepository;
-    private final ClasseRepository classeRepository;
+    private final ClasseRoomRepository classeRepository;
     private final SubjectRepository subjectRepository;
     private final AnneeScolaireRepository anneeScolaireRepository;
     private final TypeAffectationRepository typeAffectationRepository;

@@ -43,7 +43,7 @@ public class Grade {
     @NotNull(message = "La classe est obligatoire")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "classe_id", nullable = false)
-    private Classe classe;
+    private ClasseRoom classe;
 
     // Relation vers la séquence pédagogique (obligatoire)
     @NotNull(message = "La séquence est obligatoire")

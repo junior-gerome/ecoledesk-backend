@@ -2,8 +2,8 @@ package com.school.service.impl;
 
 import com.school.exception.ResourceNotFoundException;
 import com.school.management.dto.ClassDTO;
-import com.school.management.model.Classe;
-import com.school.management.repository.ClasseRepository;
+import com.school.management.model.ClasseRoom;
+import com.school.management.repository.ClasseRoomRepository;
 import com.school.service.ClassService;
 
 
@@ -17,7 +17,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ClassServiceImpl implements ClassService {
 
-    private final ClasseRepository classeRepository;
+    private final ClasseRoomRepository classeRepository;
 
     @Override
     public List<ClassDTO> getAllClasses() {
@@ -34,7 +34,7 @@ public class ClassServiceImpl implements ClassService {
 
     @Override
     public ClassDTO createClass(ClassDTO classDTO) {
-        Classe classe = convertToEntity(classDTO);
+        ClasseRoom classe = convertToEntity(classDTO);
         return convertToDTO(classeRepository.save(classe));
     }
 
@@ -43,7 +43,7 @@ public class ClassServiceImpl implements ClassService {
         if (!classeRepository.existsById(id)) {
             throw new ResourceNotFoundException("Classe non trouvée avec l'id: " + id);
         }
-        Classe classe = convertToEntity(classDTO);
+        ClasseRoom classe = convertToEntity(classDTO);
         classe.setId(id);
         return convertToDTO(classeRepository.save(classe));
     }
@@ -56,27 +56,27 @@ public class ClassServiceImpl implements ClassService {
         classeRepository.deleteById(id);
     }
 
-    private ClassDTO convertToDTO(Classe classe) {
+    private ClassDTO convertToDTO(ClasseRoom classe) {
         ClassDTO dto = new ClassDTO();
         dto.setId(classe.getId());
         dto.setNameClasse(classe.getNameClasse());
         dto.setLevell(classe.getLevel());
-        dto.setCapacity(classe.getCapacite());
+        dto.setCapacity(classe.getCapacity());
         dto.setAnneeScolaire(classe.getAnneeScolaire());
         dto.setDescription(classe.getDescription());
-        dto.setActive(classe.getActif());
+       // dto.setActive(classe.getActif());
         return dto;
     }
 
-    private Classe convertToEntity(ClassDTO dto) {
-        Classe classe = new Classe();
+    private ClasseRoom convertToEntity(ClassDTO dto) {
+        ClasseRoom classe = new ClasseRoom();
         classe.setId(dto.getId());
         classe.setNameClasse(dto.getNameClasse());
         classe.setLevel(dto.getLevell());
-        classe.setCapacite(dto.getCapacity());
+        classe.setCapacity(dto.getCapacity());
         classe.setAnneeScolaire(dto.getAnneeScolaire());
         classe.setDescription(dto.getDescription());
-        classe.setActif(dto.getActive());
+        //classe.setActif(dto.getActive());
         return classe;
     }
 }

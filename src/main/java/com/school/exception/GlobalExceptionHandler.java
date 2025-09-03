@@ -2,7 +2,9 @@ package com.school.exception;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,8 @@ import org.springframework.web.context.request.WebRequest;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -146,9 +150,19 @@ public class GlobalExceptionHandler {
         public final String message;
         public final int status;
         public final long timestamp = System.currentTimeMillis();
+
         public ApiError(int status, String message) {
             this.status = status;
             this.message = message;
         }
+    }
+   
+    
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<List<String>> handleConstraintViolationException(ConstraintViolationException ex) {
+        List<String> errors = ex.getConstraintViolations().stream()
+            .map(ConstraintViolation::getMessage)
+            .collect(Collectors.toList());
+        return ResponseEntity.badRequest().body(errors);
     }
 }

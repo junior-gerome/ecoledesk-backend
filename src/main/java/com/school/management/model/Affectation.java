@@ -36,7 +36,7 @@ public class Affectation {
 
     @ManyToOne
     @JoinColumn(name = "classe_id", nullable = false)
-    private Classe classe;
+    private ClasseRoom classe;
 
     @ManyToOne
     @JoinColumn(name = "subject_id", nullable = false)

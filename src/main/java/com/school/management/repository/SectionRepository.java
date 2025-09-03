@@ -9,5 +9,5 @@ import com.school.management.model.Section;
 
 @Repository
 public interface SectionRepository extends JpaRepository<Section, Long> {
-    Optional<Section> findByNameSection(String nameSection);
+    Optional<Section> findByLibelle(String libelle);
 }

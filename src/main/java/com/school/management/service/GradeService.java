@@ -18,7 +18,7 @@ import com.school.exception.ValidationException;
 import com.school.management.dto.ClassPerformanceReport;
 import com.school.management.dto.GradeDTO;
 import com.school.management.model.Grade;
-import com.school.management.repository.ClasseRepository;
+import com.school.management.repository.ClasseRoomRepository;
 import com.school.management.repository.GradeRepository;
 import com.school.management.repository.SequenceRepository;
 import com.school.management.repository.StudentRepository;
@@ -38,7 +38,7 @@ public class GradeService {
     private final SubjectRepository subjectRepository;
     private final SequenceRepository sequenceRepository;
     private final TrimestreRepository trimestreRepository;
-    private final ClasseRepository classeRepository;
+    private final ClasseRoomRepository classeRepository;
     private final NotificationService notificationService;
     
     // Conversion réutilisable

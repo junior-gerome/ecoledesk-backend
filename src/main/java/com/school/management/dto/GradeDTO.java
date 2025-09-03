@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.school.management.enums.AssessmentType;
-import com.school.management.model.Classe;
+import com.school.management.model.ClasseRoom;
 import com.school.management.model.Sequence;
 import com.school.management.model.Student;
 import com.school.management.model.Subject;
@@ -20,7 +20,7 @@ public class GradeDTO {
     private BigDecimal grade;
     private Student student;
     private Subject subject;
-    private Classe classe;
+    private ClasseRoom classe;
     private AssessmentType assessmentType;
     private BigDecimal coefficient;
     private Sequence sequence;

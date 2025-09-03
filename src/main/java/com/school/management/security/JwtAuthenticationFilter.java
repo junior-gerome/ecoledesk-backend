@@ -1,7 +1,6 @@
 package com.school.management.security;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.lang.NonNull;
@@ -30,31 +29,64 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
 
     // Chemins qui ne nécessitent AUCUNE vérification JWT
-    private static final List<String> PUBLIC_PATHS = Arrays.asList(
-    "/api/auth/",
-        "/api/students",
-        "/users/password-reset-request",
-        "/users/password-reset",
-        "/swagger-ui/",
-        "/v3/api-docs/",
-        "/actuator/",
-        "/error"
-    );
-
+   private static final List<String> PUBLIC_PATHS = List.of(
+    "/auth", 
+    "/users/password-reset-request",
+    "/users/password-reset",
+    "/swagger-ui",
+    "/swagger-ui.html",
+    "/swagger-resources",
+    "/v3/api-docs",
+    "/actuator",
+    "/error"
+);
      /**
      * Vérifie si l'endpoint est public (ne nécessite pas d'authentification)
-     */
-    private boolean isPublicEndpoint(String requestURI) {
-        return PUBLIC_PATHS.stream().anyMatch(requestURI::startsWith);
+    //  */
+     private boolean isPublicEndpoint(String requestURI) {
+         return PUBLIC_PATHS.stream().anyMatch(p -> requestURI.startsWith(p));
+     }
+
+@Override
+protected boolean shouldNotFilter(HttpServletRequest req) {
+    String path = req.getRequestURI();
+    String method = req.getMethod();
+
+    // Toujours bypasser les preflight OPTIONS
+    if ("OPTIONS".equalsIgnoreCase(method)) {
+        return true;
     }
-    
-//     private boolean isPublicEndpoint(String requestURI) {
-//     return PUBLIC_PATHS.stream().anyMatch(path -> requestURI.matches(path + "(/.*)?"));
+
+    // Bypass uniquement pour /auth/** et docs
+    if (path.startsWith("/auth") ||
+        path.startsWith("/swagger-ui") ||
+        path.startsWith("/v3/api-docs") ||
+        path.startsWith("/swagger-resources") ||
+        path.startsWith("/actuator")) {
+        return true;
+    }
+
+    // // Exemple : autoriser GET /api/students (liste publique) sans JWT
+    // if ("/api/students".equals(path) && "GET".equalsIgnoreCase(method)) {
+    //     return true;
+    // }
+
+    // Pour tout le reste, exécuter le filtre (ne pas bypasser)
+    return false;
+}
+
+// @Override
+// protected boolean shouldNotFilter(HttpServletRequest req) {
+//   String path = req.getRequestURI();
+//   return PUBLIC_PATHS.stream().anyMatch(path::startsWith)
+//       || "OPTIONS".equalsIgnoreCase(req.getMethod());
 // }
     
 
     @Override
     protected void doFilterInternal(
+
+    
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
@@ -62,7 +94,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String requestURI = request.getRequestURI();
         final String method = request.getMethod();
+                        // Au début de doFilterInternal (dans JwtAuthenticationFilter)
+log.info("→ Incoming request: method={} uri={} remote={} query={}",
+         request.getMethod(), request.getRequestURI(), request.getRemoteAddr(), request.getQueryString());
+log.info("→ Authorization header present? {}", request.getHeader("Authorization") != null);
+log.debug("→ Authorization header value: {}", request.getHeader("Authorization"));
 
+        // Log l'URI et la méthode pour le débogage         
         log.debug("🔍 JwtFilter - URI: {} | Method: {}", requestURI, method);
 
         // 1. Toujours laisser passer les requêtes OPTIONS (CORS preflight)
@@ -123,11 +161,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     /**
      * Optionnel: Override pour exclure complètement certains patterns
      */
-    @Override
-protected boolean shouldNotFilter(HttpServletRequest request) {
-    String path = request.getRequestURI(); // path est du type: /auth/register
-    return PUBLIC_PATHS.stream().anyMatch(path::startsWith)
-            || "OPTIONS".equalsIgnoreCase(request.getMethod());
-}
+//     @Override
+// protected boolean shouldNotFilter(HttpServletRequest request) {
+//     String path = request.getRequestURI(); // path est du type: /auth/register
+//     return PUBLIC_PATHS.stream().anyMatch(path::startsWith)
+//             || "OPTIONS".equalsIgnoreCase(request.getMethod());
+// }
 
 }

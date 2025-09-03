@@ -1,26 +1,36 @@
 package com.school.management.dto;
 
-import com.school.management.model.Section;
+import java.time.LocalDate;
 import com.school.management.enums.Gender;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import jakarta.validation.constraints.*;
+import lombok.*;
 
 @Builder
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class TeacherDTO {
     private Long id;
+
+    @NotBlank(message = "Le nom est obligatoire")
     private String lastnameTeacher;
+
+    @NotBlank(message = "Le prénom est obligatoire")
     private String firstnameTeacher;
+
+    @NotBlank(message = "L'email est obligatoire")
+    @Email(message = "L'email doit être valide")
     private String email;
+
+    @NotBlank(message = "Le numéro de téléphone est obligatoire")
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Le numéro de téléphone doit être valide")
     private String phoneNumber;
-    private Section section;
+
+    @NotNull(message = "Le genre est obligatoire")
     private Gender gender;
+
     private String niveau;
     private String speciality;
-
-    public TeacherDTO(){}
-   
+    private String adress;
+    private LocalDate dateEmbauche;
 }

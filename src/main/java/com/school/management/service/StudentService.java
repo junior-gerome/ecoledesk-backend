@@ -13,7 +13,7 @@ import com.school.exception.ResourceNotFoundException;
 import com.school.management.dto.StudentDTO;
 import com.school.management.dto.StudentReportDTO;
 import com.school.management.model.Student;
-import com.school.management.repository.ClasseRepository;
+import com.school.management.repository.ClasseRoomRepository;
 import com.school.management.repository.SectionRepository;
 import com.school.management.repository.StudentRepository;
 
@@ -27,7 +27,7 @@ public class StudentService {
     
     private final StudentRepository studentRepository;
     private final SectionRepository sectionRepository;
-    private final ClasseRepository classeRepository;
+    private final ClasseRoomRepository classeRepository;
 
     
 
@@ -104,31 +104,43 @@ private StudentDTO convertToStudentDTO(Student student) {
             .gender(student.getGender()) // Conversion enum -> String
             .ecolePrecedente(student.getEcolePrecedente())
             // Mappage des relations avec gestion des nulls
+            //.classe(student.getClasse() != null ? student.getClasse().getId() : null)
+            //.section(student.getClasse()!=null ? student.getSection().getId() : null) 
             .classe(student.getClasse())
-            .Section(student.getSection() )
+            .section(student.getSection())
             .build();
 }
 
+
+    // On met directement les entités si elles sont présentes
     private void mapDtoToEntity(StudentDTO dto, Student entity) {
-        entity.setLastNameStudent(dto.getLastNameStudent());
-        entity.setFirstNameStudent(dto.getFirstNameStudent());
-        entity.setGender(dto.getGender());
-        entity.setDateOfBirth(dto.getDateOfBirth());
-        entity.setRegistrationDate(dto.getRegistrationDate() != null 
-                ? dto.getRegistrationDate()
-                : LocalDate.now().atStartOfDay());
-        entity.setEcolePrecedente(dto.getEcolePrecedente());
-        // Gestion des relations avec les entités
-        if (dto.getClasse() != null) {
-            entity.setClasse(classeRepository.findById(dto.getClasse().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Classe non trouvée: " + dto.getClasse().getId())));
-        }
-        if (dto.getSection() != null) {
-            entity.setSection(sectionRepository.findById(dto.getSection().getId())
-                    .orElseThrow(
-                            () -> new ResourceNotFoundException("Section non trouvée: " + dto.getSection().getId())));
-        }
+    entity.setLastNameStudent(dto.getLastNameStudent());
+    entity.setFirstNameStudent(dto.getFirstNameStudent());
+    entity.setGender(dto.getGender());
+    entity.setDateOfBirth(dto.getDateOfBirth());
+    entity.setRegistrationDate(dto.getRegistrationDate() != null
+            ? dto.getRegistrationDate()
+            : LocalDate.now().atStartOfDay());
+    entity.setEcolePrecedente(dto.getEcolePrecedente());
+
+    // 🔑 Ici on recharge les entités à partir de leur ID
+    if (dto.getClasse() != null && dto.getClasse().getId() != null) {
+        entity.setClasse(classeRepository.findById(dto.getClasse().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Classe non trouvée: " + dto.getClasse().getId())));
+    } else {
+        entity.setClasse(null);
     }
+
+    if (dto.getSection() != null && dto.getSection().getId() != null) {
+        entity.setSection(sectionRepository.findById(dto.getSection().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Section non trouvée: " + dto.getSection().getId())));
+    } else {
+        entity.setSection(null);
+    }
+
+
+}
+
 
     public StudentReportDTO generateStudentReport(String studentId, String period) {
         // TODO: Implement the logic to generate student report based on studentId and period

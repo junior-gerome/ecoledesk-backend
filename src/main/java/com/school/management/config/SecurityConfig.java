@@ -101,10 +101,11 @@ public class SecurityConfig {
                       
 
                     // Endpoints d'authentification - PUBLICS
-                    // .requestMatchers("/auth/**").permitAll()
-                            // .requestMatchers("/api/students/**").permitAll()
+                         
                     .requestMatchers("/auth/**").permitAll()
-                    .requestMatchers("/api/students/**").permitAll() // ✅ corrige le problème
+                    
+
+ // ✅ corrige le problème
                     
                     // Reset password - PUBLICS  
                     .requestMatchers(HttpMethod.POST, "/users/password-reset-request").permitAll()

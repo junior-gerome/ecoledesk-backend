@@ -17,7 +17,7 @@ public class Section {
     private Long id;
 
     @Column(nullable = false)
-    private String nameSection;
+    private String libelle;
 
     @Column(name = "description")
     private String description;

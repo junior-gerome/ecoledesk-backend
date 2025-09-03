@@ -52,7 +52,7 @@ public class EnseignantValidator implements Validator {
             messages.add("L'adresse email est invalide");
         }
 
-        if (teacher.getPhoneNumber() != null && !PHONE_PATTERN.matcher(teacher.getPhoneNumber().trim()).matches()) {
+       if (teacher.getPhoneNumber() != null && !PHONE_PATTERN.matcher(teacher.getPhoneNumber().trim()).matches()) {
             errors.rejectValue("telephone", "invalid.telephone", "Format de numéro de téléphone invalide");
             messages.add("Le numéro de téléphone est invalide");
         }

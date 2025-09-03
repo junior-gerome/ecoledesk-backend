@@ -15,7 +15,7 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "classes")
-public class Classe {
+public class ClasseRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,7 +31,7 @@ public class Classe {
     private Section section;
 
     @Column(name = "capacite")
-    private Integer capacite;
+    private Integer capacity;
 
      @ManyToOne
     @JoinColumn(name = "teacher_id")  // colonne fk
@@ -44,8 +44,8 @@ public class Classe {
     @Column(name = "description", length = 500)
     private String description;
 
-    @Column(name = "actif")
-    private Boolean actif = true;
+    // @Column(name = "actif")
+    // private Boolean actif = true;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;

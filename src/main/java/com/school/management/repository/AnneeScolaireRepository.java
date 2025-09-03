@@ -7,6 +7,6 @@ import java.util.Optional;
 
 @Repository
 public interface AnneeScolaireRepository extends JpaRepository<AnneeScolaire, Long> {
-    Optional<AnneeScolaire> findByStatutCode(String statutCode);
+    Optional<AnneeScolaire> findByStatutCode(boolean statutCode);
     boolean existsByLibelleAnneeScolaire(String libelleAnneeScolaire);
 }

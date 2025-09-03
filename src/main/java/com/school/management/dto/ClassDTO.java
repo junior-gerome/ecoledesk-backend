@@ -13,18 +13,8 @@ public class ClassDTO {
     private Teacher teacher;    
     private AnneeScolaire anneeScolaire;
     private String description;
-    private Boolean active;
+    //private Boolean active;
     private Section section;
 
-    // public String getName() {
-    //     return nom;
-    // }
-
-    // public String getLevel() {
-    //     return niveau;
-    // }
-
-    // public Integer getCapacity() {
-    //     return capacity;
-    // }
+    
 }

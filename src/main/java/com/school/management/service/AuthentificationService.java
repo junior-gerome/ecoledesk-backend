@@ -81,7 +81,6 @@ import com.school.management.dto.auth.LoginResponse;
 import com.school.management.dto.auth.RegisterRequest;
 import com.school.management.model.Users;
 import com.school.management.model.UsersProfil;
-import com.school.management.repository.UsersProfilRepository;
 import com.school.management.repository.UsersRepository;
 import com.school.management.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -104,8 +103,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthentificationService {
     
     private final UsersRepository usersRepository;
-    // private final RoleRepository roleRepository;
-    private final UsersProfilRepository profilRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;

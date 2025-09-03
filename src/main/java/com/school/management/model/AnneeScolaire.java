@@ -23,7 +23,7 @@ public class AnneeScolaire {
     private LocalDate dateFin;
 
     @Column(name = "statut_code", nullable = false, length = 20)
-    private String statutCode;
+    private boolean statutCode;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;

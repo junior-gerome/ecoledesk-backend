@@ -2,7 +2,6 @@ package com.school.management.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 import com.school.management.enums.Gender;
 
 import jakarta.persistence.Column;
@@ -54,12 +53,12 @@ public class Student {
     private Gender gender;
     
 
-    @Column(name = "actif")
-    private Boolean actif = true;
+    @Column(name = "active")
+    private Boolean active = true;
 
     @ManyToOne
     @JoinColumn(name = "classe_id")
-    private Classe classe;
+    private ClasseRoom classe;
 
     @ManyToOne
     @JoinColumn(name = "section_id")

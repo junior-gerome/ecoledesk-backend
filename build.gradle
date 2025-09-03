@@ -1,7 +1,7 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.4'
-    id 'io.spring.dependency-management' version '1.1.5' // recommandé avec Boot 3.5.x
     id 'java'
+    id 'org.springframework.boot' version '3.5.0'
+    id 'io.spring.dependency-management' version '1.1.5' // recommandé avec Boot 3.5.0
 }
 
 group = 'school'
@@ -88,8 +88,3 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
-
-// tasks.register('wrapper', Wrapper) {
-//     gradleVersion = '8.13'
-//     distributionType = Wrapper.DistributionType.BIN
-// }

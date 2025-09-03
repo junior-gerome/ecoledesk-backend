@@ -3,15 +3,13 @@ package com.school.management.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.school.management.dto.TeacherDTO;
 import com.school.management.model.Teacher;
-import com.school.management.model.Section;
 import com.school.management.repository.TeacherRepository;
-import com.school.management.repository.SectionRepository; // Ajout de l'import manquant
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,16 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class TeacherService {
 
-    private final AffectationService affectationService;
     private final TeacherRepository teacherRepository;
-
-    @Autowired
-    private SectionRepository sectionRepository;
-
-    // public TeacherService(AffectationService affectationService, TeacherRepository teacherRepository) {
-    //     this.affectationService = affectationService;
-    //     this.teacherRepository = teacherRepository;
-    // } // Ajout de l'injection de dépendance
 
     @Transactional(readOnly = true)
     public List<TeacherDTO> getAllEnseignants() {
@@ -48,13 +37,24 @@ public class TeacherService {
 
     @Transactional
     public TeacherDTO createEnseignant(TeacherDTO dto) {
+        // Vérification des doublons
         if (teacherRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email déjà utilisé");
+        }
+        if (teacherRepository.existsByPhoneNumber(dto.getPhoneNumber())) {
+            throw new RuntimeException("Numéro de téléphone déjà utilisé");
         }
 
         Teacher teacher = new Teacher();
         updateTeacherFromDTO(teacher, dto);
-        return convertToDTO(teacherRepository.save(teacher));
+        
+        try {
+            return convertToDTO(teacherRepository.save(teacher));
+        } catch (DataIntegrityViolationException e) {
+            throw new RuntimeException("Erreur de contrainte d'intégrité: " + e.getRootCause().getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la création: " + e.getMessage());
+        }
     }
 
     @Transactional
@@ -81,12 +81,14 @@ public class TeacherService {
 
     private void updateTeacherFromDTO(Teacher teacher, TeacherDTO dto) {
         teacher.setLastnameTeacher(dto.getLastnameTeacher());
-        teacher.setFirstnameTeacher(dto.getLastnameTeacher());
+        teacher.setFirstnameTeacher(dto.getFirstnameTeacher());
         teacher.setEmail(dto.getEmail());
-
-        Section section = sectionRepository.findById(dto.getId())
-                .orElseThrow(() -> new RuntimeException("Section non trouvée"));
-                teacher.setSection(section);
+        teacher.setGender(dto.getGender()); 
+        teacher.setPhoneNumber(dto.getPhoneNumber());
+        teacher.setSpeciality(dto.getSpeciality());
+        teacher.setNiveau(dto.getNiveau());
+        teacher.setAdress(dto.getAdress());
+        teacher.setDateEmbauche(dto.getDateEmbauche());
     }
 
     private TeacherDTO convertToDTO(Teacher teacher) {
@@ -95,12 +97,12 @@ public class TeacherService {
         dto.setLastnameTeacher(teacher.getLastnameTeacher());
         dto.setFirstnameTeacher(teacher.getFirstnameTeacher());
         dto.setEmail(teacher.getEmail());
-        dto.setSection( teacher.getSection());
         dto.setGender(teacher.getGender());
         dto.setNiveau(teacher.getNiveau());
-        dto.setPhoneNumber(teacher.getPhonenumber());
+        dto.setAdress(teacher.getAdress());
+        dto.setDateEmbauche(teacher.getDateEmbauche());
+        dto.setPhoneNumber(teacher.getPhoneNumber());
         dto.setSpeciality(teacher.getSpeciality());
         return dto;
-       
     }
 }

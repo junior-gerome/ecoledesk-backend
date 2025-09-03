@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -70,13 +71,14 @@ public class Users implements UserDetails {
     // Implémentation de UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (profils != null && !profils.isEmpty()) {
-            return Collections.singletonList(
-                new SimpleGrantedAuthority("ROLE_" + profils.get(0).getRoleType().name())
-            );
+        if (profils == null || profils.isEmpty()) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        return profils.stream()
+            .map(up -> new SimpleGrantedAuthority("ROLE_" + up.getRoleType().name()))
+            .collect(Collectors.toList());
     }
+
 
     @Override
     public boolean isAccountNonExpired() { return true; }
