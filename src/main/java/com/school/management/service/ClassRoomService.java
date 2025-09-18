@@ -71,4 +71,8 @@ public class ClassRoomService {
                 .orElseThrow(() -> new ResourceNotFoundException("Section", "id", sectionId));
         return classeRoomRepository.findBySectionId(section.getId());
     }
+
+    public long getTotalClassRooms() {
+        return classeRoomRepository.count();
+    }
 }

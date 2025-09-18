@@ -71,4 +71,10 @@ public class ClassRoomController {
         List<ClasseRoom> classRooms = classRoomService.getClassRoomsBySection(sectionId);
         return ResponseEntity.ok(classRooms);
     }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> getTotalClassRooms() {
+        Long total = classRoomService.getTotalClassRooms();
+        return ResponseEntity.ok(total);
+    }
 }

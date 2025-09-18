@@ -105,4 +105,8 @@ public class TeacherService {
         dto.setSpeciality(teacher.getSpeciality());
         return dto;
     }
+
+    public long getTotalTeachers() {
+        return teacherRepository.count();
+    }
 }

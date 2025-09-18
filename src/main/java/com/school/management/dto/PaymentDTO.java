@@ -1,9 +1,8 @@
 package com.school.management.dto;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.school.management.model.Student;
+import com.school.management.model.*;
 
 import lombok.Data;
 
@@ -12,8 +11,11 @@ public class PaymentDTO {
 
    private Long id;
     private Student student;
-    private BigDecimal montant;
+    private Montant montant;
     private LocalDate datePaiement;
+    private Long montantPaye;
+    private Long montantRestant;
+    private Long remise;
     //private TypePaiement typePaiement;
     private String description;
 

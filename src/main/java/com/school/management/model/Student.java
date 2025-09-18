@@ -45,7 +45,7 @@ public class Student {
     @Column(name = "date_naissance", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(name = "date_inscription", nullable = false)
+    @Column(name = "registration_Date", nullable = true)
     private LocalDateTime registrationDate;
 
     @Enumerated(EnumType.STRING)
@@ -55,14 +55,6 @@ public class Student {
 
     @Column(name = "active")
     private Boolean active = true;
-
-    @ManyToOne
-    @JoinColumn(name = "classe_id")
-    private ClasseRoom classe;
-
-    @ManyToOne
-    @JoinColumn(name = "section_id")
-    private Section section;
 
     @Size(max = 100, message = "Le nom de la classe ne doit pas dépasser 100 caractères")
     @Column(name = "ecole_precedente", length = 100) 

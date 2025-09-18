@@ -1,8 +1,9 @@
 package com.school.management.service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,9 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.school.exception.ResourceNotFoundException;
 import com.school.management.dto.StudentDTO;
 import com.school.management.dto.StudentReportDTO;
+import com.school.management.mappers.StudentMapper;
 import com.school.management.model.Student;
-import com.school.management.repository.ClasseRoomRepository;
-import com.school.management.repository.SectionRepository;
+import com.school.management.repository.ParentRepository;
 import com.school.management.repository.StudentRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,64 +27,67 @@ import lombok.extern.slf4j.Slf4j;
 public class StudentService {
     
     private final StudentRepository studentRepository;
-    private final SectionRepository sectionRepository;
-    private final ClasseRoomRepository classeRepository;
-
-    
-
-    // 1. Recherche d'étudiants avec pagination
-    @Transactional(readOnly = true)
-    public Page<StudentDTO> getStudentsByClasse(Long classeId, Pageable pageable) {
-        return studentRepository.findByClasseId(classeId, pageable) 
-                .map(this::convertToStudentDTO);
-    }
+    private final ParentRepository parentRepository;
 
     @Transactional(readOnly = true)
-    public Page<StudentDTO> getStudentsByParent(Long parentId, Pageable pageable) {
+    public Page<StudentDTO> getStudentsByParentId(Long parentId, Pageable pageable) {
         return studentRepository.findByParentId(parentId, pageable)
-                .map(this::convertToStudentDTO);
+                .map(StudentMapper::toDTO);
     }
 
-    public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+    public List<StudentDTO> getAllStudents() {
+        return studentRepository.findAll().stream()
+                .map(StudentMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public Page<StudentDTO> getStudentsBySection(Long sectionId, Pageable pageable) {
-        return studentRepository.findBySectionId(sectionId, pageable)
-                .map(this::convertToStudentDTO);
-    }
-
-    // 2. Opérations CRUD optimisées
     @Transactional(readOnly = true)
     public StudentDTO getStudentById(Long id) {
         return studentRepository.findById(id)
-                .map(this::convertToStudentDTO)
+                .map(StudentMapper::toDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Étudiant non trouvé avec l'ID : " + id));
     }
 
-    @Transactional
-    public StudentDTO createStudent(StudentDTO studentDTO) {
-        Student student = new Student();
-        mapDtoToEntity(studentDTO, student);
-        
-        Student savedStudent = studentRepository.save(student);
+    public StudentDTO createStudent(StudentDTO dto) {
+        Student entity = StudentMapper.toEntity(dto);
+
+        // Charge le parent si l'ID est présent
+        if (dto.getParentId() != null) {
+            entity.setParent(parentRepository.findById(dto.getParentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Parent non trouvé avec l'ID : " + dto.getParentId())));
+        }
+
+        // ⚡ Générer automatiquement la date d'inscription si elle est nulle
+        if (entity.getRegistrationDate() == null) {
+            entity.setRegistrationDate(LocalDateTime.now());
+        }
+
+        Student savedStudent = studentRepository.save(entity);
         log.info("Étudiant créé avec ID: {}", savedStudent.getId());
-        return convertToStudentDTO(savedStudent);
+        return StudentMapper.toDTO(savedStudent);
     }
 
     @Transactional
-    public StudentDTO updateStudent(Long id, StudentDTO studentDTO) {
-        Student student = studentRepository.findById(id)
+    public StudentDTO updateStudent(Long id, StudentDTO dto) {
+        Student existingStudent = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Étudiant non trouvé avec l'ID : " + id));
-        
-        mapDtoToEntity(studentDTO, student);
-        
-        Student updatedStudent = studentRepository.save(student);
-        log.info("Étudiant mis à jour avec ID: {}", id);
-        return convertToStudentDTO(updatedStudent);
-    }
 
+        // Conserver la date d'inscription existante
+        Student entity = StudentMapper.toEntity(dto);
+        entity.setId(existingStudent.getId());
+        entity.setRegistrationDate(existingStudent.getRegistrationDate());
+
+        // Charge le parent si l'ID est présent
+        if (dto.getParentId() != null) {
+            entity.setParent(parentRepository.findById(dto.getParentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent non trouvé avec l'ID : " + dto.getParentId())));
+        }
+
+        Student updatedStudent = studentRepository.save(entity);
+        log.info("Étudiant mis à jour avec ID: {}", id);
+        return StudentMapper.toDTO(updatedStudent);
+    }
+    
     @Transactional
     public void deleteStudent(Long id) {
         if (!studentRepository.existsById(id)) {
@@ -92,80 +96,19 @@ public class StudentService {
         studentRepository.deleteById(id);
         log.info("Étudiant supprimé avec ID: {}", id);
     }
-
-    // Méthode de conversion optimisée d'un Student en StudentDTO
-private StudentDTO convertToStudentDTO(Student student) {
-    return StudentDTO.builder()
-            .id(student.getId())
-            .lastNameStudent(student.getLastNameStudent())
-            .firstNameStudent(student.getFirstNameStudent())
-            .dateOfBirth(student.getDateOfBirth())
-            .registrationDate(student.getRegistrationDate())
-            .gender(student.getGender()) // Conversion enum -> String
-            .ecolePrecedente(student.getEcolePrecedente())
-            // Mappage des relations avec gestion des nulls
-            //.classe(student.getClasse() != null ? student.getClasse().getId() : null)
-            //.section(student.getClasse()!=null ? student.getSection().getId() : null) 
-            .classe(student.getClasse())
-            .section(student.getSection())
-            .build();
-}
-
-
-    // On met directement les entités si elles sont présentes
-    private void mapDtoToEntity(StudentDTO dto, Student entity) {
-    entity.setLastNameStudent(dto.getLastNameStudent());
-    entity.setFirstNameStudent(dto.getFirstNameStudent());
-    entity.setGender(dto.getGender());
-    entity.setDateOfBirth(dto.getDateOfBirth());
-    entity.setRegistrationDate(dto.getRegistrationDate() != null
-            ? dto.getRegistrationDate()
-            : LocalDate.now().atStartOfDay());
-    entity.setEcolePrecedente(dto.getEcolePrecedente());
-
-    // 🔑 Ici on recharge les entités à partir de leur ID
-    if (dto.getClasse() != null && dto.getClasse().getId() != null) {
-        entity.setClasse(classeRepository.findById(dto.getClasse().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Classe non trouvée: " + dto.getClasse().getId())));
-    } else {
-        entity.setClasse(null);
-    }
-
-    if (dto.getSection() != null && dto.getSection().getId() != null) {
-        entity.setSection(sectionRepository.findById(dto.getSection().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Section non trouvée: " + dto.getSection().getId())));
-    } else {
-        entity.setSection(null);
-    }
-
-
-}
-
-
+    
     public StudentReportDTO generateStudentReport(String studentId, String period) {
-        // TODO: Implement the logic to generate student report based on studentId and period
+        // TODO: Implémenter la génération de rapport
         return new StudentReportDTO();
     }
     
-    // 4. Statistiques et méthodes utilitaires
-    @Transactional(readOnly = true)
-    public long countStudentsInClass(Long classeId) {
-        return studentRepository.countByClasseId(classeId);
-    }
-
     @Transactional(readOnly = true)
     public Optional<StudentDTO> getCurrentStudent() {
         // Implémentation réelle basée sur le contexte de sécurité
-        // Exemple simplifié :
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // String username = auth.getName();
-        // return studentRepository.findByEmail(username).map(this::convertToStudentDTO);
         return Optional.empty();
     }
 
-    @Transactional(readOnly = true)
-    public int getAbsenceDays(Long student_Id) {
-        // Implémentation réelle à compléter
-        return studentRepository.countAbsencesByStudentId(student_Id);
+    public long getTotalStudents() {
+        return studentRepository.count();
     }
 }

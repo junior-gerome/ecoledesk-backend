@@ -17,4 +17,6 @@ public interface ClasseRoomRepository extends JpaRepository<ClasseRoom, Long> {
 
     // Récupère toutes les classes d’une section donnée
     List<ClasseRoom> findBySectionId(Long sectionId);
+
+    
 }

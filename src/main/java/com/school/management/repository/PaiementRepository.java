@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface PaiementRepository extends JpaRepository<Paiement, Long> {
     List<Paiement> findByDatePaiementBetween(LocalDate startDate, LocalDate endDate);
-    List<Paiement> findByStudentId(Long eleveId);
-    List<Paiement> findByStudentClasseId(Long classeId);
+  //  List<Paiement> findByStudentId(Long eleveId);
+   // List<Paiement> findByStudentClasseId(Long classeId);
 }

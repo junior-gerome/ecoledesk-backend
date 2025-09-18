@@ -12,16 +12,19 @@ import com.school.management.model.Student;
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
     
-    Page<Student> findByClasseId(Long classeRoomId, Pageable pageable);
+   // Page<Student> findByClasseId(Long classeRoomId, Pageable pageable);
 
     Page<Student> findByParentId(Long parentId, Pageable pageable);
 
-    Page<Student> findBySectionId(Long sectionId, Pageable pageable);
+    //@Query("SELECT COUNT(id) FROM students")
 
-    long countByClasseId(Long classeRoomId);
+
+    //Page<Student> findBySectionId(Long sectionId, Pageable pageable);
+
+    //long countByClasseId(Long classeRoomId);
     // OU Solution 2: Utilisez une requête JPQL explicite
-    @Query("SELECT COUNT(a) FROM Absence a WHERE a.student.id = :studentId")
-    int countAbsencesByStudentId(@Param("studentId") Long studentId);
+    // @Query("SELECT COUNT(a) FROM Absence a WHERE a.student.id = :studentId")
+    // int countAbsencesByStudentId(@Param("studentId") Long studentId);
 
 
     // Si tu as cette méthode custom, elle doit être définie dans une implémentation manuelle
