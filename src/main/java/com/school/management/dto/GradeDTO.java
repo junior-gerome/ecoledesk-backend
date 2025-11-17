@@ -21,7 +21,7 @@ public class GradeDTO {
     private Student student;
     private Subject subject;
     private ClasseRoom classe;
-    private AssessmentType assessmentType;
+    //private AssessmentType assessmentType;
     private BigDecimal coefficient;
     private Sequence sequence;
     private Trimestre trimestre;

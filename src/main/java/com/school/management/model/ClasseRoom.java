@@ -38,14 +38,14 @@ public class ClasseRoom {
     private Teacher teacher;    
 
     @ManyToOne
-    @JoinColumn(name = "annee_scolaire_id")
+    @JoinColumn(name = "anneescolaire_id")
     private AnneeScolaire anneeScolaire;
 
     @Column(name = "description", length = 500)
     private String description;
 
-    // @Column(name = "actif")
-    // private Boolean actif = true;
+    @Column(name = "actif")
+    private Boolean actif = true;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -53,11 +53,4 @@ public class ClasseRoom {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    // public String getLibelle() {
-    //     return this.nom;
-    // }
-
-    // public void setLibelle(String libelle) {
-    //     this.nom = libelle;
-    // }
 }

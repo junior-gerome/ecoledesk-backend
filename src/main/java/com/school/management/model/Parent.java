@@ -1,6 +1,8 @@
 package com.school.management.model;
 
 
+import java.time.LocalDateTime;
+
 import com.school.management.enums.TypeParent;
 
 import jakarta.persistence.*;
@@ -16,28 +18,25 @@ public class Parent {
     private Long id;
 
     @Column(name="nom-parent", nullable = false)
-    private String LastNameParent; 
+    private String lastNameParent; 
 
     @Column(name="prenom-parent", nullable = false)
-    private String FirstNameParent ;
-
-    @Size(max = 200, message = "L'adresse ne doit pas dépasser 200 caractères")
-    @Column(name ="address", length = 200)
-    private String Address;
+    private String firstNameParent ;
 
     @Email(message = "L'email doit être valide")
     @NotBlank(message = "L'email est obligatoire")
-    @Column(unique = true, length = 100)
-    private String Email;
-
+    @Column( unique = true, length = 100)
+    private String email;
 
     @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Le numéro de téléphone doit être valide")
-    @Column(name = "phone-number", unique = true, length = 15)
+    @Column( unique = true, length =20)
     @NotBlank(message = "Le numéro de téléphone est obligatoire")
-    private String Phonenumber;
+    private String phoneNumber;
 
+     @Size(max = 200, message = "L'adresse ne doit pas dépasser 200 caractères")
+    @Column(name ="address", length = 200)
+    private String address;
     
-
     @Column(name = "profession-parent", nullable = false, length =100)
     private String professionParent;
 
@@ -45,6 +44,10 @@ public class Parent {
     @Column(name = "type_parent", nullable = false)
     private TypeParent typeParent;
 
-    // @Column(name = "profession-mere", nullable = false, length =100)
-    // private String professionMere;
+     @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
+
 }

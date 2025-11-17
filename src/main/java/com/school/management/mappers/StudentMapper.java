@@ -1,49 +1,31 @@
 package com.school.management.mappers;
 
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
 import com.school.management.dto.StudentDTO;
 import com.school.management.model.*;
 
-public class StudentMapper {
-  // Entity → DTO
-  public static StudentDTO toDTO(Student entity) {
-    if (entity == null)
-      return null;
-    
-    StudentDTO dto = new StudentDTO();
-    dto.setId(entity.getId());
-    dto.setFirstNameStudent(entity.getFirstNameStudent());
-    dto.setLastNameStudent(entity.getLastNameStudent());
-    dto.setDateOfBirth(entity.getDateOfBirth());
-    dto.setGender(entity.getGender());
-    dto.setActive(entity.getActive());
-    dto.setEcolePrecedente(entity.getEcolePrecedente());
-    if (entity.getParent() != null) {
-      dto.setParentId(entity.getParent().getId());
-    }
-    return dto;
-  }
 
-  // DTO → Entity
-  public static Student toEntity(StudentDTO dto) {
-    if (dto == null) return null;
+@Mapper(componentModel = "spring", uses = ParentMapper.class)
+public interface StudentMapper extends EntityMapper<StudentDTO, Student> {
+  
+  StudentDTO toDto(Student entity);
 
-    Student entity = new Student();
-    entity.setId(dto.getId());
-    entity.setFirstNameStudent(dto.getFirstNameStudent());
-    entity.setLastNameStudent(dto.getLastNameStudent());
-    entity.setDateOfBirth(dto.getDateOfBirth());
-    entity.setGender(dto.getGender());
-    entity.setActive(dto.getActive());
-    entity.setEcolePrecedente(dto.getEcolePrecedente());
-    
+  @Mapping(target = "parent", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "registrationDate", ignore = true)
+  @Mapping(target = "active", ignore = true)
+  //@Mapping(source = "parent", target = "parent")
+  Student toEntity(StudentDTO dto);
 
-    if (dto.getParentId() != null) {
-      Parent parent = new Parent();
-      parent.setId(dto.getParentId());
-      entity.setParent(parent);
-    }
+  List<StudentDTO> toDto(List<Student> entityList);
 
-    return entity;
-  }
+  List<Student> toEntity(List<StudentDTO> dtoList);
 
+
+  
 }

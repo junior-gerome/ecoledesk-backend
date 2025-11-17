@@ -11,13 +11,11 @@ package com.school.management.dto;
 @Data 
 public class StudentDTO { 
   private Long id;
-    private String firstNameStudent;
-    private String lastNameStudent;
-    //private String fullNameStudent;
-    private LocalDate dateOfBirth;
-    private Gender gender;
-   private Boolean active;
-    private String ecolePrecedente;
-    private Long parentId; 
+  private String firstNameStudent;
+  private String lastNameStudent;
+  private LocalDate dateOfBirth;
+  private Gender gender;
+  private String ecolePrecedente;
+  private ParentDTO parent;
             
 }

@@ -111,3 +111,44 @@ public class UsersController {
     //     ));
     // }
 }
+
+
+
+// import org.modelmapper.ModelMapper;
+// import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.http.HttpStatus;
+// import org.springframework.http.ResponseEntity;
+// import org.springframework.web.bind.annotation.GetMapping;
+// import org.springframework.web.bind.annotation.PathVariable;
+// import org.springframework.web.bind.annotation.RestController;
+
+// @RestController
+// public class UserController {
+
+//     @Autowired
+//     private UserService userService; // Service to access the database
+
+//     @Autowired
+//     private ModelMapper modelMapper;
+
+//     @GetMapping("/users/{id}")
+//     public ResponseEntity<?> getUserById(@PathVariable Long id) {
+//         try {
+//             User user = userService.findById(id);
+//             if (user == null) {
+//                 return ResponseEntity.notFound().header("Custom-Header", "UserNotFound").build();
+//             }
+
+        
+//             UserDTO userDto = modelMapper.map(user, UserDTO.class);
+
+//             return ResponseEntity.ok()
+//                     .header("Custom-Header", "UserFound")
+//                     .body(userDto);
+//         } catch (Exception ex) {
+//             return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                     .header("Custom-Header", "ErrorOccurred")
+//                     .body("User not found");
+//         }
+//     }
+// }

@@ -1,9 +1,6 @@
 package com.school.management.controller;
 
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import org.springframework.data.domain.*;
 import com.school.exception.ResourceNotFoundException;
 import com.school.management.dto.StudentDTO;
 import com.school.management.service.StudentService;
@@ -19,17 +16,23 @@ public class StudentController {
 
     private final StudentService studentService;
 
+
     @PostMapping
-    public ResponseEntity<?> createStudent(@RequestBody StudentDTO dto) {
-        try {
-            StudentDTO savedStudent = studentService.createStudent(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedStudent);
-        } catch (ResourceNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur interne : " + ex.getMessage());
-        }
+    public StudentDTO createStudent(@RequestBody StudentDTO studentDTO) {
+        return studentService.createStudentWithParent(studentDTO);
     }
+
+    // @PostMapping
+    // public ResponseEntity<?> createStudent(@RequestBody StudentDTO dto) {
+    //     try {
+    //         StudentDTO savedStudent = studentService.createStudent(dto);
+    //         return ResponseEntity.status(HttpStatus.CREATED).body(savedStudent);
+    //     } catch (ResourceNotFoundException ex) {
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    //     } catch (Exception ex) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur interne : " + ex.getMessage());
+    //     }
+    // }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateStudent(@PathVariable Long id, @RequestBody StudentDTO dto) {

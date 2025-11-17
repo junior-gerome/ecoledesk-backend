@@ -14,9 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.school.management.model.Section;
+import com.school.management.dto.SectionDTO;
 import com.school.management.service.SectionService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -27,23 +28,23 @@ public class SectionController {
   private final SectionService sectionService;
   
   @PostMapping
-  public ResponseEntity<Section> createSection(@RequestBody Section section) {
-    Section savedSection = sectionService.createSection(section);
+  public ResponseEntity<SectionDTO> createSection(@Valid @RequestBody SectionDTO dto) {
+    SectionDTO savedSection = sectionService.createSection(dto);
     return ResponseEntity.status(HttpStatus.CREATED).body(savedSection);
   }
   @GetMapping("/{id}")
-  public ResponseEntity<Section> getSectionById(@PathVariable Long id) {
-    Section section = sectionService.getSectionById(id);
+  public ResponseEntity<SectionDTO> getSectionById(@PathVariable Long id) {
+    SectionDTO section = sectionService.getSectionById(id);
     return ResponseEntity.ok(section);
   }
 @GetMapping("/libelle/{libelle}")
-  public ResponseEntity<Section> getSectionByLibelle(@PathVariable String libelle) {
-    Section section = sectionService.getSectionByLibelle(libelle);
+  public ResponseEntity<SectionDTO> getSectionByLibelle(@PathVariable String libelle) {
+    SectionDTO section = sectionService.getSectionByLibelle(libelle);
     return ResponseEntity.ok(section);
   }
   @PutMapping("/{id}")
-  public ResponseEntity<Section> updateSection(@PathVariable Long id, @RequestBody Section updatedSection) {
-    Section section = sectionService.updateSection(id, updatedSection);
+  public ResponseEntity<SectionDTO> updateSection(@PathVariable Long id, @RequestBody SectionDTO updatedSection) {
+    SectionDTO section = sectionService.updateSection(id, updatedSection);
     return ResponseEntity.ok(section);
   }
   @DeleteMapping("/{id}")
@@ -52,8 +53,8 @@ public class SectionController {
     return ResponseEntity.noContent().build();
   }
   @GetMapping
-  public ResponseEntity<List<Section>> getAllSections() {
-    List<Section> sections = sectionService.getAllSections();
+  public ResponseEntity<List<SectionDTO>> getAllSections() {
+    List<SectionDTO> sections = sectionService.getAllSections();
     return ResponseEntity.ok(sections);
   }
   

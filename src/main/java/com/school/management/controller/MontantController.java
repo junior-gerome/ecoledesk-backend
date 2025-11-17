@@ -1,6 +1,5 @@
 package com.school.management.controller;
 
-import java.util.Optional;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -9,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.school.management.model.Montant;
 import com.school.management.service.MontantService;
-import com.school.management.enums.TypePaiement;
 
 @RestController
 @RequestMapping("/montant")

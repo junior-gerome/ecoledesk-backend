@@ -2,15 +2,11 @@ package com.school.management.service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.stereotype.Service;
 
 import com.school.management.dto.GradeDTO;
 import com.school.management.dto.PaymentDTO;
 import com.school.management.dto.PaymentSummaryReport;
-import com.school.management.dto.StudentDTO;
-import com.school.management.model.Paiement;
 import com.school.management.repository.PaiementRepository;
 
 

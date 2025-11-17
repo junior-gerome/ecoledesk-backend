@@ -6,9 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.school.management.dto.AnneeScolaireDTO;
 import com.school.management.model.AnneeScolaire;
 import com.school.management.service.AnneeScolaireService;
-import org.springframework.web.bind.annotation.*;
 
 
 
@@ -22,21 +22,27 @@ public class AnneeScolaireController {
     this.anneeScolaireService = anneeScolaireService;
   }
   @PostMapping
-  public ResponseEntity<AnneeScolaire> createAnneeScolaire(@RequestBody AnneeScolaire anneeScolaire) {
-    AnneeScolaire createdAnneeScolaire = anneeScolaireService.createAnneeScolaire(anneeScolaire);
+  public ResponseEntity<AnneeScolaireDTO> createAnneeScolaire(@RequestBody AnneeScolaireDTO dto) {
+    AnneeScolaireDTO createdAnneeScolaire = anneeScolaireService.createAnneeScolaire(dto);
     return ResponseEntity.status(HttpStatus.CREATED).body(createdAnneeScolaire);
   }
 
 
   @GetMapping
-  public List<AnneeScolaire> getAllAnneeScolaire() {
-    return anneeScolaireService.getAllAnneeScolaire();  
+  public List<AnneeScolaireDTO> getAllAnneeScolaire() {
+    return anneeScolaireService.getAllAnneeScolaire();
+  }
+  
+  @GetMapping("id")
+  public ResponseEntity<AnneeScolaireDTO> getById(@PathVariable Long id) {
+    AnneeScolaireDTO annee = anneeScolaireService.getById(id);
+    return ResponseEntity.ok(annee);
   }
   
     
   @GetMapping("/active")
-  public ResponseEntity<AnneeScolaire> getActiveAnneeScolaire() {
-    AnneeScolaire activeAnneeScolaire = anneeScolaireService.getActiveAnneeScolaire();
+  public ResponseEntity<AnneeScolaireDTO> getActiveAnneeScolaire() {
+    AnneeScolaireDTO activeAnneeScolaire = anneeScolaireService.getActiveAnneeScolaire();
     return ResponseEntity.ok(activeAnneeScolaire);
   }
 
@@ -47,8 +53,8 @@ public class AnneeScolaireController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<AnneeScolaire> getAnneeScolaireById(@RequestParam Long id) {
-    AnneeScolaire anneeScolaire = anneeScolaireService.updateAnneeScolaire(id, null);
+  public ResponseEntity<AnneeScolaireDTO> getAnneeScolaireById(@RequestParam Long id) {
+    AnneeScolaireDTO anneeScolaire = anneeScolaireService.updateAnneeScolaire(id, null);
     return ResponseEntity.ok(anneeScolaire);
   }
 

@@ -15,10 +15,8 @@ public class Sequence {
     @Column(nullable = false, length = 50)
     private String libelleSequence;
 
-    @Column(nullable = false)
-    private Integer numero;
-
-    @ManyToOne(optional = false)
+    
+    @ManyToOne
     @JoinColumn(name = "trimestre_id")
     private Trimestre trimestre;
 

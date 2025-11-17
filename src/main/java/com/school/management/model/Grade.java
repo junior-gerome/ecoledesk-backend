@@ -51,10 +51,10 @@ public class Grade {
     @JoinColumn(name = "sequence_id", nullable = false)
     private Sequence sequence;
 
-    // Relation vers le trimestre (optionnel)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trimestre_id")
-    private Trimestre trimestre;
+    // // Relation vers le trimestre (optionnel)
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "trimestre_id")
+    // private Trimestre trimestre;
 
    
     // Valeur de la note (ex : 15.50, 4.75, etc.)
@@ -66,15 +66,15 @@ public class Grade {
     private BigDecimal grade;
 
    // Type d'évaluation (devoir, examen, projet...)
-    @NotNull(message = "Le type d'évaluation est obligatoire")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "assessment_type", nullable = false, length = 20)
-    private AssessmentType assessmentType;
+    // @NotNull(message = "Le type d'évaluation est obligatoire")
+    // @Enumerated(EnumType.STRING)
+    // @Column(name = "assessment_type", nullable = false, length = 20)
+    // private AssessmentType assessmentType;
 
     // Coefficient de la note
-    @DecimalMin(value = "0.1", message = "Le coefficient doit être au moins 0.1")
-    @Column(nullable = false, columnDefinition = "DECIMAL(3,2) DEFAULT 1.00")
-    private BigDecimal coefficient = BigDecimal.ONE;
+    // @DecimalMin(value = "0.1", message = "Le coefficient doit être au moins 0.1")
+    // @Column(nullable = false, columnDefinition = "DECIMAL(3,2) DEFAULT 1.00")
+    // private BigDecimal coefficient = BigDecimal.ONE;
 
     // Commentaires pédagogiques
     @Column(name = "pedagogical_comment", length = 1000)

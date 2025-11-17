@@ -184,9 +184,9 @@ public class GradeService {
             errors.add("La note doit être comprise entre 0 et 20");
         }
         
-        if (dto.getAssessmentType() == null) {
-            errors.add("Le type d'évaluation est obligatoire");
-        }
+        // if (dto.getAssessmentType() == null) {
+        //     errors.add("Le type d'évaluation est obligatoire");
+        // }
         
         if (dto.getCoefficient() != null && dto.getCoefficient().compareTo(BigDecimal.valueOf(0.1)) < 0) {
             errors.add("Le coefficient doit être supérieur à 0.1");
@@ -213,8 +213,8 @@ public class GradeService {
     private void updateGradeFromDTO(Grade grade, GradeDTO dto) {
         grade.setGrade(dto.getGrade());
         grade.setPedagogicalComment(dto.getComments());
-        grade.setAssessmentType(dto.getAssessmentType());
-        grade.setCoefficient(dto.getCoefficient());
+        // grade.setAssessmentType(dto.getAssessmentType());
+        // grade.setCoefficient(dto.getCoefficient());
         grade.setAssessmentDate(dto.getAssessmentDate());
         
         grade.setStudent(studentRepository.findById(dto.getStudent().getId())
@@ -226,10 +226,10 @@ public class GradeService {
         grade.setSequence(sequenceRepository.findByLibelleSequence(dto.getSequence().getLibelleSequence())
                 .orElseThrow(() -> new ResourceNotFoundException("Séquence non trouvée")));
         
-        if (dto.getTrimestre() != null) {
-            grade.setTrimestre(trimestreRepository.findByLibelleTrimestre(dto.getTrimestre().getLibelleTrimestre())
-                    .orElseThrow(() -> new ResourceNotFoundException("Trimestre non trouvé")));
-        }
+        // if (dto.getTrimestre() != null) {
+        //     grade.setTrimestre(trimestreRepository.findByLibelleTrimestre(dto.getTrimestre().getLibelleTrimestre())
+        //             .orElseThrow(() -> new ResourceNotFoundException("Trimestre non trouvé")));
+        // }
         
         grade.setClasse(classeRepository.findByNameClasse(dto.getClasse().getNameClasse())
                 .orElseThrow(() -> new ResourceNotFoundException("Classe non trouvée")));
@@ -241,10 +241,10 @@ public class GradeService {
                 .grade(grade.getGrade())
                 .student(grade.getStudent())
                 .subject(grade.getSubject())
-                .assessmentType(grade.getAssessmentType())
-                .coefficient(grade.getCoefficient())
+                // .assessmentType(grade.getAssessmentType())
+                // .coefficient(grade.getCoefficient())
                 .sequence(grade.getSequence())
-                .trimestre(grade.getTrimestre())
+                // .trimestre(grade.getTrimestre())
                 .classe(grade.getClasse())
                 .comments(grade.getPedagogicalComment())
                 .assessmentDate(grade.getAssessmentDate())

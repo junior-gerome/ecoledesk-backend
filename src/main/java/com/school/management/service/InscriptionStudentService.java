@@ -1,16 +1,18 @@
 package com.school.management.service;
 
-import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.school.exception.ResourceNotFoundException;
+import com.school.management.dto.ClasseRoomStudentCountDTO;
 import com.school.management.dto.InscriptionStudentDTO;
+import com.school.management.dto.SectionStudentCountDTO;
 import com.school.management.dto.StudentDTO;
 import com.school.management.mappers.InscriptionStudentMapper;
-import com.school.management.mappers.StudentMapper;
+import com.school.management.model.ClasseRoom;
 import com.school.management.model.InscriptionStudent;
 import com.school.management.model.Student;
 import com.school.management.repository.*;
@@ -26,65 +28,62 @@ public class InscriptionStudentService {
   
   private final InscriptionStudentRepository inscriptionStudentRepository;
   private final StudentRepository studentRepository;
-  private final AnneeScolaireRepository anneeScolaireRepository;
   private final ClasseRoomRepository classeRoomRepository;
-  private final MontantRepository montantRepository;
-  private final ParentRepository parentRepository;
+  private final SectionRepository sectionRepository;
+  private final StudentService studentService;
+  private final InscriptionStudentMapper mapper;
 
-  // Méthode création inscription avec StudentDTO
-  public InscriptionStudentDTO createInscription(StudentDTO studentDTO, Long classeRoomId, Long montantId, Long anneeScolaireId) {
+  public InscriptionStudentDTO createInscription(InscriptionStudentDTO dto) {
+     // 1. Créer l'élève et récupérer son ID
+    StudentDTO savedStudentDTO = studentService.createStudentWithParent(dto.getStudent());
     
-    // 1. Convertir StudentDTO → Student et sauvegarder
-    Student student = StudentMapper.toEntity(studentDTO);
-    Student savedStudent = studentRepository.save(student);
-
-    // 2. Construire InscriptionStudentDTO
-    InscriptionStudentDTO dto = new InscriptionStudentDTO();
-    dto.setStudentId(savedStudent.getId());
-    dto.setClasseRoomId(classeRoomId);
-    dto.setMontantId(montantId);
-    dto.setAnneeScolaireId(anneeScolaireId);
-    dto.setDateInscription(LocalDate.now());
-
-    // 3. Mapper DTO → Entity
-    InscriptionStudent inscription = InscriptionStudentMapper.toEntity(dto);
-
-    // ⚠ Charger les vraies entités (sinon tu as juste des IDs "fantômes")
-    inscription.setStudent(savedStudent);
-    inscription.setClasseRoom(classeRoomRepository.findById(classeRoomId)
-        .orElseThrow(() -> new ResourceNotFoundException("Classe non trouvée avec l'ID : " + classeRoomId)));
-    inscription.setMontant(montantRepository.findById(montantId)
-        .orElseThrow(() -> new ResourceNotFoundException("Montant non trouvé avec l'ID : " + montantId)));
-    inscription.setAnneeScolaire(anneeScolaireRepository.findById(anneeScolaireId)
-        .orElseThrow(() -> new ResourceNotFoundException("Année scolaire non trouvée avec l'ID : " + anneeScolaireId)));
-
-    // 4. Sauvegarder inscription
-    InscriptionStudent saved = inscriptionStudentRepository.save(inscription);
-
-    // 5. Retourner DTO
-    return InscriptionStudentMapper.toDTO(saved);
+    // 2. Charger l'entité Student depuis la base de données
+    Student studentEntity = studentRepository.findById(savedStudentDTO.getId())
+        .orElseThrow(() -> new IllegalStateException("Student not found after creation"));
+    
+    // 3. Mapper l'inscription (sans le student pour éviter le conflit)
+    InscriptionStudent entity = mapper.toEntity(dto);
+    
+    // 4. Associer l'entité Student managée
+    entity.setStudent(studentEntity);
+    
+    // 5. Sauvegarder
+    InscriptionStudent saved = inscriptionStudentRepository.save(entity);
+    
+    return mapper.toDto(saved);
   }
 
+  
+  public InscriptionStudentDTO updateInscription(Long id, InscriptionStudentDTO dto) {
+    InscriptionStudent existinginscriptionStudent = inscriptionStudentRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Inscription non trouvé avec l'ID : " + id));
+
+    InscriptionStudent inscripton = mapper.toEntity(dto);
+        inscripton.setId(existinginscriptionStudent.getId());
+        inscripton.setDateInscription(existinginscriptionStudent.getDateInscription());
+        InscriptionStudent updated = inscriptionStudentRepository.save(inscripton);
+        return mapper.toDto(updated);
+  }
   // Récupérer toutes les inscriptions
-  public List<InscriptionStudent> getAll() {
-    return inscriptionStudentRepository.findAll();
+  public List<InscriptionStudentDTO> getAll() {
+    return inscriptionStudentRepository.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
   }
 
   // Récupérer inscription par ID
-  public InscriptionStudent getById(Long id) {
-    return inscriptionStudentRepository.findById(id)
+  public InscriptionStudentDTO getById(Long id) {
+    return inscriptionStudentRepository.findById(id).map(mapper::toDto)
             .orElseThrow(() -> new ResourceNotFoundException("Inscription non trouvée avec l'ID : " + id));
   }
 
-  public InscriptionStudent getByStudentAndClass(Long studentId, Long classeRoomId) {
-    return inscriptionStudentRepository.findByStudentIdAndClasseRoomId(studentId, classeRoomId)
+  public InscriptionStudentDTO getByStudentAndClass(Long studentId, Long classeRoomId) {
+    return inscriptionStudentRepository.findByStudentIdAndClasseRoomId(studentId, classeRoomId).map(mapper::toDto)
         .orElseThrow(() -> new ResourceNotFoundException("Inscription non trouvée pour l'étudiant avec l'ID : "
             + studentId + " et la classe avec l'ID : " + classeRoomId));
   }
   
   public long getCountByClass(Long classeRoomId) {
     return inscriptionStudentRepository.countByClasseRoomId(classeRoomId);
-        // .orElseThrow(() -> new ResourceNotFoundException("Le Nombre d'etudiant pas section non trouver:" + sectionId + "et la classe avec l'ID:" + classId));
+        //.orElseThrow(() -> new ResourceNotFoundException("Le Nombre d'etudiant pas section non trouver:" + sectionId + "et la classe avec l'ID:" + classId));
   }
 
   // Supprimer inscription
@@ -94,4 +93,34 @@ public class InscriptionStudentService {
     }
     inscriptionStudentRepository.deleteById(id);
   }
+
+  public List<SectionStudentCountDTO> getStudentCountBySection() {
+
+    return sectionRepository.findAll().stream()
+        .map(section -> {
+          // Récupérer toutes les classes de la section
+          List<ClasseRoom> classes = classeRoomRepository.findBySection(section);
+
+          // Compter le total des élèves pour ces classes
+          long totalStudents = classes.stream()
+              .mapToLong(classe -> inscriptionStudentRepository.countByClasseRoom(classe))
+              .sum();
+
+          // Retourner le DTO
+          return new SectionStudentCountDTO(section.getLibelle(), totalStudents);
+        })
+        .collect(Collectors.toList());
+  }
+    
+    public List<ClasseRoomStudentCountDTO> getStudentCountByClasse() {
+    return classeRoomRepository.findAll().stream()
+        .map(classe -> {
+            long totalStudents = inscriptionStudentRepository.countByClasseRoomId(classe.getId());
+            return new ClasseRoomStudentCountDTO(classe.getNameClasse(), totalStudents);
+        })
+        .collect(Collectors.toList());
+}
+
+
+
 }

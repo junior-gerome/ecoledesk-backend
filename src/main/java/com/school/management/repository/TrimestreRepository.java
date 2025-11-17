@@ -6,16 +6,11 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.school.management.enums.TypeTrimestre;
 import com.school.management.model.Trimestre;
 
 @Repository
 public interface TrimestreRepository extends JpaRepository<Trimestre, Long> {
     List<Trimestre> findByAnneeScolaireId(Long anneeScolaireId);
-    Optional<Trimestre> findByNumeroAndAnneeScolaireId(Integer numero, Long anneeScolaireId);
-    boolean existsByNumeroAndAnneeScolaireId(Integer numero, Long anneeScolaireId);
-
-    List<Trimestre> findByType(TypeTrimestre type); // ✅ corrigé ici
     Optional<Trimestre> findByLibelleTrimestre(String libelleTrimestre);
     boolean existsByLibelleTrimestre(String libelleTrimestre);
 }

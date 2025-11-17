@@ -13,12 +13,12 @@ public class InscriptionStudent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name ="student_id",nullable = false)
     private Student student;
 
     @ManyToOne
-    @JoinColumn(name = "classeRoom_id", nullable = false)
+    @JoinColumn(name = "classe_room_id", nullable = false)
     private ClasseRoom classeRoom;
 
     @ManyToOne
@@ -26,7 +26,7 @@ public class InscriptionStudent {
     private Montant montant;
 
     @ManyToOne
-    @JoinColumn(name ="annnescolaire_id", nullable = false)
+    @JoinColumn(name ="anneescolaire_id", nullable = false)
     private AnneeScolaire anneeScolaire;
 
     @Column(name = "date_inscription", nullable = false)

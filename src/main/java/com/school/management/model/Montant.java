@@ -17,7 +17,7 @@ public class Montant {
   private Long count;
 
   @ManyToOne
-  @JoinColumn(name = "classRoom_id", nullable = false)
+  @JoinColumn(name = "classeRoom_id", nullable = false)
   private ClasseRoom classeRoom;
 
   @Enumerated(EnumType.STRING)
