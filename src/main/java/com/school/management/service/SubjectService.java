@@ -31,7 +31,6 @@ public class SubjectService {
     Subject subject = subjectRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException("Matier non trouver par ID:" + id));
     
-           // subject.setId(dto.getId());
             subject.setNameSubject(dto.getNameSubject());
             subject.setCoefficient(dto.getCoefficient());
             subject.setCode(dto.getCode());

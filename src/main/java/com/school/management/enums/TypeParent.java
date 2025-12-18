@@ -3,7 +3,6 @@ package com.school.management.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-// Enumération pour les types d'évaluation
 public enum TypeParent {
   PERE ("PERE") ,
   MERE ("MERE") ,

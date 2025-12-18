@@ -34,20 +34,20 @@ public class InscriptionStudentService {
   private final InscriptionStudentMapper mapper;
 
   public InscriptionStudentDTO createInscription(InscriptionStudentDTO dto) {
-     // 1. Créer l'élève et récupérer son ID
-    StudentDTO savedStudentDTO = studentService.createStudentWithParent(dto.getStudent());
     
-    // 2. Charger l'entité Student depuis la base de données
+    StudentDTO savedStudentDTO = studentService.createStudentWithParent(dto.getStudent());
+  
+  
     Student studentEntity = studentRepository.findById(savedStudentDTO.getId())
         .orElseThrow(() -> new IllegalStateException("Student not found after creation"));
     
-    // 3. Mapper l'inscription (sans le student pour éviter le conflit)
+    
     InscriptionStudent entity = mapper.toEntity(dto);
     
-    // 4. Associer l'entité Student managée
+  
     entity.setStudent(studentEntity);
     
-    // 5. Sauvegarder
+    
     InscriptionStudent saved = inscriptionStudentRepository.save(entity);
     
     return mapper.toDto(saved);
@@ -64,12 +64,11 @@ public class InscriptionStudentService {
         InscriptionStudent updated = inscriptionStudentRepository.save(inscripton);
         return mapper.toDto(updated);
   }
-  // Récupérer toutes les inscriptions
+
   public List<InscriptionStudentDTO> getAll() {
     return inscriptionStudentRepository.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
   }
 
-  // Récupérer inscription par ID
   public InscriptionStudentDTO getById(Long id) {
     return inscriptionStudentRepository.findById(id).map(mapper::toDto)
             .orElseThrow(() -> new ResourceNotFoundException("Inscription non trouvée avec l'ID : " + id));

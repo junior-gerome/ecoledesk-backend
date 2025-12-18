@@ -34,7 +34,6 @@ public class StudentService {
     private final StudentMapper studentMapper;
     private final ParentMapper parentMapper;
 
-      // 🔹 Créer un élève avec parent (création auto du parent si inexistant)
     @Transactional
 public StudentDTO createStudentWithParent(StudentDTO studentDTO) {
     if (studentDTO == null || studentDTO.getParent() == null) {
@@ -46,12 +45,11 @@ public StudentDTO createStudentWithParent(StudentDTO studentDTO) {
 
     Optional<Parent> existingParent = Optional.empty();
 
-    // recherche par email
+
     if (parentDto.getEmail() != null && !parentDto.getEmail().isBlank()) {
         existingParent = parentRepository.findByEmail(parentDto.getEmail());
     }
 
-    // si non trouvé, recherche par téléphone
     if (existingParent.isEmpty()
             && parentDto.getPhoneNumber() != null
             && !parentDto.getPhoneNumber().isBlank()) {
@@ -61,27 +59,27 @@ public StudentDTO createStudentWithParent(StudentDTO studentDTO) {
     
     if (existingParent.isPresent()) {
         parentEntity = existingParent.get();
-        log.info("✅ Parent existant trouvé : {}", parentEntity.getEmail());
+        log.info("Parent existant trouvé : {}", parentEntity.getEmail());
     } else {
         parentEntity = parentMapper.toEntity(parentDto);
-        parentEntity = parentRepository.save(parentEntity); // <-- parent sauvegardé
+        parentEntity = parentRepository.save(parentEntity); 
         parentRepository.flush();
-        log.info("🆕 Nouveau parent créé : {}", parentEntity.getEmail());
+        log.info("Nouveau parent créé : {}", parentEntity.getEmail());
     }
 
     Student studentEntity = studentMapper.toEntity(studentDTO);
-    studentEntity.setParent(parentEntity);                    // relation valide
+    studentEntity.setParent(parentEntity);                   
     studentEntity.setRegistrationDate(LocalDateTime.now());
     studentEntity.setActive(true);
 
     Student savedStudent = studentRepository.save(studentEntity);
-    log.info("🎓 Élève enregistré : {} {} (ID: {})", savedStudent.getFirstNameStudent(),
+    log.info("Élève enregistré : {} {} (ID: {})", savedStudent.getFirstNameStudent(),
              savedStudent.getLastNameStudent(), savedStudent.getId());
 
     return studentMapper.toDto(savedStudent);
 }
 
-    // 🔹 Récupérer les étudiants d’un parent
+
     @Transactional(readOnly = true)
     public Page<StudentDTO> getStudentsByParentId(Long parentId, Pageable pageable) {
         return studentRepository.findByParentId(parentId, pageable)
@@ -111,17 +109,19 @@ public StudentDTO createStudentWithParent(StudentDTO studentDTO) {
         Student existingStudent = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Étudiant non trouvé avec l'ID : " + id));
 
-        Student entity = studentMapper.toEntity(dto);
-        entity.setId(existingStudent.getId());
-        entity.setRegistrationDate(existingStudent.getRegistrationDate());
+        studentMapper.updateEntityFromDto(dto, existingStudent);
+        // Student entity = studentMapper.toEntity(dto);
+        // entity.setId(existingStudent.getId());
+        // entity.setRegistrationDate(existingStudent.getRegistrationDate());
 
-        if (dto.getParent() != null) {
-            entity.setParent(parentRepository.findById(dto.getParent().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Parent non trouvé avec l'ID : " + dto.getParent().getId())));
+        if (dto.getParent() != null && dto.getParent().getId()!=null) {
+           Parent parent = parentRepository.findById(dto.getParent().getId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Parent non trouvé avec l'ID : " + dto.getParent().getId()));
+        existingStudent.setParent(parent);
         }
 
-        Student updatedStudent = studentRepository.save(entity);
+        Student updatedStudent = studentRepository.save(existingStudent);
         log.info("Étudiant mis à jour : {}", updatedStudent.getId());
 
         return studentMapper.toDto(updatedStudent);

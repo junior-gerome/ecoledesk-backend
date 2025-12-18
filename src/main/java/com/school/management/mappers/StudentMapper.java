@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import com.school.management.dto.StudentDTO;
 import com.school.management.model.*;
@@ -19,8 +20,15 @@ public interface StudentMapper extends EntityMapper<StudentDTO, Student> {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "registrationDate", ignore = true)
   @Mapping(target = "active", ignore = true)
-  //@Mapping(source = "parent", target = "parent")
   Student toEntity(StudentDTO dto);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "parent", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "registrationDate", ignore = true)
+  @Mapping(target = "active", ignore = true)
+  void updateEntityFromDto(StudentDTO dto, @MappingTarget Student entity);
 
   List<StudentDTO> toDto(List<Student> entityList);
 
