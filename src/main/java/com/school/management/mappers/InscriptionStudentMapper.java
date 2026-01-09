@@ -15,11 +15,14 @@ public interface InscriptionStudentMapper extends EntityMapper<InscriptionStuden
   @Mapping(source = "anneeScolaire.id", target = "anneeScolaireId")
   InscriptionStudentDTO toDto(InscriptionStudent entity);
 
-  @Mapping(source = "student", target = "student", ignore = true) // ✅ Ignorer
+  @Mapping(source = "student", target = "student", ignore = true)
   @Mapping(source = "classeRoomId", target = "classeRoom.id")
   @Mapping(source = "montantId", target = "montant.id")
   @Mapping(source = "anneeScolaireId", target = "anneeScolaire.id")
   InscriptionStudent toEntity(InscriptionStudentDTO dto);
+
+  @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+  void updateEntityFromDto(InscriptionStudentDTO dto, @MappingTarget InscriptionStudent entity);
 
   List<InscriptionStudentDTO> toDto(List<InscriptionStudent> entityList);
   List<InscriptionStudent> toEntity(List<InscriptionStudentDTO> dtoList);
