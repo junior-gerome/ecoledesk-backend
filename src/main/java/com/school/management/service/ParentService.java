@@ -14,7 +14,9 @@ import com.school.management.repository.ParentRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ParentService {
@@ -39,43 +41,19 @@ public class ParentService {
     //     return parentRepository.save(parent);
     // }
 
-    @Transactional
-    public ParentDTO updateParent(Long id, ParentDTO dto) {
-        Parent existingParent = parentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Parent non trouvé avec l'ID " + id));
-        
-        Parent entity = mapper.toEntity(dto);
-                entity.setId(existingParent.getId());
-               // entity.setRegistrationDate(existingParent.getRegistrationDate());
+    @Transactional 
+public ParentDTO updateParent(Long id, ParentDTO dto) {
+    Parent existingParent = parentRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Parent non trouvé avec l'ID " + id));
+    
+     mapper.updateEntityFromDto(dto, existingParent);
 
-        // Ne mettre à jour que les champs fournis (non null) dans l'objet 'parent' reçu
-        // if (dto.getFirstNameParent() != null) {
-        //     existingParent.setFirstNameParent(dto.getFirstNameParent());
-        // }
-        // if (dto.getLastNameParent() != null) {
-        //     existingParent.setLastNameParent(dto.getLastNameParent());
-        // }
-        // if (dto.getPhoneNumber() != null) {
-        //     existingParent.setPhoneNumber(dto.getPhoneNumber());
-        // }
-        // if (dto.getEmail() != null) {
-        //     existingParent.setEmail(dto.getEmail());
-        // }
-        // if (dto.getProfessionParent() != null) {
-        //     existingParent.setProfessionParent(dto.getProfessionParent());
-        // }
-        // if (dto.getTypeParent() != null) {
-        //     existingParent.setTypeParent(dto.getTypeParent());
-        // }
-        // if (dto.getAddress() != null) {
-        //     existingParent.setAddress(dto.getAddress());
-        // }
+    Parent updated = parentRepository.save(existingParent);
 
-        Parent updated = parentRepository.save(entity);
-
-        return mapper.toDto(updated);
-    }
+    log.info("Parent mis à jour avec succès : {}", updated.getId());
+    return mapper.toDto(updated);
+}
 
     @Transactional
     public void deleteParent(Long id) {

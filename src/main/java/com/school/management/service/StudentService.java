@@ -115,10 +115,11 @@ public StudentDTO createStudentWithParent(StudentDTO studentDTO) {
         // entity.setRegistrationDate(existingStudent.getRegistrationDate());
 
         if (dto.getParent() != null && dto.getParent().getId()!=null) {
-           Parent parent = parentRepository.findById(dto.getParent().getId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Parent non trouvé avec l'ID : " + dto.getParent().getId()));
-        existingStudent.setParent(parent);
+           if (existingStudent.getParent() == null || !existingStudent.getParent().getId().equals(dto.getParent().getId())) {
+            Parent parent = parentRepository.findById(dto.getParent().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent non trouvé"));
+            existingStudent.setParent(parent);
+        }
         }
 
         Student updatedStudent = studentRepository.save(existingStudent);
