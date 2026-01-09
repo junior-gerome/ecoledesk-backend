@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import com.school.management.dto.InscriptionStudentDTO;
 import com.school.management.model.*;
 
@@ -21,6 +24,10 @@ public interface InscriptionStudentMapper extends EntityMapper<InscriptionStuden
   @Mapping(source = "anneeScolaireId", target = "anneeScolaire.id")
   InscriptionStudent toEntity(InscriptionStudentDTO dto);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "actif", ignore = true)
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
   void updateEntityFromDto(InscriptionStudentDTO dto, @MappingTarget InscriptionStudent entity);
 
