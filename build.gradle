@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.0'
-    id 'io.spring.dependency-management' version '1.1.5' // recommandé avec Boot 3.5.0
+    id 'org.springframework.boot' version '3.5.14'
+    id 'io.spring.dependency-management' version '1.1.5'
 }
 
 group = 'school'
@@ -13,6 +13,13 @@ java {
     }
 }
 
+sourceSets {
+    main {
+        java {
+            exclude 'com/school/management/gestion-user/**'
+        }
+    }
+}
 repositories {
     mavenCentral()
 }
@@ -27,6 +34,41 @@ configurations {
     }
 }
 
+def loadDotEnv = { File envFile ->
+    def values = [:]
+
+    if (!envFile?.exists()) {
+        return values
+    }
+
+    envFile.eachLine('UTF-8') { rawLine ->
+        def line = rawLine.trim()
+
+        if (line && !line.startsWith('#')) {
+            if (line.startsWith('export ')) {
+                line = line.substring('export '.length()).trim()
+            }
+
+            def separatorIndex = line.indexOf('=')
+
+            if (separatorIndex > 0) {
+                def key = line.substring(0, separatorIndex).trim()
+                def value = line.substring(separatorIndex + 1).trim()
+
+                if (value.length() >= 2
+                        && ((value.startsWith('"') && value.endsWith('"'))
+                        || (value.startsWith("'") && value.endsWith("'")))) {
+                    value = value.substring(1, value.length() - 1)
+                }
+
+                values[key] = value
+            }
+        }
+    }
+
+    values
+}
+
 dependencies {
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -37,6 +79,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
 
     // Base de données
     runtimeOnly 'com.mysql:mysql-connector-j'
@@ -96,4 +140,25 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+tasks.named('bootRun') {
+    def repoEnvFile = rootProject.projectDir.parentFile?.toPath()?.resolve('.env')?.normalize()?.toFile()
+    def backendEnvFile = rootProject.file('.env')
+
+    [repoEnvFile, backendEnvFile].each { envFile ->
+        loadDotEnv(envFile).each { key, value ->
+            if (!System.getenv().containsKey(key) && !getEnvironment().containsKey(key)) {
+                environment key, value
+            }
+        }
+    }
+}
+
+tasks.register('repairFlyway', JavaExec) {
+    group = 'database'
+    description = 'Repairs Flyway schema history using the application datasource configuration.'
+    dependsOn 'classes'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.school.platform.shared.infrastructure.flyway.FlywayRepairTool'
 }

@@ -1,0 +1,9 @@
+.git
+.gradle
+build
+**/build
+bin
+src/test
+**/src/test
+out
+*.log
