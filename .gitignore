@@ -1,37 +1,36 @@
 HELP.md
-.gradle
+
+# Gradle / Java
+.gradle/
 build/
+bin/
+out/
+*.class
+*.log
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IDEs
+.idea/
+.vscode/
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+.sts4-cache/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# Frontend / Node tooling
+frontend/.angular/cache/
+frontend/node_modules/
+frontend/dist/
+node_modules/
 
-### VS Code ###
-.vscode/
+# Local runtime files
+*.pid
+*.h2.db
+*.mv.db
