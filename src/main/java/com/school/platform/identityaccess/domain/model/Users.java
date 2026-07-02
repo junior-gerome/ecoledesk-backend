@@ -24,8 +24,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,13 +48,8 @@ public class Users implements UserDetails {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @NotBlank(message = "Le mot de passe est obligatoire")
-    @Size(min = 8, max = 255, message = "Le mot de passe doit contenir entre 8 et 100 caracteres")
-    @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[.\\-_@$!%*?&#])[A-Za-z\\d.\\-_@$!%*?&#]{8,}$",
-            message = "Le mot de passe doit contenir au moins : 1 majuscule, 1 minuscule, 1 chiffre et 1 caractere special (.-_@$!%*?&#)"
-    )
-    private String password;
+    @Column(name = "password", nullable = false, length = 255)
+    private String passwordHash;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UsersProfil> profils;
@@ -64,8 +57,8 @@ public class Users implements UserDetails {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
-    @Column(name = "reset_token", length = 255)
-    private String resetToken;
+    @Column(name = "reset_token", length = 64)
+    private String resetTokenHash;
 
     @Column(name = "reset_token_expires_at")
     private LocalDateTime resetTokenExpiresAt;
@@ -80,6 +73,23 @@ public class Users implements UserDetails {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Override
+    public String getPassword() {
+        return passwordHash;
+    }
+
+    public void setPassword(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public String getResetToken() {
+        return resetTokenHash;
+    }
+
+    public void setResetToken(String resetTokenHash) {
+        this.resetTokenHash = resetTokenHash;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -130,13 +140,19 @@ public class Users implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonExpired() { return true; }
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() {
+        return true;
+    }
 
     @Override
-    public boolean isCredentialsNonExpired() { return true; }
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 
     @Override
     public boolean isEnabled() {

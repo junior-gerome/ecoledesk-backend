@@ -3,6 +3,13 @@ package com.school.platform.identityaccess.infrastructure.security;
 import java.io.IOException;
 import java.util.List;
 
+import io.jsonwebtoken.JwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,161 +19,94 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.jsonwebtoken.JwtException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final List<String> PUBLIC_PATHS = List.of(
+            "/auth",
+            "/users/password-reset-request",
+            "/users/password-reset",
+            "/swagger-ui",
+            "/swagger-ui.html",
+            "/swagger-resources",
+            "/v3/api-docs",
+            "/actuator/health",
+            "/actuator/info",
+            "/ws",
+            "/api/ws",
+            "/error"
+    );
+
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
-    // Chemins qui ne nécessitent AUCUNE vérification JWT
-   private static final List<String> PUBLIC_PATHS = List.of(
-    "/auth", 
-    "/users/password-reset-request",
-    "/users/password-reset",
-    "/swagger-ui",
-    "/swagger-ui.html",
-    "/swagger-resources",
-    "/v3/api-docs",
-    "/actuator",
-    "/error"
-);
-     /**
-     * Vérifie si l'endpoint est public (ne nécessite pas d'authentification)
-    //  */
-     private boolean isPublicEndpoint(String requestURI) {
-         return PUBLIC_PATHS.stream().anyMatch(p -> requestURI.startsWith(p));
-     }
-
-@Override
-protected boolean shouldNotFilter(HttpServletRequest req) {
-    String path = req.getRequestURI();
-    String method = req.getMethod();
-
-    // Toujours bypasser les preflight OPTIONS
-    if ("OPTIONS".equalsIgnoreCase(method)) {
-        return true;
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+        String path = resolvePath(request);
+        return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
-
-    // Bypass uniquement pour /auth/**, WebSocket/SockJS et docs
-    if (path.startsWith("/auth") ||
-        path.startsWith("/api/ws") ||
-        path.startsWith("/ws") ||
-        path.startsWith("/swagger-ui") ||
-        path.startsWith("/v3/api-docs") ||
-        path.startsWith("/swagger-resources") ||
-        path.startsWith("/actuator")) {
-        return true;
-    }
-
-    // // Exemple : autoriser GET /api/students (liste publique) sans JWT
-    // if ("/api/students".equals(path) && "GET".equalsIgnoreCase(method)) {
-    //     return true;
-    // }
-
-    // Pour tout le reste, exécuter le filtre (ne pas bypasser)
-    return false;
-}
-
-// @Override
-// protected boolean shouldNotFilter(HttpServletRequest req) {
-//   String path = req.getRequestURI();
-//   return PUBLIC_PATHS.stream().anyMatch(path::startsWith)
-//       || "OPTIONS".equalsIgnoreCase(req.getMethod());
-// }
-    
 
     @Override
     protected void doFilterInternal(
-
-    
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+        String path = resolvePath(request);
+        log.debug("JWT filter request method={} path={} remote={}",
+                request.getMethod(), path, request.getRemoteAddr());
 
-        final String requestURI = request.getRequestURI();
-        final String method = request.getMethod();
-                        // Au début de doFilterInternal (dans JwtAuthenticationFilter)
-log.info("→ Incoming request: method={} uri={} remote={} query={}",
-         request.getMethod(), request.getRequestURI(), request.getRemoteAddr(), request.getQueryString());
-log.info("→ Authorization header present? {}", request.getHeader("Authorization") != null);
-
-        // Log l'URI et la méthode pour le débogage         
-        log.debug("🔍 JwtFilter - URI: {} | Method: {}", requestURI, method);
-
-        // 1. Toujours laisser passer les requêtes OPTIONS (CORS preflight)
-        if ("OPTIONS".equals(method)) {
-            log.debug("✅ OPTIONS request - Bypass JWT filter");
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // 2. Vérifier si c'est un endpoint public
-        if (isPublicEndpoint(requestURI)) {
-            log.debug("✅ Public endpoint detected: {} - Bypass JWT filter", requestURI);
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // 3. Pour les endpoints protégés, vérifier le token JWT
-        final String authHeader = request.getHeader("Authorization");
-        
+        String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.debug("❌ No Bearer token found for protected endpoint: {}", requestURI);
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            final String jwt = authHeader.substring(7);
-            final String userEmail = jwtService.extractUsername(jwt);
+            String jwt = authHeader.substring(7);
+            String username = jwtService.extractUsername(jwt);
 
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-                
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    log.debug("✅ User authenticated: {}", userEmail);
+                    log.debug("JWT authenticated user={}", username);
                 } else {
-                    log.warn("❌ Invalid JWT token for user: {}", userEmail);
+                    log.warn("Rejected invalid JWT for user={}", username);
                 }
             }
-
-        } catch (JwtException e) {
-            log.error("❌ JWT Exception: {}", e.getMessage());
-        } catch (Exception e) {
-            log.error("❌ Unexpected error in JWT filter: {}", e.getMessage());
+        } catch (JwtException ex) {
+            SecurityContextHolder.clearContext();
+            log.warn("Rejected JWT: {}", ex.getMessage());
+        } catch (RuntimeException ex) {
+            SecurityContextHolder.clearContext();
+            log.warn("JWT authentication failed: {}", ex.getMessage());
         }
 
         filterChain.doFilter(request, response);
     }
 
-   
-
-    /**
-     * Optionnel: Override pour exclure complètement certains patterns
-     */
-//     @Override
-// protected boolean shouldNotFilter(HttpServletRequest request) {
-//     String path = request.getRequestURI(); // path est du type: /auth/register
-//     return PUBLIC_PATHS.stream().anyMatch(path::startsWith)
-//             || "OPTIONS".equalsIgnoreCase(request.getMethod());
-// }
-
+    private String resolvePath(HttpServletRequest request) {
+        String servletPath = request.getServletPath();
+        if (servletPath != null && !servletPath.isBlank()) {
+            return servletPath;
+        }
+        String requestUri = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        if (contextPath != null && !contextPath.isBlank() && requestUri.startsWith(contextPath)) {
+            return requestUri.substring(contextPath.length());
+        }
+        return requestUri;
+    }
 }

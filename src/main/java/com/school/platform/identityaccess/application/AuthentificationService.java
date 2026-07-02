@@ -18,19 +18,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.school.platform.shared.domain.exception.BusinessException;
-import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import com.school.platform.identityaccess.application.dto.auth.LoginRequest;
 import com.school.platform.identityaccess.application.dto.auth.LoginResponse;
 import com.school.platform.identityaccess.application.dto.auth.RefreshTokenRequest;
 import com.school.platform.identityaccess.application.dto.auth.RegisterRequest;
-import com.school.platform.identityaccess.domain.model.RoleType;
 import com.school.platform.identityaccess.domain.model.RefreshToken;
+import com.school.platform.identityaccess.domain.model.RoleType;
 import com.school.platform.identityaccess.domain.model.Users;
 import com.school.platform.identityaccess.domain.model.UsersProfil;
 import com.school.platform.identityaccess.infrastructure.persistence.RefreshTokenRepository;
 import com.school.platform.identityaccess.infrastructure.persistence.UsersRepository;
 import com.school.platform.identityaccess.infrastructure.security.JwtService;
+import com.school.platform.shared.domain.exception.BusinessException;
+import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +46,7 @@ public class AuthentificationService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenRepository refreshTokenRepository;
     private final LoginAttemptService loginAttemptService;
+    private final AuthenticationAuditService authenticationAuditService;
 
     @Transactional
     public LoginResponse login(LoginRequest req, String clientIp) {
@@ -58,67 +59,67 @@ public class AuthentificationService {
 
             Users user = usersRepository.findByUsername(req.getEmail())
                     .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouve"));
+            user.setLastLogin(LocalDateTime.now());
+
             String token = jwtService.generateToken(user);
-
-            UsersProfil profil = user.getProfils().stream()
-                    .findFirst()
-                    .orElseThrow(() -> new BusinessException("Profil utilisateur introuvable"));
-
+            UsersProfil profil = primaryProfile(user);
             String refreshToken = createPersistedRefreshToken(user);
             loginAttemptService.reset(req.getEmail(), clientIp);
+            authenticationAuditService.recordLoginSuccess(user, clientIp);
 
-            return LoginResponse.builder()
-                    .token(token)
-                    .refreshToken(refreshToken)
-                    .userId(user.getId())
-                    .nameUser(profil.getFirstName() + " " + profil.getLastName())
-                    .email(user.getUsername())
-                    .userProfile(userProfileMap(profil))
-                    .build();
+            return buildLoginResponse(user, profil, token, refreshToken);
         } catch (BadCredentialsException ex) {
             loginAttemptService.registerFailure(req.getEmail(), clientIp);
+            authenticationAuditService.recordLoginFailure(req.getEmail(), clientIp, "Bad credentials");
             throw ex;
         }
     }
 
     @Transactional
     public LoginResponse refresh(RefreshTokenRequest request) {
+        return refresh(request, null);
+    }
+
+    @Transactional
+    public LoginResponse refresh(RefreshTokenRequest request, String clientIp) {
         String username = jwtService.extractUsername(request.refreshToken());
         Users user = usersRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouve"));
 
         if (!jwtService.isRefreshTokenValid(request.refreshToken(), user)) {
+            authenticationAuditService.recordRefreshRejected(user.getId(), username, clientIp, "Invalid refresh token");
             throw new BusinessException("Refresh token invalide");
         }
 
         String currentHash = hashToken(request.refreshToken());
         RefreshToken persistedToken = refreshTokenRepository.findByTokenHash(currentHash)
-                .orElseThrow(() -> new BusinessException("Refresh token inconnu ou revoque"));
+                .orElseThrow(() -> {
+                    authenticationAuditService.recordRefreshRejected(user.getId(), username, clientIp,
+                            "Unknown refresh token");
+                    return new BusinessException("Refresh token inconnu ou revoque");
+                });
 
         LocalDateTime now = LocalDateTime.now();
-        if (!persistedToken.isActive(now) || !persistedToken.getUser().getId().equals(user.getId())) {
-            throw new BusinessException("Refresh token expire ou revoque");
+        if (!persistedToken.getUser().getId().equals(user.getId())) {
+            authenticationAuditService.recordRefreshRejected(user.getId(), username, clientIp,
+                    "Refresh token user mismatch");
+            throw new BusinessException("Refresh token invalide");
         }
 
-        UsersProfil profil = user.getProfils().stream()
-                .findFirst()
-                .orElseThrow(() -> new BusinessException("Profil utilisateur introuvable"));
+        if (!persistedToken.isActive(now)) {
+            handleInactiveRefreshToken(user, persistedToken, clientIp);
+        }
 
+        UsersProfil profil = primaryProfile(user);
         String nextRefreshToken = jwtService.generateRefreshToken(user);
         String nextHash = hashToken(nextRefreshToken);
         RefreshToken nextPersistedToken = buildRefreshToken(user, nextHash);
         persistedToken.revoke(nextHash);
         refreshTokenRepository.save(persistedToken);
         refreshTokenRepository.save(nextPersistedToken);
+        authenticationAuditService.recordRefreshSuccess(user, clientIp);
 
-        return LoginResponse.builder()
-                .token(jwtService.generateToken(user))
-                .refreshToken(nextRefreshToken)
-                .userId(user.getId())
-                .nameUser(profil.getFirstName() + " " + profil.getLastName())
-                .email(user.getUsername())
-                .userProfile(userProfileMap(profil))
-                .build();
+        return buildLoginResponse(user, profil, jwtService.generateToken(user), nextRefreshToken);
     }
 
     @Transactional
@@ -145,6 +146,47 @@ public class AuthentificationService {
 
         user.setProfils(List.of(profil));
         usersRepository.save(user);
+    }
+
+    @Transactional
+    public void logout(String refreshToken) {
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            refreshTokenRepository.findByTokenHash(hashToken(refreshToken))
+                    .filter(token -> token.getRevokedAt() == null)
+                    .ifPresent(token -> {
+                        token.revoke(null);
+                        refreshTokenRepository.save(token);
+                    });
+        }
+        SecurityContextHolder.clearContext();
+    }
+
+    private void handleInactiveRefreshToken(Users user, RefreshToken persistedToken, String clientIp) {
+        if (persistedToken.getRevokedAt() != null && persistedToken.getReplacedByTokenHash() != null) {
+            refreshTokenRepository.revokeActiveTokensForUser(user.getId(), LocalDateTime.now());
+            authenticationAuditService.recordRefreshReuse(user, clientIp);
+            throw new BusinessException("Refresh token reutilise; les sessions actives ont ete revoquees");
+        }
+        authenticationAuditService.recordRefreshRejected(user.getId(), user.getUsername(), clientIp,
+                "Expired or revoked refresh token");
+        throw new BusinessException("Refresh token expire ou revoque");
+    }
+
+    private LoginResponse buildLoginResponse(Users user, UsersProfil profil, String token, String refreshToken) {
+        return LoginResponse.builder()
+                .token(token)
+                .refreshToken(refreshToken)
+                .userId(user.getId())
+                .nameUser(profil.getFirstName() + " " + profil.getLastName())
+                .email(user.getUsername())
+                .userProfile(userProfileMap(profil))
+                .build();
+    }
+
+    private UsersProfil primaryProfile(Users user) {
+        return user.getProfils().stream()
+                .findFirst()
+                .orElseThrow(() -> new BusinessException("Profil utilisateur introuvable"));
     }
 
     private boolean isSelfRegistrableRole(RoleType roleType) {
@@ -186,18 +228,5 @@ public class AuthentificationService {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 indisponible", e);
         }
-    }
-
-    @Transactional
-    public void logout(String refreshToken) {
-        if (refreshToken != null && !refreshToken.isBlank()) {
-            refreshTokenRepository.findByTokenHash(hashToken(refreshToken))
-                    .filter(token -> token.getRevokedAt() == null)
-                    .ifPresent(token -> {
-                        token.revoke(null);
-                        refreshTokenRepository.save(token);
-                    });
-        }
-        SecurityContextHolder.clearContext();
     }
 }

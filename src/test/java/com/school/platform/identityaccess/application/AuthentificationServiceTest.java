@@ -7,24 +7,25 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.school.platform.shared.domain.exception.BusinessException;
-import com.school.platform.identityaccess.application.AuthentificationService;
-import com.school.platform.identityaccess.application.LoginAttemptService;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import com.school.platform.identityaccess.application.dto.auth.LoginRequest;
 import com.school.platform.identityaccess.application.dto.auth.RefreshTokenRequest;
 import com.school.platform.identityaccess.application.dto.auth.RegisterRequest;
+import com.school.platform.identityaccess.domain.model.RefreshToken;
 import com.school.platform.identityaccess.domain.model.RoleType;
 import com.school.platform.identityaccess.domain.model.Users;
 import com.school.platform.identityaccess.domain.model.UsersProfil;
 import com.school.platform.identityaccess.infrastructure.persistence.RefreshTokenRepository;
 import com.school.platform.identityaccess.infrastructure.persistence.UsersRepository;
 import com.school.platform.identityaccess.infrastructure.security.JwtService;
-import java.util.List;
-import java.util.Optional;
+import com.school.platform.shared.domain.exception.BusinessException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 class AuthentificationServiceTest {
@@ -34,9 +35,10 @@ class AuthentificationServiceTest {
     private final AuthenticationManager authenticationManager = Mockito.mock(AuthenticationManager.class);
     private final RefreshTokenRepository refreshTokenRepository = Mockito.mock(RefreshTokenRepository.class);
     private final LoginAttemptService loginAttemptService = Mockito.mock(LoginAttemptService.class);
+    private final AuthenticationAuditService authenticationAuditService = Mockito.mock(AuthenticationAuditService.class);
     private final AuthentificationService service =
             new AuthentificationService(usersRepository, passwordEncoder, jwtService, authenticationManager,
-                    refreshTokenRepository, loginAttemptService);
+                    refreshTokenRepository, loginAttemptService, authenticationAuditService);
 
     @Test
     void publicRegisterRejectsPrivilegedRole() {
@@ -53,52 +55,55 @@ class AuthentificationServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("administrateur");
 
-        verifyNoInteractions(passwordEncoder, jwtService, authenticationManager);
+        verifyNoInteractions(passwordEncoder, jwtService, authenticationManager, authenticationAuditService);
     }
 
     @Test
     void refreshRejectsUnknownPersistedToken() {
-        Users user = new Users();
-        user.setId(7L);
-        user.setUsername("ada@example.com");
-        user.setPassword("Password1!");
-        user.setActif(true);
-
-        UsersProfil profil = new UsersProfil();
-        profil.setId(11L);
-        profil.setFirstName("Ada");
-        profil.setLastName("Lovelace");
-        profil.setRoleType(RoleType.AGENT);
-        user.setProfils(List.of(profil));
+        Users user = user("ada@example.com");
 
         when(jwtService.extractUsername("refresh-token")).thenReturn(user.getUsername());
         when(usersRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
         when(jwtService.isRefreshTokenValid("refresh-token", user)).thenReturn(true);
         when(refreshTokenRepository.findByTokenHash(anyString())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.refresh(new RefreshTokenRequest("refresh-token")))
+        assertThatThrownBy(() -> service.refresh(new RefreshTokenRequest("refresh-token"), "127.0.0.1"))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("inconnu");
+
+        verify(authenticationAuditService).recordRefreshRejected(user.getId(), user.getUsername(), "127.0.0.1",
+                "Unknown refresh token");
+    }
+
+    @Test
+    void refreshReuseRevokesActiveUserTokens() {
+        Users user = user("ada@example.com");
+        RefreshToken reusedToken = new RefreshToken();
+        reusedToken.setUser(user);
+        reusedToken.setTokenHash("current-hash");
+        reusedToken.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+        reusedToken.revoke("next-hash");
+
+        when(jwtService.extractUsername("refresh-token")).thenReturn(user.getUsername());
+        when(usersRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
+        when(jwtService.isRefreshTokenValid("refresh-token", user)).thenReturn(true);
+        when(refreshTokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(reusedToken));
+
+        assertThatThrownBy(() -> service.refresh(new RefreshTokenRequest("refresh-token"), "127.0.0.1"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("reutilise");
+
+        verify(refreshTokenRepository).revokeActiveTokensForUser(Mockito.eq(user.getId()), any(LocalDateTime.class));
+        verify(authenticationAuditService).recordRefreshReuse(user, "127.0.0.1");
     }
 
     @Test
     void loginResetsAttemptsAfterSuccess() {
-        Users user = new Users();
-        user.setId(7L);
-        user.setUsername("ada@example.com");
-        user.setPassword("Password1!");
-        user.setActif(true);
-
-        UsersProfil profil = new UsersProfil();
-        profil.setId(11L);
-        profil.setFirstName("Ada");
-        profil.setLastName("Lovelace");
-        profil.setRoleType(RoleType.AGENT);
-        user.setProfils(List.of(profil));
-
+        Users user = user("ada@example.com");
         LoginRequest request = new LoginRequest("ada@example.com", "Password1!");
 
-        when(authenticationManager.authenticate(any())).thenReturn(Mockito.mock(org.springframework.security.core.Authentication.class));
+        when(authenticationManager.authenticate(any()))
+                .thenReturn(Mockito.mock(org.springframework.security.core.Authentication.class));
         when(usersRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
         when(jwtService.generateToken(user)).thenReturn("jwt-token");
         when(jwtService.generateRefreshToken(user)).thenReturn("refresh-token");
@@ -108,6 +113,7 @@ class AuthentificationServiceTest {
 
         verify(loginAttemptService).assertAllowed(request.getEmail(), "127.0.0.1");
         verify(loginAttemptService).reset(request.getEmail(), "127.0.0.1");
+        verify(authenticationAuditService).recordLoginSuccess(user, "127.0.0.1");
         verifyNoInteractions(passwordEncoder);
     }
 
@@ -122,5 +128,22 @@ class AuthentificationServiceTest {
 
         verify(loginAttemptService).assertAllowed(request.getEmail(), "127.0.0.1");
         verify(loginAttemptService).registerFailure(request.getEmail(), "127.0.0.1");
+        verify(authenticationAuditService).recordLoginFailure(request.getEmail(), "127.0.0.1", "Bad credentials");
+    }
+
+    private Users user(String username) {
+        Users user = new Users();
+        user.setId(7L);
+        user.setUsername(username);
+        user.setPassword("Password1!");
+        user.setActif(true);
+
+        UsersProfil profil = new UsersProfil();
+        profil.setId(11L);
+        profil.setFirstName("Ada");
+        profil.setLastName("Lovelace");
+        profil.setRoleType(RoleType.AGENT);
+        user.setProfils(List.of(profil));
+        return user;
     }
 }

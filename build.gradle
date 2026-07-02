@@ -16,7 +16,7 @@ java {
 sourceSets {
     main {
         java {
-            exclude 'com/school/management/gestion-user/**'
+            exclude 'com/school/gestionuser/**' // legacy sandbox: keep outside the modular monolith build
         }
     }
 }
@@ -117,16 +117,14 @@ dependencies {
     implementation 'io.micrometer:micrometer-core'
 
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    //compileOnly 'org.projectlombok:lombok:1.18.30'
-   // annotationProcessor 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-
-    // optional
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
-    // Lombok
-     compileOnly 'org.projectlombok:lombok'
-     annotationProcessor 'org.projectlombok:lombok'
+    // Lombok is explicit so VS Code/JDT can resolve lombok.* imports after Gradle refresh.
+    compileOnly 'org.projectlombok:lombok:1.18.38'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+    testCompileOnly 'org.projectlombok:lombok:1.18.38'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
 
     // Tests
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

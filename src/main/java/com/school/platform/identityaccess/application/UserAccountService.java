@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Deprecated(since = "2026-07", forRemoval = false)
 public class UserAccountService {
 
     private final UserAccountRepository userAccountRepository;

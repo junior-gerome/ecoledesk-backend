@@ -1,7 +1,7 @@
 package com.school.platform.identityaccess.infrastructure.security;
 
-import com.school.platform.identityaccess.infrastructure.security.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -35,6 +35,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CorsProperties corsProperties;
     private final Environment environment;
+    private final RestAuthenticationEntryPoint authenticationEntryPoint;
+    private final RestAccessDeniedHandler accessDeniedHandler;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -43,47 +45,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        log.info("Configuration Spring Security...");
+        log.debug("Configuring Spring Security");
 
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((req, res, authEx) -> {
-                            log.warn("Unauthorized access attempt to: {} from {}",
-                                    req.getRequestURI(), req.getRemoteAddr());
-                            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            res.setContentType("application/json;charset=UTF-8");
-                            res.getWriter().write(String.format("""
-                                    {
-                                      "success": false,
-                                      "error": "Unauthorized",
-                                      "message": "Authentication required",
-                                      "status": 401,
-                                      "path": "%s",
-                                      "timestamp": %d
-                                    }
-                                    """, req.getRequestURI(), System.currentTimeMillis()));
-                        })
-                        .accessDeniedHandler((req, res, deniedEx) -> {
-                            log.warn("Access denied to: {} for user: {}",
-                                    req.getRequestURI(), req.getUserPrincipal());
-                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                            res.setContentType("application/json;charset=UTF-8");
-                            res.getWriter().write(String.format("""
-                                    {
-                                      "success": false,
-                                      "error": "Forbidden",
-                                      "message": "Insufficient permissions",
-                                      "status": 403,
-                                      "path": "%s",
-                                      "timestamp": %d
-                                    }
-                                    """, req.getRequestURI(), System.currentTimeMillis()));
-                        }))
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> {
-                    log.info("Configuration des regles d'autorisation...");
                     auth
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register", "/auth/refresh").permitAll()
@@ -103,21 +74,22 @@ public class SecurityConfig {
                             .requestMatchers("/error", "/api/error").permitAll()
                             .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                             .anyRequest().authenticated();
-
-                    log.info("Regles d'autorisation configurees");
                 })
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        log.info("Spring Security configure avec succes");
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        log.info("Configuration CORS...");
-
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
+        List<String> allowedOrigins = corsProperties.getAllowedOrigins().stream()
+                .filter(origin -> origin != null && !origin.isBlank())
+                .map(String::trim)
+                .toList();
+
+        validateCorsOrigins(allowedOrigins);
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(corsProperties.getAllowedMethods());
         configuration.setAllowedHeaders(corsProperties.getAllowedHeaders());
         configuration.setExposedHeaders(corsProperties.getExposedHeaders());
@@ -126,8 +98,7 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-
-        log.info("CORS configure - Origins: {}", configuration.getAllowedOrigins());
+        log.debug("CORS configured for {} origin(s)", allowedOrigins.size());
         return source;
     }
 
@@ -136,9 +107,25 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(12);
     }
 
+    private void validateCorsOrigins(List<String> allowedOrigins) {
+        if (!isProdProfileActive()) {
+            return;
+        }
+        if (allowedOrigins.isEmpty()) {
+            throw new IllegalStateException("APP_CORS_ALLOWED_ORIGINS must be configured in production");
+        }
+        boolean unsafeOrigin = allowedOrigins.stream().anyMatch(origin ->
+                "*".equals(origin)
+                        || origin.contains("localhost")
+                        || origin.contains("127.0.0.1"));
+        if (unsafeOrigin) {
+            throw new IllegalStateException("Production CORS origins must not use wildcard or localhost values");
+        }
+    }
+
     private boolean isProdProfileActive() {
         for (String profile : environment.getActiveProfiles()) {
-            if ("prod".equals(profile)) {
+            if ("prod".equalsIgnoreCase(profile)) {
                 return true;
             }
         }

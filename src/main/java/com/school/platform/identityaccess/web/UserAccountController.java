@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/user-accounts")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@Deprecated(since = "2026-07", forRemoval = false)
 public class UserAccountController {
 
     private final UserAccountService userAccountService;

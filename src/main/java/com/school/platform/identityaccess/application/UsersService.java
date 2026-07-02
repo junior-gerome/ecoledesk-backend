@@ -174,7 +174,7 @@ public class UsersService {
             user.setResetToken(hashToken(resetToken));
             user.setResetTokenExpiresAt(LocalDateTime.now().plusMinutes(30));
             userRepository.save(user);
-            passwordResetDeliveryService.sendResetToken(user.getUsername(), resetToken);
+            sendPasswordResetTokenAfterCommit(user.getUsername(), resetToken);
         });
     }
 
