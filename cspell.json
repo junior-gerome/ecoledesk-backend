@@ -1,0 +1,26 @@
+{
+  "version": "0.2",
+  "language": "en,fr",
+  "words": [
+    "Montant",
+    "Classe",
+    "Scolaire",
+    "Annee",
+    "Trimestre",
+    "Sequence",
+    "Inscription",
+    "Paiement",
+    "Affectation",
+    "Absence",
+    "classeRoom",
+    "anneeScolaire",
+    "mapstruct"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    "build",
+    "bin",
+    ".gradle",
+    "*.class"
+  ]
+}
