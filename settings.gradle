@@ -1,0 +1,4 @@
+rootProject.name = 'school-management'
+
+include 'services:billing-service'
+include 'services:attendance-service'
