@@ -1,4 +1,0 @@
--- Baseline migration for the legacy school-management schema.
--- Existing installations already own the full schema. New bounded contexts are
--- extracted into dedicated services with their own Flyway migrations.
--- Future legacy schema changes must be added as V2, V3, ... migrations.
