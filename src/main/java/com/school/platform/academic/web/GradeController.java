@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
+import com.school.platform.academic.application.dto.BulkGradeCreateRequest;
+import com.school.platform.academic.application.dto.GradeBatchStatusRequest;
 import com.school.platform.academic.application.dto.GradeCreateRequestDTO;
 import com.school.platform.academic.application.dto.GradeResponseDTO;
 import com.school.platform.shared.web.PageResponse;
@@ -117,6 +120,40 @@ public class GradeController {
     public ResponseEntity<GradeResponseDTO> addGrade(
             @Parameter(name = "grade", description = "Details de la note", in = ParameterIn.QUERY) @Valid @RequestBody GradeCreateRequestDTO grade) {
         return ResponseEntity.ok(gradeCommandService.saveGrade(grade));
+    }
+
+    @PostMapping("/bulk")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ENSEIGNANT')")
+    public ResponseEntity<List<GradeResponseDTO>> addBulkGrades(
+            @Valid @RequestBody BulkGradeCreateRequest request) {
+        return ResponseEntity.ok(gradeCommandService.saveBulkGrades(request));
+    }
+
+    @PostMapping("/{id}/validate")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<GradeResponseDTO> validateGrade(@PathVariable Long id) {
+        return ResponseEntity.ok(gradeCommandService.validateGrade(id));
+    }
+
+    @PostMapping("/validate-by-class")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<List<GradeResponseDTO>> validateGradesByClass(
+            @Valid @RequestBody GradeBatchStatusRequest request) {
+        return ResponseEntity.ok(gradeCommandService.validateGradesByClass(request));
+    }
+
+    @PostMapping("/lock-by-class")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<List<GradeResponseDTO>> lockGradesByClass(
+            @Valid @RequestBody GradeBatchStatusRequest request) {
+        return ResponseEntity.ok(gradeCommandService.lockGradesByClass(request));
+    }
+
+    @PostMapping("/unlock-by-class")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<GradeResponseDTO>> unlockGradesByClass(
+            @Valid @RequestBody GradeBatchStatusRequest request) {
+        return ResponseEntity.ok(gradeCommandService.unlockGradesByClass(request));
     }
 
     @Operation(summary = "Mettre a jour une note", description = "Met a jour une note existante")

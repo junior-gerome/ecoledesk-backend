@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.school.platform.enrollment.application.dto.InscriptionStudentDTO;
+import com.school.platform.enrollment.application.dto.PreinscriptionDecisionRequest;
+import com.school.platform.enrollment.application.dto.PreinscriptionStatusResponse;
 import com.school.platform.enrollment.application.InscriptionStudentService;
 
 import jakarta.validation.Valid;
@@ -49,5 +51,27 @@ public class PreinscriptionController {
             @PathVariable Long id,
             @RequestBody InscriptionStudentDTO request) {
         return ResponseEntity.ok(inscriptionService.updateInscription(id, request));
+    }
+
+    @PostMapping("/{id}/validate")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<PreinscriptionStatusResponse> validatePreinscription(@PathVariable Long id) {
+        return ResponseEntity.ok(inscriptionService.validatePreinscription(id));
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<PreinscriptionStatusResponse> rejectPreinscription(
+            @PathVariable Long id,
+            @Valid @RequestBody PreinscriptionDecisionRequest request) {
+        return ResponseEntity.ok(inscriptionService.rejectPreinscription(id, request.getJustification()));
+    }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<PreinscriptionStatusResponse> cancelPreinscription(
+            @PathVariable Long id,
+            @Valid @RequestBody PreinscriptionDecisionRequest request) {
+        return ResponseEntity.ok(inscriptionService.cancelPreinscription(id, request.getJustification()));
     }
 }

@@ -13,6 +13,7 @@ import com.school.platform.billing.domain.model.Paiement;
 import com.school.platform.attendance.infrastructure.persistence.AbsenceRepository;
 import com.school.platform.academic.infrastructure.persistence.ClasseRoomRepository;
 import com.school.platform.academic.infrastructure.persistence.GradeRepository;
+import com.school.platform.enrollment.domain.model.PreinscriptionStatus;
 import com.school.platform.enrollment.infrastructure.persistence.InscriptionStudentRepository;
 import com.school.platform.reporting.infrastructure.persistence.LogActiviteRepository;
 import com.school.platform.billing.infrastructure.persistence.PaiementRepository;
@@ -58,7 +59,7 @@ public class DirectionDashboardService {
                 gradeRepository.countByGradeGreaterThanEqual(EXCELLENT_GRADE_LIMIT),
                 gradeRepository.countByGradeLessThan(WEAK_GRADE_LIMIT),
                 overloadedClasses,
-                inscriptionStudentRepository.countByStatutPreinscriptionIn(List.of("BROUILLON", "EN_ATTENTE")),
+                inscriptionStudentRepository.countByStatutPreinscriptionIn(List.of(PreinscriptionStatus.BROUILLON, PreinscriptionStatus.EN_ATTENTE)),
                 logActiviteRepository.count());
     }
 

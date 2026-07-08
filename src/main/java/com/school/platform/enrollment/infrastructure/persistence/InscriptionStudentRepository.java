@@ -3,6 +3,7 @@ package com.school.platform.enrollment.infrastructure.persistence;
 import com.school.platform.academic.domain.model.AnneeScolaire;
 import com.school.platform.academic.domain.model.ClasseRoom;
 import com.school.platform.enrollment.domain.model.InscriptionStudent;
+import com.school.platform.enrollment.domain.model.PreinscriptionStatus;
 import com.school.platform.enrollment.domain.model.Student;
 
 import org.springframework.data.jpa.repository.Query;
@@ -35,6 +36,10 @@ public interface InscriptionStudentRepository extends JpaRepository<InscriptionS
     Optional<InscriptionStudent> findByStudentIdAndAnneeScolaireId(Long studentId, Long anneeScolaireId);
 
     boolean existsByStudentIdAndAnneeScolaireId(Long studentId, Long anneeScolaireId);
+    boolean existsByStudentIdAndAnneeScolaireIdAndStatutPreinscriptionIn(
+            Long studentId,
+            Long anneeScolaireId,
+            List<PreinscriptionStatus> statutsPreinscription);
 
     Optional<InscriptionStudent> findByStudentIdAndClasseRoomId(Long studentId, Long classeRoomId);
 
@@ -75,14 +80,18 @@ public interface InscriptionStudentRepository extends JpaRepository<InscriptionS
     long countByClasseRoomId(Long classeRoomId);
 
     long countByAnneeScolaireId(Long anneeScolaireId);
-    long countByStatutPreinscription(String statutPreinscription);
-    long countByStatutPreinscriptionIn(List<String> statutsPreinscription);
+    long countByStatutPreinscription(PreinscriptionStatus statutPreinscription);
+    long countByStatutPreinscriptionIn(List<PreinscriptionStatus> statutsPreinscription);
 
     long countByStudentId(Long studentId);
 
     long countByClasseRoomAndAnneeScolaire(ClasseRoom classeRoom, AnneeScolaire anneeScolaire);
 
     long countByClasseRoomIdAndAnneeScolaireId(Long classeRoomId, Long anneeScolaireId);
+    long countByClasseRoomIdAndAnneeScolaireIdAndStatutPreinscriptionIn(
+            Long classeRoomId,
+            Long anneeScolaireId,
+            List<PreinscriptionStatus> statutsPreinscription);
 
     Optional<InscriptionStudent> findFirstByStudentIdOrderByIdDesc(Long studentId);
 }

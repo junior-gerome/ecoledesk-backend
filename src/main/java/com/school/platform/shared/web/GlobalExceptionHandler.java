@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
+import com.school.platform.shared.domain.exception.BadRequestException;
 import com.school.platform.shared.domain.exception.BusinessException;
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import com.school.platform.shared.domain.exception.ValidationException;
@@ -41,6 +42,12 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadRequestException(BadRequestException ex) {
+        logger.info("Bad request: {}", ex.getMessage());
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
     @ExceptionHandler(com.school.platform.shared.domain.exception.shared.BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleSharedBusinessException(
             com.school.platform.shared.domain.exception.shared.BusinessException ex) {
@@ -180,3 +187,4 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(ApiResponse.error(message, errors));
     }
 }
+

@@ -27,12 +27,12 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
         List<Grade> findByStudentIdAndSequenceId(Long studentId, Long sequenceId);
         List<Grade> findBySubjectIdAndSequenceId(Long subjectId, Long sequenceId);
 
-    // 1. Recherches paginées optimisées
+    // 1. Recherches paginÃ©es optimisÃ©es
     Page<Grade> findByClasseIdAndPeriod(Long classId, String period, Pageable pageable);
     Page<Grade> findByStudentId(Long studentId, Pageable pageable);
     Page<Grade> findByStudentIdAndPeriod(Long studentId, String period, Pageable pageable);
 
-    // 2. Requêtes spécifiques avec projections
+    // 2. RequÃªtes spÃ©cifiques avec projections
     @Query("SELECT g.grade FROM Grade g WHERE g.student.id = :studentId AND g.subject.id = :subjectId AND g.sequence.id = :sequenceId")
     Optional<Double> findGradeValueByStudentSubjectAndSequence(
             @Param("studentId") Long studentId,
@@ -40,9 +40,11 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
             @Param("sequenceId") Long sequenceId);
 
     boolean existsByStudentIdAndSubjectIdAndSequenceId(Long studentId, Long subjectId, Long sequenceId);
+    boolean existsByClasseIdAndSubjectId(Long classeId, Long subjectId);
     Optional<Grade> findFirstByStudentIdAndSubjectIdAndSequenceId(Long studentId, Long subjectId, Long sequenceId);
+    List<Grade> findByClasseIdAndSubjectIdAndSequenceId(Long classeId, Long subjectId, Long sequenceId);
 
-    // 3. Méthode unifiée pour la recherche par période
+    // 3. MÃ©thode unifiÃ©e pour la recherche par pÃ©riode
     @Query("SELECT g FROM Grade g WHERE g.student.id = :studentId AND " +
            "(g.period = :period OR g.sequence.libelleSequence = :period)")
     Page<Grade> findByStudentIdAndPeriodFlexible(
@@ -50,7 +52,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
             @Param("period") String period,
             Pageable pageable);
 
-    // 4. Calculs statistiques optimisés
+    // 4. Calculs statistiques optimisÃ©s
     @Query("SELECT AVG(g.grade) FROM Grade g WHERE g.student.id = :studentId")
     Optional<Double> calculateAverageByStudentId(@Param("studentId") Long studentId);
 
@@ -70,7 +72,7 @@ Optional<Integer> calculateStudentRank(
         @Param("classId") Long classId);
 
 
-    // 5. Recherches spécifiques avec jointures
+    // 5. Recherches spÃ©cifiques avec jointures
     @Query("SELECT g FROM Grade g " +
            "JOIN FETCH g.subject " +
            "WHERE g.student.id = :studentId AND g.subject.id = :subjectId")
@@ -85,3 +87,4 @@ Optional<Integer> calculateStudentRank(
             @Param("classId") Long classId,
             @Param("subjectId") Long subjectId);
 }
+

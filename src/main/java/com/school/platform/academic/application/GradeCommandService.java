@@ -1,5 +1,7 @@
 package com.school.platform.academic.application;
 
+import com.school.platform.academic.application.dto.BulkGradeCreateRequest;
+import com.school.platform.academic.application.dto.GradeBatchStatusRequest;
 import com.school.platform.academic.application.dto.GradeCreateRequestDTO;
 import com.school.platform.academic.application.dto.GradeResponseDTO;
 import java.util.List;
@@ -31,5 +33,30 @@ public class GradeCommandService {
     @Transactional
     public List<GradeResponseDTO> saveBulkGrades(List<GradeCreateRequestDTO> grades) {
         return gradeService.addBulkGrades(grades);
+    }
+
+    @Transactional
+    public List<GradeResponseDTO> saveBulkGrades(BulkGradeCreateRequest request) {
+        return gradeService.addBulkGrades(request);
+    }
+
+    @Transactional
+    public GradeResponseDTO validateGrade(Long id) {
+        return gradeService.validateGrade(id);
+    }
+
+    @Transactional
+    public List<GradeResponseDTO> validateGradesByClass(GradeBatchStatusRequest request) {
+        return gradeService.validateGradesByClass(request);
+    }
+
+    @Transactional
+    public List<GradeResponseDTO> lockGradesByClass(GradeBatchStatusRequest request) {
+        return gradeService.lockGradesByClass(request);
+    }
+
+    @Transactional
+    public List<GradeResponseDTO> unlockGradesByClass(GradeBatchStatusRequest request) {
+        return gradeService.unlockGradesByClass(request);
     }
 }

@@ -26,6 +26,7 @@ public interface GradeMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
+    @Mapping(target = "status", ignore = true)
     Grade toEntity(GradeCreateRequestDTO dto);
 
     @Mapping(source = "student.id", target = "studentId")
@@ -51,6 +52,7 @@ public interface GradeMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "version", ignore = true)
+    @Mapping(target = "status", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromRequest(GradeCreateRequestDTO dto, @MappingTarget Grade entity);
 

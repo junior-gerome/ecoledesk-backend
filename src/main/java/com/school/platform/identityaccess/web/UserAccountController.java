@@ -2,6 +2,7 @@ package com.school.platform.identityaccess.web;
 
 import java.util.Set;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -13,19 +14,22 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.school.platform.identityaccess.application.UserAccountService;
+import com.school.platform.identityaccess.application.dto.useraccount.UserAccountCreateRequest;
 import com.school.platform.identityaccess.application.dto.useraccount.UserAccountFullDTO;
 import com.school.platform.identityaccess.application.dto.useraccount.UserAccountMediumDTO;
-import com.school.platform.identityaccess.application.UserAccountService;
+import com.school.platform.identityaccess.application.dto.useraccount.UserAccountPasswordChangeRequest;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/user-accounts")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@ConditionalOnProperty(name = "school.identity.legacy-user-account.enabled", havingValue = "true")
 @Deprecated(since = "2026-07", forRemoval = false)
 public class UserAccountController {
 
@@ -33,11 +37,9 @@ public class UserAccountController {
 
     @PostMapping
     public ResponseEntity<UserAccountFullDTO> create(
-            @RequestParam Long personId,
-            @RequestParam String username,
-            @RequestParam String password) {
+            @Valid @RequestBody UserAccountCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(userAccountService.create(personId, username, password));
+            .body(userAccountService.create(request.getPersonId(), request.getUsername(), request.getPassword()));
     }
 
     @PostMapping("/{id}/roles")
@@ -51,8 +53,8 @@ public class UserAccountController {
     @PutMapping("/{id}/password")
     public ResponseEntity<Void> changePassword(
             @PathVariable Long id,
-            @RequestParam String newPassword) {
-        userAccountService.changePassword(id, newPassword);
+            @Valid @RequestBody UserAccountPasswordChangeRequest request) {
+        userAccountService.changePassword(id, request.getNewPassword());
         return ResponseEntity.ok().build();
     }
 

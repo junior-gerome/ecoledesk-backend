@@ -96,6 +96,10 @@ public class Grade {
     @Version
     private Integer version;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private GradeStatus status = GradeStatus.DRAFT;
+
     private String period;
 }
 

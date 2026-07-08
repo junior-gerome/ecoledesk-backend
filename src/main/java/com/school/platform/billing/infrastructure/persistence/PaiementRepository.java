@@ -22,6 +22,7 @@ public interface PaiementRepository extends JpaRepository<Paiement, Long> {
     Page<Paiement> findByDatePaiementBetween(LocalDate startDate, LocalDate endDate, Pageable pageable);
     boolean existsByReceiptNumber(String receiptNumber);
     boolean existsByReceiptNumberAndIdNot(String receiptNumber, Long id);
+    boolean existsByInscriptionStudentIdAndTypePaiementAndCancelledAtIsNull(Long inscriptionStudentId, TypePaiement typePaiement);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Paiement p where p.id = :id")

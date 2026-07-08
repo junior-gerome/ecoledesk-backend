@@ -11,6 +11,7 @@ import com.school.platform.identityaccess.infrastructure.persistence.UserAccount
 import com.school.platform.shared.domain.exception.compat.NotFoundException;
 import com.school.platform.shared.domain.exception.compat.ValidationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@ConditionalOnProperty(name = "school.identity.legacy-user-account.enabled", havingValue = "true")
 @Deprecated(since = "2026-07", forRemoval = false)
 public class UserAccountService {
 

@@ -19,12 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import com.school.platform.shared.domain.exception.ValidationException;
 import com.school.platform.notification.application.NotificationService;
+import com.school.platform.shared.application.BusinessAuditService;
+import com.school.platform.shared.domain.exception.BadRequestException;
 import com.school.platform.reporting.application.dto.ClassPerformanceReport;
+import com.school.platform.academic.application.dto.BulkGradeCreateRequest;
+import com.school.platform.academic.application.dto.BulkGradeItemRequest;
+import com.school.platform.academic.application.dto.GradeBatchStatusRequest;
 import com.school.platform.academic.application.dto.GradeCreateRequestDTO;
 import com.school.platform.academic.application.dto.GradeResponseDTO;
 import com.school.platform.academic.application.mapper.GradeMapper;
 import com.school.platform.academic.domain.model.ClasseRoom;
 import com.school.platform.academic.domain.model.Grade;
+import com.school.platform.academic.domain.model.GradeStatus;
 import com.school.platform.academic.domain.model.Sequence;
 import com.school.platform.enrollment.domain.model.Student;
 import com.school.platform.academic.domain.model.Subject;
@@ -52,6 +58,7 @@ public class GradeService {
     private final ClasseRoomRepository classeRepository;
     private final NotificationService notificationService;
     private final GradeMapper gradeMapper;
+    private final BusinessAuditService businessAuditService;
 
     @Cacheable(value = "grades", key = "'class:' + #classId + ':period:' + #period + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     @Transactional(readOnly = true)
@@ -76,6 +83,7 @@ public class GradeService {
         Grade grade = gradeMapper.toEntity(dto);
         applyRelationsAndValues(grade, dto);
         Grade saved = gradeRepository.save(grade);
+        businessAuditService.record("GRADE_CREATED", "academic_grade", saved.getId());
 
         GradeResponseDTO response = gradeMapper.toResponseDto(saved);
         notificationService.notifyNewGrade(saved.getStudent().getId(), response);
@@ -94,23 +102,111 @@ public class GradeService {
         Grade existing = gradeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Note non trouvee"));
 
+        ensureGradeEditable(existing);
         validateRequest(dto, id);
         gradeMapper.updateEntityFromRequest(dto, existing);
         applyRelationsAndValues(existing, dto);
 
         Grade saved = gradeRepository.save(existing);
+        businessAuditService.record("GRADE_UPDATED", "academic_grade", saved.getId());
         return gradeMapper.toResponseDto(saved);
     }
 
     @Transactional
     @CacheEvict(value = "grades", allEntries = true)
     public void deleteGrade(Long id) {
-        if (!gradeRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Note non trouvee");
+        Grade existing = gradeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Note non trouvee"));
+        if (currentStatus(existing) == GradeStatus.LOCKED) {
+            throw new BadRequestException("Impossible de supprimer une note verrouillee.");
         }
-        gradeRepository.deleteById(id);
+        gradeRepository.delete(existing);
+        businessAuditService.record("GRADE_DELETED", "academic_grade", id);
     }
 
+    @Transactional
+    @CacheEvict(value = "grades", allEntries = true)
+    public List<GradeResponseDTO> addBulkGrades(BulkGradeCreateRequest request) {
+        if (request == null || request.getGrades() == null || request.getGrades().isEmpty()) {
+            throw new BadRequestException("Au moins une note est obligatoire.");
+        }
+
+        List<GradeCreateRequestDTO> grades = request.getGrades().stream()
+                .map(item -> toGradeCreateRequest(request, item))
+                .collect(Collectors.toList());
+        return addBulkGrades(grades);
+    }
+
+    @Transactional
+    @CacheEvict(value = "grades", allEntries = true)
+    public GradeResponseDTO validateGrade(Long id) {
+        Grade grade = gradeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Note non trouvee"));
+
+        if (currentStatus(grade) == GradeStatus.LOCKED) {
+            throw new BadRequestException("Impossible de valider une note verrouillee.");
+        }
+        if (currentStatus(grade) == GradeStatus.DRAFT) {
+            grade.setStatus(GradeStatus.VALIDATED);
+            grade = gradeRepository.save(grade);
+            businessAuditService.record("GRADE_VALIDATED", "academic_grade", grade.getId());
+        }
+        return gradeMapper.toResponseDto(grade);
+    }
+
+    @Transactional
+    @CacheEvict(value = "grades", allEntries = true)
+    public List<GradeResponseDTO> validateGradesByClass(GradeBatchStatusRequest request) {
+        List<Grade> grades = findMatchingGrades(request);
+        ensureGradesFound(grades);
+
+        if (grades.stream().anyMatch(grade -> currentStatus(grade) == GradeStatus.LOCKED)) {
+            throw new BadRequestException("Impossible de valider un lot contenant des notes verrouillees.");
+        }
+
+        grades.stream()
+                .filter(grade -> currentStatus(grade) == GradeStatus.DRAFT)
+                .forEach(grade -> grade.setStatus(GradeStatus.VALIDATED));
+
+        List<Grade> saved = gradeRepository.saveAll(grades);
+        businessAuditService.record("GRADE_BATCH_VALIDATED", "academic_grade", request.getClasseId());
+        return gradeMapper.toResponseDto(saved);
+    }
+
+    @Transactional
+    @CacheEvict(value = "grades", allEntries = true)
+    public List<GradeResponseDTO> lockGradesByClass(GradeBatchStatusRequest request) {
+        List<Grade> grades = findMatchingGrades(request);
+        ensureGradesFound(grades);
+
+        if (grades.stream().anyMatch(grade -> currentStatus(grade) == GradeStatus.DRAFT)) {
+            throw new BadRequestException("Toutes les notes doivent etre validees avant verrouillage.");
+        }
+
+        grades.stream()
+                .filter(grade -> currentStatus(grade) == GradeStatus.VALIDATED)
+                .forEach(grade -> grade.setStatus(GradeStatus.LOCKED));
+
+        List<Grade> saved = gradeRepository.saveAll(grades);
+        businessAuditService.record("GRADE_BATCH_LOCKED", "academic_grade", request.getClasseId());
+        return gradeMapper.toResponseDto(saved);
+    }
+
+    @Transactional
+    @CacheEvict(value = "grades", allEntries = true)
+    public List<GradeResponseDTO> unlockGradesByClass(GradeBatchStatusRequest request) {
+        requireUnlockJustification(request);
+        List<Grade> grades = findMatchingGrades(request);
+        ensureGradesFound(grades);
+
+        grades.stream()
+                .filter(grade -> currentStatus(grade) == GradeStatus.LOCKED)
+                .forEach(grade -> grade.setStatus(GradeStatus.VALIDATED));
+
+        List<Grade> saved = gradeRepository.saveAll(grades);
+        businessAuditService.record("GRADE_BATCH_UNLOCKED", "academic_grade", request.getClasseId());
+        return gradeMapper.toResponseDto(saved);
+    }
     @Transactional
     @CacheEvict(value = "grades", allEntries = true)
     public List<GradeResponseDTO> addBulkGrades(List<GradeCreateRequestDTO> grades) {
@@ -127,6 +223,7 @@ public class GradeService {
         }
 
         List<Grade> savedGrades = gradeRepository.saveAll(entities);
+        savedGrades.forEach(saved -> businessAuditService.record("GRADE_CREATED", "academic_grade", saved.getId()));
         List<GradeResponseDTO> responses = savedGrades.stream()
                 .map(gradeMapper::toResponseDto)
                 .collect(Collectors.toList());
@@ -275,6 +372,70 @@ public class GradeService {
         return report;
     }
 
+    private GradeCreateRequestDTO toGradeCreateRequest(BulkGradeCreateRequest request, BulkGradeItemRequest item) {
+        GradeCreateRequestDTO dto = new GradeCreateRequestDTO();
+        dto.setStudentId(item.getStudentId());
+        dto.setClasseId(request.getClasseId());
+        dto.setSubjectId(request.getSubjectId());
+        dto.setSequenceId(request.getSequenceId());
+        dto.setTrimestreId(request.getTrimestreId());
+        dto.setScore(item.getScore());
+        dto.setCoefficient(item.getCoefficient());
+        dto.setPeriod(request.getPeriod());
+        dto.setAssessmentDate(request.getAssessmentDate());
+        dto.setComments(item.getComments());
+        return dto;
+    }
+
+    private void ensureGradeEditable(Grade grade) {
+        GradeStatus status = currentStatus(grade);
+        if (status == GradeStatus.LOCKED) {
+            throw new BadRequestException("Impossible de modifier une note verrouillee.");
+        }
+        if (status == GradeStatus.VALIDATED) {
+            throw new BadRequestException("Impossible de modifier une note deja validee.");
+        }
+    }
+
+    private List<Grade> findMatchingGrades(GradeBatchStatusRequest request) {
+        validateBatchRequest(request);
+        return gradeRepository.findByClasseId(request.getClasseId()).stream()
+                .filter(grade -> request.getSubjectId() == null
+                        || grade.getSubject() != null && request.getSubjectId().equals(grade.getSubject().getId()))
+                .filter(grade -> request.getSequenceId() == null
+                        || grade.getSequence() != null && request.getSequenceId().equals(grade.getSequence().getId()))
+                .filter(grade -> periodMatches(grade, request.getPeriod()))
+                .collect(Collectors.toList());
+    }
+
+    private void validateBatchRequest(GradeBatchStatusRequest request) {
+        if (request == null || request.getClasseId() == null || request.getClasseId() <= 0) {
+            throw new BadRequestException("La classe est obligatoire pour ce traitement.");
+        }
+        if (request.getSubjectId() != null && request.getSubjectId() <= 0) {
+            throw new BadRequestException("L'identifiant de la matiere doit etre positif.");
+        }
+        if (request.getSequenceId() != null && request.getSequenceId() <= 0) {
+            throw new BadRequestException("L'identifiant de la sequence doit etre positif.");
+        }
+    }
+
+    private void ensureGradesFound(List<Grade> grades) {
+        if (grades.isEmpty()) {
+            throw new ResourceNotFoundException("Aucune note trouvee pour ces criteres");
+        }
+    }
+
+    private void requireUnlockJustification(GradeBatchStatusRequest request) {
+        validateBatchRequest(request);
+        if (!hasText(request.getJustification())) {
+            throw new BadRequestException("Une justification est obligatoire pour deverrouiller des notes.");
+        }
+    }
+
+    private GradeStatus currentStatus(Grade grade) {
+        return grade.getStatus() == null ? GradeStatus.DRAFT : grade.getStatus();
+    }
     private void validateRequest(GradeCreateRequestDTO dto, Long currentGradeId) {
         List<String> errors = new ArrayList<>();
         if (dto == null) {
@@ -565,3 +726,6 @@ public class GradeService {
         return value != null && !value.isBlank();
     }
 }
+
+
+

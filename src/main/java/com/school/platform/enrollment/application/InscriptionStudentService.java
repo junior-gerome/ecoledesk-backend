@@ -1,9 +1,11 @@
 package com.school.platform.enrollment.application;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,12 +13,15 @@ import com.school.platform.shared.domain.exception.BadRequestException;
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import com.school.platform.academic.application.dto.ClasseRoomStudentCountDTO;
 import com.school.platform.enrollment.application.dto.InscriptionStudentDTO;
+import com.school.platform.enrollment.application.dto.PreinscriptionStatusResponse;
 import com.school.platform.academic.application.dto.SectionStudentCountDTO;
 import com.school.platform.enrollment.application.dto.StudentDTO;
 import com.school.platform.enrollment.application.mapper.InscriptionStudentMapper;
 import com.school.platform.academic.domain.model.AnneeScolaire;
 import com.school.platform.academic.domain.model.ClasseRoom;
 import com.school.platform.enrollment.domain.model.InscriptionStudent;
+import com.school.platform.enrollment.domain.model.PreinscriptionStatus;
+import com.school.platform.billing.domain.model.TypePaiement;
 import com.school.platform.billing.domain.model.Montant;
 import com.school.platform.academic.domain.model.Section;
 import com.school.platform.enrollment.domain.model.Student;
@@ -24,8 +29,10 @@ import com.school.platform.academic.infrastructure.persistence.AnneeScolaireRepo
 import com.school.platform.academic.infrastructure.persistence.ClasseRoomRepository;
 import com.school.platform.enrollment.infrastructure.persistence.InscriptionStudentRepository;
 import com.school.platform.billing.infrastructure.persistence.MontantRepository;
+import com.school.platform.billing.infrastructure.persistence.PaiementRepository;
 import com.school.platform.academic.infrastructure.persistence.SectionRepository;
 import com.school.platform.enrollment.infrastructure.persistence.StudentRepository;
+import com.school.platform.shared.application.BusinessAuditService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,17 +47,22 @@ public class InscriptionStudentService {
     private final StudentRepository studentRepository;
     private final ClasseRoomRepository classeRoomRepository;
     private final MontantRepository montantRepository;
+    private final PaiementRepository paiementRepository;
     private final AnneeScolaireRepository anneeScolaireRepository;
     private final SectionRepository sectionRepository;
     private final StudentService studentService;
+    private final BusinessAuditService businessAuditService;
     private final InscriptionStudentMapper mapper;
+
+    @Value("${school.preinscription.validation.requires-payment:false}")
+    private boolean validationRequiresPreinscriptionPayment;
 
     public InscriptionStudentDTO createPreinscription(InscriptionStudentDTO dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Les informations de la preinscription sont requises.");
         }
 
-        dto.setStatutPreinscription("EN_ATTENTE");
+        dto.setStatutPreinscription(PreinscriptionStatus.EN_ATTENTE);
         if (dto.getDatePreinscription() == null) {
             dto.setDatePreinscription(LocalDate.now());
         }
@@ -58,7 +70,9 @@ public class InscriptionStudentService {
             dto.setDateInscription(dto.getDatePreinscription());
         }
 
-        return createInscription(dto);
+        InscriptionStudentDTO created = createInscription(dto);
+        businessAuditService.record("PREINSCRIPTION_CREATED", "inscription_student", created.getId());
+        return created;
     }
 
     public InscriptionStudentDTO createInscription(InscriptionStudentDTO dto) {
@@ -240,6 +254,89 @@ public class InscriptionStudentService {
                 .collect(Collectors.toList());
     }
 
+    public PreinscriptionStatusResponse validatePreinscription(Long id) {
+        InscriptionStudent inscription = findPreinscriptionForDecision(id);
+        ensureDecisionAllowed(inscription, PreinscriptionStatus.VALIDEE);
+        if (validationRequiresPreinscriptionPayment
+                && !paiementRepository.existsByInscriptionStudentIdAndTypePaiementAndCancelledAtIsNull(
+                        id, TypePaiement.FRAIS_PREINSCRIPTION)) {
+            throw new BadRequestException("Un paiement de preinscription est obligatoire avant validation.");
+        }
+
+        applyPreinscriptionDecision(inscription, PreinscriptionStatus.VALIDEE, null);
+        InscriptionStudent saved = inscriptionStudentRepository.save(inscription);
+        businessAuditService.record("PREINSCRIPTION_VALIDATED", "inscription_student", saved.getId());
+        businessAuditService.record("INSCRIPTION_CONFIRMED", "inscription_student", saved.getId());
+        return toStatusResponse(saved);
+    }
+
+    public PreinscriptionStatusResponse rejectPreinscription(Long id, String justification) {
+        InscriptionStudent inscription = findPreinscriptionForDecision(id);
+        ensureDecisionAllowed(inscription, PreinscriptionStatus.REFUSEE);
+        String reason = requireDecisionReason(justification);
+        applyPreinscriptionDecision(inscription, PreinscriptionStatus.REFUSEE, reason);
+        InscriptionStudent saved = inscriptionStudentRepository.save(inscription);
+        businessAuditService.record("PREINSCRIPTION_REJECTED", "inscription_student", saved.getId());
+        return toStatusResponse(saved);
+    }
+
+    public PreinscriptionStatusResponse cancelPreinscription(Long id, String justification) {
+        InscriptionStudent inscription = findPreinscriptionForDecision(id);
+        ensureDecisionAllowed(inscription, PreinscriptionStatus.ANNULEE);
+        String reason = requireDecisionReason(justification);
+        applyPreinscriptionDecision(inscription, PreinscriptionStatus.ANNULEE, reason);
+        InscriptionStudent saved = inscriptionStudentRepository.save(inscription);
+        businessAuditService.record("PREINSCRIPTION_CANCELLED", "inscription_student", saved.getId());
+        return toStatusResponse(saved);
+    }
+
+    private InscriptionStudent findPreinscriptionForDecision(Long id) {
+        return inscriptionStudentRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Preinscription", "id", id));
+    }
+
+    private void ensureDecisionAllowed(InscriptionStudent inscription, PreinscriptionStatus targetStatus) {
+        PreinscriptionStatus currentStatus = inscription.getStatutPreinscription();
+        if (currentStatus == null) {
+            currentStatus = PreinscriptionStatus.INSCRITE;
+        }
+        if (currentStatus != PreinscriptionStatus.EN_ATTENTE && currentStatus != PreinscriptionStatus.BROUILLON) {
+            throw new BadRequestException("Transition de preinscription interdite depuis le statut " + currentStatus + ".");
+        }
+        if (targetStatus == PreinscriptionStatus.VALIDEE
+                && (inscription.getStudent() == null || inscription.getClasseRoom() == null || inscription.getAnneeScolaire() == null)) {
+            throw new BadRequestException("La preinscription ne contient pas toutes les informations necessaires a la validation.");
+        }
+    }
+
+    private void applyPreinscriptionDecision(InscriptionStudent inscription, PreinscriptionStatus status, String reason) {
+        inscription.setStatutPreinscription(status);
+        inscription.setPreinscriptionDecisionReason(reason);
+        inscription.setPreinscriptionDecisionAt(LocalDateTime.now());
+        inscription.setPreinscriptionDecisionBy(businessAuditService.currentUserId().orElse(null));
+    }
+
+    private String requireDecisionReason(String justification) {
+        if (justification == null || justification.isBlank()) {
+            throw new BadRequestException("Une justification est obligatoire pour cette decision.");
+        }
+        String reason = justification.trim();
+        if (reason.length() > 500) {
+            throw new BadRequestException("La justification ne doit pas depasser 500 caracteres.");
+        }
+        return reason;
+    }
+
+    private PreinscriptionStatusResponse toStatusResponse(InscriptionStudent inscription) {
+        return PreinscriptionStatusResponse.builder()
+                .id(inscription.getId())
+                .studentId(inscription.getStudent() == null ? null : inscription.getStudent().getId())
+                .status(inscription.getStatutPreinscription())
+                .reason(inscription.getPreinscriptionDecisionReason())
+                .changedBy(inscription.getPreinscriptionDecisionBy())
+                .changedAt(inscription.getPreinscriptionDecisionAt())
+                .build();
+    }
     private void validateSectionConsistency(Long requestedSectionId, ClasseRoom selectedClasse) {
         if (requestedSectionId == null) {
             return;
@@ -259,8 +356,8 @@ public class InscriptionStudentService {
             return;
         }
 
-        long currentCount = inscriptionStudentRepository.countByClasseRoomIdAndAnneeScolaireId(
-                selectedClasse.getId(), schoolYearId);
+        long currentCount = inscriptionStudentRepository.countByClasseRoomIdAndAnneeScolaireIdAndStatutPreinscriptionIn(
+                selectedClasse.getId(), schoolYearId, activePreinscriptionStatuses());
         if (currentCount >= selectedClasse.getCapacity()) {
             throw new BadRequestException("La classe selectionnee a deja atteint sa capacite maximale.");
         }
@@ -280,8 +377,8 @@ public class InscriptionStudentService {
 
         for (Student duplicate : possibleDuplicates) {
             if (duplicate.getId() != null
-                    && inscriptionStudentRepository.findByStudentIdAndAnneeScolaireId(
-                            duplicate.getId(), schoolYearId).isPresent()) {
+                    && inscriptionStudentRepository.existsByStudentIdAndAnneeScolaireIdAndStatutPreinscriptionIn(
+                            duplicate.getId(), schoolYearId, activePreinscriptionStatuses())) {
                 throw new BadRequestException(
                         "Un eleve avec les memes informations est deja inscrit ou preinscrit pour cette annee scolaire.");
             }
@@ -290,11 +387,20 @@ public class InscriptionStudentService {
 
     private void validateStudentNotAlreadyEnrolled(Long studentId, Long schoolYearId) {
         if (studentId != null
-                && inscriptionStudentRepository.existsByStudentIdAndAnneeScolaireId(studentId, schoolYearId)) {
+                && inscriptionStudentRepository.existsByStudentIdAndAnneeScolaireIdAndStatutPreinscriptionIn(
+                        studentId, schoolYearId, activePreinscriptionStatuses())) {
             throw new BadRequestException("Cet eleve est deja inscrit ou preinscrit pour cette annee scolaire.");
         }
     }
 
+
+    private List<PreinscriptionStatus> activePreinscriptionStatuses() {
+        return List.of(
+                PreinscriptionStatus.BROUILLON,
+                PreinscriptionStatus.EN_ATTENTE,
+                PreinscriptionStatus.VALIDEE,
+                PreinscriptionStatus.INSCRITE);
+    }
     private void requireId(Long value, String message) {
         if (value == null || value <= 0) {
             throw new BadRequestException(message);

@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -47,19 +48,29 @@ public class InscriptionStudent {
     @Column(name = "date_inscription", nullable = false)
     private LocalDate DateInscription;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "statut_preinscription", nullable = false, length = 30)
-    private String statutPreinscription = "INSCRITE";
+    private PreinscriptionStatus statutPreinscription = PreinscriptionStatus.VALIDEE;
 
     @Column(name = "date_preinscription")
     private LocalDate datePreinscription;
+
+    @Column(name = "preinscription_decision_reason", length = 500)
+    private String preinscriptionDecisionReason;
+
+    @Column(name = "preinscription_decision_by")
+    private Long preinscriptionDecisionBy;
+
+    @Column(name = "preinscription_decision_at")
+    private LocalDateTime preinscriptionDecisionAt;
 
     @Version
     private Long version;
 
     @PrePersist
     void applyDefaults() {
-        if (statutPreinscription == null || statutPreinscription.isBlank()) {
-            statutPreinscription = "INSCRITE";
+        if (statutPreinscription == null) {
+            statutPreinscription = PreinscriptionStatus.VALIDEE;
         }
         if (datePreinscription == null) {
             datePreinscription = DateInscription;

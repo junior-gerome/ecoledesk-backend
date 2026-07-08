@@ -6,16 +6,21 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.school.platform.shared.domain.exception.BadRequestException;
-import com.school.platform.shared.domain.exception.ResourceNotFoundException;
+import com.school.platform.academic.application.dto.AffectationCreateRequest;
 import com.school.platform.academic.application.dto.AffectationDTO;
+import com.school.platform.academic.application.dto.AffectationResponse;
+import com.school.platform.academic.application.dto.AffectationUpdateRequest;
 import com.school.platform.academic.domain.model.Affectation;
 import com.school.platform.academic.infrastructure.persistence.AffectationRepository;
 import com.school.platform.academic.infrastructure.persistence.AnneeScolaireRepository;
 import com.school.platform.academic.infrastructure.persistence.ClasseRoomRepository;
+import com.school.platform.academic.infrastructure.persistence.GradeRepository;
 import com.school.platform.academic.infrastructure.persistence.SubjectRepository;
 import com.school.platform.academic.infrastructure.persistence.TeacherRepository;
 import com.school.platform.academic.infrastructure.persistence.TypeAffectationRepository;
+import com.school.platform.shared.application.BusinessAuditService;
+import com.school.platform.shared.domain.exception.BadRequestException;
+import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +35,28 @@ public class AffectationService {
     private final SubjectRepository subjectRepository;
     private final AnneeScolaireRepository anneeScolaireRepository;
     private final TypeAffectationRepository typeAffectationRepository;
+    private final GradeRepository gradeRepository;
+    private final BusinessAuditService businessAuditService;
 
     @Transactional(readOnly = true)
     public List<AffectationDTO> getAllAffectations() {
         return affectationRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AffectationResponse> getAllAffectationResponses() {
+        return affectationRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public AffectationResponse getAffectationById(Long id) {
+        return affectationRepository.findById(id)
+                .map(this::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Affectation", "id", id));
     }
 
     @Transactional(readOnly = true)
@@ -46,9 +67,30 @@ public class AffectationService {
     }
 
     @Transactional(readOnly = true)
+    public List<AffectationResponse> getAffectationResponsesByTeacher(Long teacherId) {
+        return affectationRepository.findByTeacherId(teacherId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<AffectationDTO> getAffectationsByClasse(Long classeId) {
         return affectationRepository.findByClasseId(classeId).stream()
                 .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AffectationResponse> getAffectationResponsesByClasse(Long classeId) {
+        return affectationRepository.findByClasseId(classeId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AffectationResponse> getAffectationResponsesBySchoolYear(Long schoolYearId) {
+        return affectationRepository.findByAnneeScolaireId(schoolYearId).stream()
+                .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -57,7 +99,14 @@ public class AffectationService {
         validateAffectation(dto, null);
         Affectation affectation = new Affectation();
         updateAffectationFromDTO(affectation, dto);
-        return convertToDTO(affectationRepository.save(affectation));
+        Affectation saved = affectationRepository.save(affectation);
+        businessAuditService.record("AFFECTATION_CREATED", "affectation", saved.getId());
+        return convertToDTO(saved);
+    }
+
+    @Transactional
+    public AffectationResponse createAffectation(AffectationCreateRequest request) {
+        return toResponseFromDto(createAffectation(toDto(request)));
     }
 
     @Transactional
@@ -67,15 +116,28 @@ public class AffectationService {
 
         validateAffectation(dto, id);
         updateAffectationFromDTO(affectation, dto);
-        return convertToDTO(affectationRepository.save(affectation));
+        Affectation saved = affectationRepository.save(affectation);
+        businessAuditService.record("AFFECTATION_UPDATED", "affectation", saved.getId());
+        return convertToDTO(saved);
+    }
+
+    @Transactional
+    public AffectationResponse updateAffectation(Long id, AffectationUpdateRequest request) {
+        return toResponseFromDto(updateAffectation(id, toDto(request)));
     }
 
     @Transactional
     public void deleteAffectation(Long id) {
-        if (!affectationRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Affectation", "id", id);
+        Affectation affectation = affectationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Affectation", "id", id));
+
+        if (gradeRepository.existsByClasseIdAndSubjectId(
+                affectation.getClasse().getId(), affectation.getSubject().getId())) {
+            throw new BadRequestException("Impossible de supprimer une affectation utilisee par des notes.");
         }
+
         affectationRepository.deleteById(id);
+        businessAuditService.record("AFFECTATION_DELETED", "affectation", id);
     }
 
     private void validateAffectation(AffectationDTO dto, Long currentId) {
@@ -140,6 +202,49 @@ public class AffectationService {
                 .nameSubject(affectation.getSubject().getNameSubject())
                 .libelleAnneeScolaire(affectation.getAnneeScolaire().getLibelleAnneeScolaire())
                 .build();
+    }
+
+    private AffectationDTO toDto(AffectationCreateRequest request) {
+        if (request == null) {
+            throw new BadRequestException("Les informations de l'affectation sont requises.");
+        }
+        return AffectationDTO.builder()
+                .typeCode(request.getTypeCode())
+                .teachertId(request.getTeacherId())
+                .classeId(request.getClasseId())
+                .subjectId(request.getSubjectId())
+                .anneeScolaireId(request.getAnneeScolaireId())
+                .dateDebut(request.getDateDebut())
+                .dateFin(request.getDateFin())
+                .build();
+    }
+
+    private AffectationResponse toResponseFromDto(AffectationDTO dto) {
+        Affectation affectation = affectationRepository.findById(dto.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Affectation", "id", dto.getId()));
+        return toResponse(affectation);
+    }
+
+    private AffectationResponse toResponse(Affectation affectation) {
+        return AffectationResponse.builder()
+                .id(affectation.getId())
+                .typeCode(affectation.getTypeCode())
+                .dateDebut(affectation.getDateDebut())
+                .dateFin(affectation.getDateFin())
+                .teacherId(affectation.getTeacher().getId())
+                .classeId(affectation.getClasse().getId())
+                .subjectId(affectation.getSubject().getId())
+                .anneeScolaireId(affectation.getAnneeScolaire().getId())
+                .teacherName((safe(affectation.getTeacher().getLastnameTeacher()) + " "
+                        + safe(affectation.getTeacher().getFirstnameTeacher())).trim())
+                .classeName(affectation.getClasse().getNameClasse())
+                .subjectName(affectation.getSubject().getNameSubject())
+                .libelleAnneeScolaire(affectation.getAnneeScolaire().getLibelleAnneeScolaire())
+                .build();
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
     }
 
     private void requireId(Long value, String message) {
