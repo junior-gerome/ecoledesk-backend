@@ -1,6 +1,6 @@
 package com.school.platform.enrollment.domain.model;
 
-import com.school.platform.shared.domain.BaseEntity;
+import com.school.platform.identityaccess.domain.model.BaseEntity;
 
 import com.school.platform.identityaccess.domain.model.Person;
 
@@ -45,6 +45,9 @@ public class Student extends BaseEntity {
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<StudentParent> studentParents = new HashSet<>();
+
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<StudentGuardian> guardians = new HashSet<>();
 
     public String getFirstNameStudent() {
         return person == null ? null : person.getFirstName();

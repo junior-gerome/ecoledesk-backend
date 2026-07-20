@@ -7,12 +7,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.school.platform.SchoolPlatformApplication;
-import com.school.platform.identityaccess.application.UserAccountService;
-import com.school.platform.identityaccess.web.UserAccountController;
+import com.school.platform.identityaccess.application.UserAccountManagementService;
+import com.school.platform.identityaccess.web.UserManagementController;
 
 class ModularMonolithArchitectureTest {
 
@@ -24,10 +26,8 @@ class ModularMonolithArchitectureTest {
     }
 
     @Test
-    void legacyGestionUserSourcesStayOutsideMainBuild() throws IOException {
-        String buildFile = Files.readString(Path.of("build.gradle"));
-
-        assertThat(buildFile).contains("exclude 'com/school/gestionuser/**'");
+    void legacyGestionUserModuleIsRemoved() {
+        assertThat(Path.of("src/main/java/com/school/gestionuser")).doesNotExist();
     }
 
     @Test
@@ -44,15 +44,12 @@ class ModularMonolithArchitectureTest {
     }
 
     @Test
-    void legacyUserAccountApiRequiresExplicitFeatureFlag() {
-        assertLegacyFlag(UserAccountController.class.getAnnotation(ConditionalOnProperty.class));
-        assertLegacyFlag(UserAccountService.class.getAnnotation(ConditionalOnProperty.class));
-    }
+    void canonicalUserAccountApiIsActive() {
+        assertThat(UserAccountManagementService.class.isAnnotationPresent(Service.class)).isTrue();
+        assertThat(UserManagementController.class.isAnnotationPresent(RestController.class)).isTrue();
 
-    private void assertLegacyFlag(ConditionalOnProperty annotation) {
-        assertThat(annotation).isNotNull();
-        assertThat(annotation.name()).containsExactly("school.identity.legacy-user-account.enabled");
-        assertThat(annotation.havingValue()).isEqualTo("true");
+        RequestMapping mapping = UserManagementController.class.getAnnotation(RequestMapping.class);
+        assertThat(mapping.value()).contains("/user-accounts");
     }
 
     private boolean contains(Path path, String text) {

@@ -1,7 +1,7 @@
 package com.school.platform.shared.application;
 
-import com.school.platform.identityaccess.domain.model.Users;
-import com.school.platform.identityaccess.infrastructure.persistence.UsersRepository;
+import com.school.platform.identityaccess.domain.model.UserAccount;
+import com.school.platform.identityaccess.infrastructure.persistence.UserAccountRepository;
 import com.school.platform.reporting.domain.model.LogActivite;
 import com.school.platform.reporting.infrastructure.persistence.LogActiviteRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,41 +16,32 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class BusinessAuditService {
-
     private final LogActiviteRepository logActiviteRepository;
-    private final UsersRepository usersRepository;
+    private final UserAccountRepository userAccountRepository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(String action, String tableCible, Long referenceId) {
         currentUserId().ifPresent(userId -> {
             try {
-                Users user = usersRepository.findById(userId).orElse(null);
-                if (user == null) {
-                    return;
-                }
-
+                UserAccount account = userAccountRepository.findById(userId).orElse(null);
+                if (account == null) return;
                 LogActivite log = new LogActivite();
-                log.setUsers(user);
+                log.setUserAccount(account);
                 log.setAction(action);
                 log.setTableCible(tableCible);
                 log.setReferenceId(referenceId);
                 logActiviteRepository.save(log);
-            } catch (RuntimeException ex) {
-                log.warn("Business audit failed for action {} on {}#{}: {}",
-                        action, tableCible, referenceId, ex.getMessage());
+            } catch (RuntimeException exception) {
+                log.warn("Business audit failed for action {} on {}#{}: {}", action, tableCible, referenceId, exception.getMessage());
             }
         });
     }
 
     public java.util.Optional<Long> currentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return java.util.Optional.empty();
-        }
+        if (authentication == null || !authentication.isAuthenticated()) return java.util.Optional.empty();
         Object principal = authentication.getPrincipal();
-        if (principal instanceof com.school.platform.identityaccess.infrastructure.security.AuthenticatedUserPrincipal user) {
-            return java.util.Optional.ofNullable(user.id());
-        }
+        if (principal instanceof com.school.platform.identityaccess.infrastructure.security.AuthenticatedUserPrincipal user) return java.util.Optional.ofNullable(user.id());
         return java.util.Optional.empty();
     }
 }

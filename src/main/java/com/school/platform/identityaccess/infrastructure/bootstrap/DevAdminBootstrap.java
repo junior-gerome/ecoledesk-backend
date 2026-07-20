@@ -1,6 +1,6 @@
 package com.school.platform.identityaccess.infrastructure.bootstrap;
 
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -10,10 +10,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.school.platform.identityaccess.domain.model.RoleType;
-import com.school.platform.identityaccess.domain.model.Users;
-import com.school.platform.identityaccess.domain.model.UsersProfil;
-import com.school.platform.identityaccess.infrastructure.persistence.UsersRepository;
+import com.school.platform.identityaccess.domain.model.Person;
+import com.school.platform.identityaccess.domain.model.Role;
+import com.school.platform.identityaccess.domain.model.UserAccount;
+import com.school.platform.identityaccess.domain.model.valueobject.Email;
+import com.school.platform.identityaccess.infrastructure.persistence.RoleRepository;
+import com.school.platform.identityaccess.infrastructure.persistence.UserAccountRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,46 +24,35 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class DevAdminBootstrap implements ApplicationRunner {
-
-    private final UsersRepository usersRepository;
+    private final UserAccountRepository userAccountRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.bootstrap.admin.enabled:false}")
-    private boolean enabled;
-
-    @Value("${app.bootstrap.admin.email:}")
-    private String adminEmail;
-
-    @Value("${app.bootstrap.admin.password:}")
-    private String adminPassword;
+    @Value("${app.bootstrap.admin.enabled:false}") private boolean enabled;
+    @Value("${app.bootstrap.admin.email:}") private String adminEmail;
+    @Value("${app.bootstrap.admin.password:}") private String adminPassword;
 
     @Override
     @Transactional
-    public void run(ApplicationArguments args) {
-        if (!enabled || usersRepository.count() > 0) {
-            return;
-        }
-
+    public void run(ApplicationArguments arguments) {
+        if (!enabled) return;
         if (!StringUtils.hasText(adminEmail) || !StringUtils.hasText(adminPassword)) {
-            throw new IllegalStateException(
-                    "Bootstrap admin is enabled, but app.bootstrap.admin.email/password are not configured");
+            throw new IllegalStateException("Bootstrap admin is enabled, but app.bootstrap.admin.email/password are not configured");
         }
-
-        Users user = new Users();
-        user.setUsername(adminEmail);
-        user.setPassword(passwordEncoder.encode(adminPassword));
-        user.setActif(true);
-
-        UsersProfil profile = new UsersProfil();
-        profile.setEmailUser(adminEmail);
-        profile.setFirstName("Admin");
-        profile.setLastName("System");
-        profile.setRoleType(RoleType.ADMIN);
-        profile.setUser(user);
-
-        user.setProfils(List.of(profile));
-        usersRepository.save(user);
-
+        if (userAccountRepository.existsByUsernameIgnoreCase(adminEmail)) return;
+        Role admin = roleRepository.findByCodeIgnoreCase("ADMIN")
+                .orElseThrow(() -> new IllegalStateException("Le role ADMIN doit etre initialise avant le bootstrap"));
+        Person person = new Person();
+        person.setFirstName("Admin");
+        person.setLastName("System");
+        person.setEmail(Email.of(adminEmail));
+        UserAccount account = new UserAccount();
+        account.setPerson(person);
+        account.setUsername(adminEmail);
+        account.setPassword(passwordEncoder.encode(adminPassword));
+        account.setEnabled(true);
+        account.setRoles(Set.of(admin));
+        userAccountRepository.save(account);
         log.warn("Created development admin account: {}", adminEmail);
     }
 }

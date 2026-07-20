@@ -1,7 +1,7 @@
 package com.school.platform.identityaccess.application;
 
 import com.school.platform.identityaccess.domain.model.AuthenticationAuditEvent;
-import com.school.platform.identityaccess.domain.model.Users;
+import com.school.platform.identityaccess.domain.model.UserAccount;
 import com.school.platform.identityaccess.infrastructure.persistence.AuthenticationAuditEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +17,8 @@ public class AuthenticationAuditService {
     private final AuthenticationAuditEventRepository auditEventRepository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void recordLoginSuccess(Users user, String clientIp) {
-        record(user == null ? null : user.getId(), user == null ? null : user.getUsername(),
-                "LOGIN_SUCCESS", true, null, clientIp);
+    public void recordLoginSuccess(UserAccount user, String clientIp) {
+        record(user == null ? null : user.getId(), user == null ? null : user.getUsername(), "LOGIN_SUCCESS", true, null, clientIp);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -28,9 +27,8 @@ public class AuthenticationAuditService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void recordRefreshSuccess(Users user, String clientIp) {
-        record(user == null ? null : user.getId(), user == null ? null : user.getUsername(),
-                "REFRESH_SUCCESS", true, null, clientIp);
+    public void recordRefreshSuccess(UserAccount user, String clientIp) {
+        record(user == null ? null : user.getId(), user == null ? null : user.getUsername(), "REFRESH_SUCCESS", true, null, clientIp);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -39,13 +37,11 @@ public class AuthenticationAuditService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void recordRefreshReuse(Users user, String clientIp) {
-        record(user == null ? null : user.getId(), user == null ? null : user.getUsername(),
-                "REFRESH_REUSE", false, "Refresh token reuse detected", clientIp);
+    public void recordRefreshReuse(UserAccount user, String clientIp) {
+        record(user == null ? null : user.getId(), user == null ? null : user.getUsername(), "REFRESH_REUSE", false, "Refresh token reuse detected", clientIp);
     }
 
-    private void record(Long userId, String username, String eventType,
-                        boolean successful, String reason, String clientIp) {
+    private void record(Long userId, String username, String eventType, boolean successful, String reason, String clientIp) {
         try {
             AuthenticationAuditEvent event = new AuthenticationAuditEvent();
             event.setUserId(userId);
@@ -61,9 +57,6 @@ public class AuthenticationAuditService {
     }
 
     private String truncate(String value, int maxLength) {
-        if (value == null || value.length() <= maxLength) {
-            return value;
-        }
-        return value.substring(0, maxLength);
+        return value == null || value.length() <= maxLength ? value : value.substring(0, maxLength);
     }
 }

@@ -10,9 +10,9 @@ import com.school.platform.enrollment.domain.model.Parent;
 
 public interface ParentRepository extends JpaRepository<Parent, Long> {
 
-    @Query("select p from Parent p join p.person person where lower(person.email) = lower(:email)")
+    @Query("select p from Parent p join p.person person where lower(person.email.value) = lower(:email)")
     Optional<Parent> findByEmail(@Param("email") String email);
 
-    @Query("select p from Parent p join p.person person where person.phone = :phoneNumber")
+    @Query("select p from Parent p join p.person person where person.phone.value = :phoneNumber")
     Optional<Parent> findByPhoneNumber(@Param("phoneNumber") String phoneNumber);
 }

@@ -16,7 +16,6 @@ java {
 sourceSets {
     main {
         java {
-            exclude 'com/school/gestionuser/**' // legacy sandbox: keep outside the modular monolith build
         }
     }
 }
@@ -30,7 +29,7 @@ configurations {
     }
 
     all {
-        exclude group: 'commons-logging', module: 'commons-logging' // éviter conflit avec spring-boot
+        exclude group: 'commons-logging', module: 'commons-logging' // Ã©viter conflit avec spring-boot
     }
 }
 
@@ -82,15 +81,15 @@ dependencies {
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-mysql'
 
-    // Base de données
+    // Base de donnÃ©es
     runtimeOnly 'com.mysql:mysql-connector-j'
 
-    // Sécurité - JWT (JJWT)
+    // SÃ©curitÃ© - JWT (JJWT)
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    // Validation Jakarta (optionnel : déjà inclus partiellement dans starter-validation)
+    // Validation Jakarta (optionnel : dÃ©jÃ  inclus partiellement dans starter-validation)
     implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
     implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
 
@@ -98,14 +97,14 @@ dependencies {
     implementation 'org.apache.poi:poi:5.2.3'
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
 
-    // PDF avec iText 7 (dépendances groupées ici)
+    // PDF avec iText 7 (dÃ©pendances groupÃ©es ici)
     implementation 'com.itextpdf:itext7-core:7.2.5'
     implementation 'com.itextpdf:itextpdf:5.5.13.3'
 
     // Firebase Admin SDK
     implementation 'com.google.firebase:firebase-admin:9.1.1'
 
-    // Redis Pool (nécessaire pour Lettuce ou Jedis)
+    // Redis Pool (nÃ©cessaire pour Lettuce ou Jedis)
     // implementation 'org.apache.commons:commons-pool2'
 
     // OpenAPI (Swagger avec Springdoc)

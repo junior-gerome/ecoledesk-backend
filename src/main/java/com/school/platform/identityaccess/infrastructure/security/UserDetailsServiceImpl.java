@@ -10,8 +10,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.school.platform.identityaccess.domain.model.Users;
-import com.school.platform.identityaccess.infrastructure.persistence.UsersRepository;
+import com.school.platform.identityaccess.domain.model.UserAccount;
+import com.school.platform.identityaccess.infrastructure.persistence.UserAccountRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,12 +19,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UsersRepository usersRepository;
+    private final UserAccountRepository userAccountRepository;
 
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Users user = usersRepository.findByUsername(username)
+        UserAccount user = userAccountRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         List<GrantedAuthority> authorities = user.getAuthorities().stream()
@@ -32,11 +32,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .collect(Collectors.toList());
 
         return new AuthenticatedUserPrincipal(
-                user.getId(),
-                user.getUsername(),
-                user.getPassword(),
-                user.isEnabled(),
-                authorities
-        );
+                user.getId(), user.getUsername(), user.getPassword(), user.isEnabled(), authorities);
     }
 }

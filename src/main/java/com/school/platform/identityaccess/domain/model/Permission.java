@@ -3,7 +3,6 @@ package com.school.platform.identityaccess.domain.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import com.school.platform.shared.domain.BaseEntity;
 
 @Entity
 @Table(name = "permissions")

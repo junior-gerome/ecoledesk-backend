@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,13 +37,13 @@ public class FileUploadController {
         }
     }
 
-    @GetMapping("/download/{type}/{fileName}")
+    @GetMapping("/download/{*fileUrl}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
-    public ResponseEntity<byte[]> downloadFile(
-            @PathVariable String type,
-            @PathVariable String fileName) {
+    public ResponseEntity<byte[]> downloadFile(@PathVariable String fileUrl) {
         try {
-            byte[] fileData = fileStorageService.loadFile(type + "/" + fileName);
+            String relativePath = fileUrl.startsWith("/") ? fileUrl.substring(1) : fileUrl;
+            byte[] fileData = fileStorageService.loadFile(relativePath);
+            String fileName = Paths.get(relativePath).getFileName().toString();
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")

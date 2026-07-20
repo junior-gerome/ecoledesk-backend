@@ -37,7 +37,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
             join s.person person
             where lower(person.lastName) = lower(:lastNameStudent)
               and lower(person.firstName) = lower(:firstNameStudent)
-              and person.birthDate = :dateOfBirth
+              and person.birthDate.value = :dateOfBirth
             """)
     List<Student> findByLastNameStudentIgnoreCaseAndFirstNameStudentIgnoreCaseAndDateOfBirth(
             @Param("lastNameStudent") String lastNameStudent,

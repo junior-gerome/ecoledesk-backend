@@ -37,7 +37,7 @@ public class AuditController {
     }
 
     private AuditLogDTO toDto(LogActivite log) {
-        String username = log.getUsers() != null ? log.getUsers().getUsername() : null;
+        String username = log.getUserAccount() != null ? log.getUserAccount().getUsername() : null;
         return new AuditLogDTO(
                 log.getId(),
                 username,

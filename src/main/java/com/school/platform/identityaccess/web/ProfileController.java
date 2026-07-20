@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.school.platform.identityaccess.application.dto.UsersDTO;
+import com.school.platform.identityaccess.application.dto.UserAccountSummaryDTO;
 import com.school.platform.identityaccess.application.dto.role.RoleFullDTO;
 import com.school.platform.identityaccess.application.RoleService;
-import com.school.platform.identityaccess.application.UsersService;
+import com.school.platform.identityaccess.application.UserAccountManagementService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class ProfileController {
 
     private final RoleService roleService;
-    private final UsersService usersService;
+    private final UserAccountManagementService usersService;
 
     @GetMapping
     public ResponseEntity<Page<RoleFullDTO>> findAll(Pageable pageable) {
@@ -62,14 +62,14 @@ public class ProfileController {
     }
 
     @PutMapping("/users/{userId}/role/{roleId}")
-    public ResponseEntity<UsersDTO> assignUserRole(
+    public ResponseEntity<UserAccountSummaryDTO> assignUserRole(
             @PathVariable Long userId,
             @PathVariable Long roleId) {
         return ResponseEntity.ok(usersService.assignRole(userId, roleId));
     }
 
     @DeleteMapping("/users/{userId}/role")
-    public ResponseEntity<UsersDTO> clearUserRole(@PathVariable Long userId) {
+    public ResponseEntity<UserAccountSummaryDTO> clearUserRole(@PathVariable Long userId) {
         return ResponseEntity.ok(usersService.clearDynamicRole(userId));
     }
 

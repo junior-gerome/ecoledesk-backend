@@ -95,6 +95,7 @@ public class TeacherService {
         teacher.setNiveau(dto.getNiveau());
         teacher.setAdress(dto.getAdress());
         teacher.setDateEmbauche(dto.getDateEmbauche());
+        teacher.setPhotoUrl(dto.getPhotoUrl());
     }
 
     private TeacherDTO convertToDTO(Teacher teacher) {
@@ -109,6 +110,7 @@ public class TeacherService {
         dto.setDateEmbauche(teacher.getDateEmbauche());
         dto.setPhoneNumber(teacher.getPhoneNumber());
         dto.setSpeciality(teacher.getSpeciality());
+        dto.setPhotoUrl(teacher.getPhotoUrl());
         return dto;
     }
 

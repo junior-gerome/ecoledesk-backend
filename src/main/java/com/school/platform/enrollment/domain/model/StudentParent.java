@@ -1,6 +1,6 @@
 package com.school.platform.enrollment.domain.model;
 
-import com.school.platform.shared.domain.BaseEntity;
+import com.school.platform.identityaccess.domain.model.BaseEntity;
 
 import com.school.platform.enrollment.domain.model.RelationshipType;
 import jakarta.persistence.*;
