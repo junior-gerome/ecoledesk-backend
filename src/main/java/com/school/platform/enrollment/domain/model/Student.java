@@ -10,17 +10,14 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
-
-import com.school.platform.enrollment.domain.model.Gender;
-import com.school.platform.enrollment.domain.model.RelationshipType;
 
 @Entity
 @Table(name = "students")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Student extends BaseEntity {
 
@@ -44,10 +41,7 @@ public class Student extends BaseEntity {
     private String ecolePrecedente;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<StudentParent> studentParents = new HashSet<>();
-
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<StudentGuardian> guardians = new HashSet<>();
+    private Set<StudentGuardian> studentGuardians = new HashSet<>();
 
     public String getFirstNameStudent() {
         return person == null ? null : person.getFirstName();
@@ -97,31 +91,34 @@ public class Student extends BaseEntity {
         this.admissionDate = registrationDate == null ? null : registrationDate.toLocalDate();
     }
 
-    public Parent getParent() {
-        return studentParents.stream()
+    /** Returns the primary legal guardian, or the first linked guardian. */
+    public Guardian getGuardian() {
+        return studentGuardians.stream()
+                .filter(StudentGuardian::isPrimaryContact)
                 .findFirst()
-                .map(StudentParent::getParent)
+                .or(() -> studentGuardians.stream().findFirst())
+                .map(StudentGuardian::getGuardian)
                 .orElse(null);
     }
 
-    public void setParent(Parent parent) {
-        if (parent == null) {
-            studentParents.clear();
+    /**
+     * Compatibility for the single-guardian student flow. More complete flows
+     * can add several {@link StudentGuardian} links directly.
+     */
+    public void setGuardian(Guardian guardian) {
+        studentGuardians.forEach(link -> link.getGuardian().getStudentGuardians().remove(link));
+        studentGuardians.clear();
+        if (guardian == null) {
             return;
         }
 
-        Optional<StudentParent> existing = studentParents.stream().findFirst();
-        StudentParent link = existing.orElseGet(() -> {
-            StudentParent studentParent = new StudentParent();
-            studentParent.setStudent(this);
-            studentParents.add(studentParent);
-            return studentParent;
-        });
-        link.setParent(parent);
-        if (link.getRelationshipType() == null) {
-            link.setRelationshipType(RelationshipType.GUARDIAN);
-        }
-        parent.getStudentParents().add(link);
+        StudentGuardian link = new StudentGuardian();
+        link.setStudent(this);
+        link.setGuardian(guardian);
+        link.setRelationshipType(RelationshipType.GUARDIAN);
+        link.setPrimaryContact(true);
+        studentGuardians.add(link);
+        guardian.getStudentGuardians().add(link);
     }
 
     private Person ensurePerson() {

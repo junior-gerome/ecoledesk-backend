@@ -8,7 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.school.platform.academic.application.dto.SubjectDTO;
-import com.school.platform.academic.application.SubjectService;
+import com.school.platform.academic.application.interfaces.SubjectService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

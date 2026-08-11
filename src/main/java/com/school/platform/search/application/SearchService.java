@@ -13,9 +13,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,18 +21,19 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.school.platform.academic.domain.model.ClasseRoom;
 import com.school.platform.academic.domain.model.Grade;
-import com.school.platform.enrollment.domain.model.InscriptionStudent;
+import com.school.platform.enrollment.domain.enrollment.Enrollment;
+import com.school.platform.enrollment.domain.enrollment.EnrollmentStatus;
 import com.school.platform.billing.domain.model.Paiement;
 import com.school.platform.search.domain.model.SearchFavorite;
 import com.school.platform.enrollment.domain.model.Student;
-import com.school.platform.academic.domain.model.Teacher;
+import com.school.platform.staff.domain.model.StaffMember;
 import com.school.platform.academic.infrastructure.persistence.ClasseRoomRepository;
 import com.school.platform.academic.infrastructure.persistence.GradeRepository;
-import com.school.platform.enrollment.infrastructure.persistence.InscriptionStudentRepository;
+import com.school.platform.enrollment.infrastructure.persistence.EnrollmentRepository;
 import com.school.platform.billing.infrastructure.persistence.PaiementRepository;
 import com.school.platform.search.infrastructure.persistence.SearchFavoriteRepository;
 import com.school.platform.enrollment.infrastructure.persistence.StudentRepository;
-import com.school.platform.academic.infrastructure.persistence.TeacherRepository;
+import com.school.platform.staff.infrastructure.persistence.StaffMemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -46,9 +45,9 @@ public class SearchService {
     private static final int BATCH_SIZE = 500;
 
     private final StudentRepository studentRepository;
-    private final InscriptionStudentRepository inscriptionStudentRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final ClasseRoomRepository classeRoomRepository;
-    private final TeacherRepository teacherRepository;
+    private final StaffMemberRepository teacherRepository;
     private final GradeRepository gradeRepository;
     private final PaiementRepository paiementRepository;
     private final SearchFavoriteRepository searchFavoriteRepository;
@@ -62,7 +61,7 @@ public class SearchService {
         String gender = normalized(criteria, "gender");
         Long classId = longValue(criteria.get("classId"));
         int limit = limit(criteria);
-        Map<Long, InscriptionStudent> enrollments = latestEnrollmentByStudent();
+        Map<Long, Enrollment> enrollments = latestEnrollmentByStudent();
 
         return studentRepository.findAll(PageRequest.of(0, limit)).stream()
                 .map(student -> studentRow(student, enrollments.get(student.getId())))
@@ -153,7 +152,7 @@ public class SearchService {
             return List.of();
         }
 
-        Map<Long, InscriptionStudent> enrollments = latestEnrollmentByStudent();
+        Map<Long, Enrollment> enrollments = latestEnrollmentByStudent();
         Stream<String> studentSuggestions = studentRepository.findAll(PageRequest.of(0, DEFAULT_LIMIT)).stream()
                 .map(student -> studentRow(student, enrollments.get(student.getId())))
                 .flatMap(row -> Stream.of(
@@ -199,27 +198,17 @@ public class SearchService {
         searchFavoriteRepository.deleteById(id);
     }
 
-    private Map<Long, InscriptionStudent> latestEnrollmentByStudent() {
-        return readAllInBatches(inscriptionStudentRepository).stream()
-                .filter(inscription -> inscription.getStudent() != null && inscription.getStudent().getId() != null)
+    private Map<Long, Enrollment> latestEnrollmentByStudent() {
+        return enrollmentRepository.findByStatus(EnrollmentStatus.CONFIRMED).stream()
+                .filter(e -> e.getStudent() != null && e.getStudent().getId() != null)
                 .collect(java.util.stream.Collectors.toMap(
-                        inscription -> inscription.getStudent().getId(),
-                        inscription -> inscription,
-                        this::latestEnrollment,
+                        e -> e.getStudent().getId(),
+                        e -> e,
+                        (left, right) -> left.getId() != null && right.getId() != null && left.getId() > right.getId() ? left : right,
                         LinkedHashMap::new));
     }
 
-    private InscriptionStudent latestEnrollment(InscriptionStudent left, InscriptionStudent right) {
-        if (left.getDateInscription() != null && right.getDateInscription() != null) {
-            return left.getDateInscription().isAfter(right.getDateInscription()) ? left : right;
-        }
-        if (left.getId() != null && right.getId() != null) {
-            return left.getId() > right.getId() ? left : right;
-        }
-        return right;
-    }
-
-    private Map<String, Object> studentRow(Student student, InscriptionStudent enrollment) {
+    private Map<String, Object> studentRow(Student student, Enrollment enrollment) {
         Map<String, Object> row = baseRow("student");
         row.put("id", student.getId());
         row.put("firstName", safe(student.getFirstNameStudent()));
@@ -228,8 +217,8 @@ public class SearchService {
         row.put("date", student.getRegistrationDate() == null ? null : student.getRegistrationDate().toString());
         row.put("status", Boolean.FALSE.equals(student.getActive()) ? "INACTIVE" : "ACTIVE");
 
-        if (enrollment != null && enrollment.getClasseRoom() != null) {
-            ClasseRoom classeRoom = enrollment.getClasseRoom();
+        if (enrollment != null && enrollment.getClassroom() != null) {
+            ClasseRoom classeRoom = enrollment.getClassroom();
             row.put("classId", classeRoom.getId());
             row.put("class", safe(classeRoom.getNameClasse()));
             row.put("level", safe(classeRoom.getLevel()));
@@ -244,7 +233,7 @@ public class SearchService {
         return row;
     }
 
-    private Map<String, Object> teacherRow(Teacher teacher) {
+    private Map<String, Object> teacherRow(StaffMember teacher) {
         Map<String, Object> row = baseRow("teacher");
         row.put("id", teacher.getId());
         row.put("firstName", safe(teacher.getFirstnameTeacher()));
@@ -282,9 +271,9 @@ public class SearchService {
         row.put("id", payment.getId());
         row.put("firstName", payment.getStudent() == null ? "" : safe(payment.getStudent().getFirstNameStudent()));
         row.put("lastName", payment.getStudent() == null ? "" : safe(payment.getStudent().getLastNameStudent()));
-        row.put("class", payment.getInscriptionStudent() == null || payment.getInscriptionStudent().getClasseRoom() == null
+        row.put("class", payment.getEnrollment() == null || payment.getEnrollment().getClassroom() == null
                 ? ""
-                : safe(payment.getInscriptionStudent().getClasseRoom().getNameClasse()));
+                : safe(payment.getEnrollment().getClassroom().getNameClasse()));
         row.put("amount", payment.getMontantPaye() == null ? BigDecimal.ZERO : payment.getMontantPaye());
         row.put("date", payment.getDatePaiement() == null ? null : payment.getDatePaiement().toString());
         row.put("status", payment.getMontantRestant() == null
@@ -396,17 +385,6 @@ public class SearchService {
         } catch (RuntimeException ignored) {
                 return null;
         }
-    }
-
-    private <T> List<T> readAllInBatches(JpaRepository<T, ?> repository) {
-        List<T> rows = new ArrayList<>();
-        int pageNumber = 0;
-        Page<T> page;
-        do {
-            page = repository.findAll(PageRequest.of(pageNumber++, BATCH_SIZE));
-            rows.addAll(page.getContent());
-        } while (page.hasNext());
-        return rows;
     }
 
     private int limit(Map<String, Object> criteria) {

@@ -22,11 +22,12 @@ import com.school.platform.billing.application.dto.PaymentDTO;
 import com.school.platform.billing.application.dto.PaymentRequest;
 import com.school.platform.billing.application.dto.PaymentSummaryReport;
 import com.school.platform.billing.domain.model.TypePaiement;
-import com.school.platform.enrollment.domain.model.InscriptionStudent;
+import com.school.platform.enrollment.domain.enrollment.Enrollment;
+import com.school.platform.enrollment.domain.enrollment.EnrollmentStatus;
+import com.school.platform.enrollment.infrastructure.persistence.EnrollmentRepository;
 import com.school.platform.billing.domain.model.Montant;
 import com.school.platform.billing.domain.model.Paiement;
 import com.school.platform.enrollment.domain.model.Student;
-import com.school.platform.enrollment.infrastructure.persistence.InscriptionStudentRepository;
 import com.school.platform.billing.infrastructure.persistence.MontantRepository;
 import com.school.platform.billing.infrastructure.persistence.PaiementRepository;
 import com.school.platform.enrollment.infrastructure.persistence.StudentRepository;
@@ -40,7 +41,7 @@ public class PaymentService {
 
     private final PaiementRepository paiementRepository;
     private final StudentRepository studentRepository;
-    private final InscriptionStudentRepository inscriptionRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final MontantRepository montantRepository;
 
     @Transactional(readOnly = true)
@@ -178,10 +179,10 @@ public class PaymentService {
 
         Map<String, BigDecimal> amountByClass = paiements.stream()
                 .collect(Collectors.groupingBy(
-                        paiement -> paiement.getInscriptionStudent() != null
-                                && paiement.getInscriptionStudent().getClasseRoom() != null
-                                && paiement.getInscriptionStudent().getClasseRoom().getNameClasse() != null
-                                        ? paiement.getInscriptionStudent().getClasseRoom().getNameClasse()
+                        paiement -> paiement.getEnrollment() != null
+                                && paiement.getEnrollment().getClassroom() != null
+                                && paiement.getEnrollment().getClassroom().getNameClasse() != null
+                                        ? paiement.getEnrollment().getClassroom().getNameClasse()
                                         : "INCONNU",
                         LinkedHashMap::new,
                         Collectors.reducing(
@@ -191,10 +192,10 @@ public class PaymentService {
 
         Map<String, BigDecimal> unpaidByClass = paiements.stream()
                 .collect(Collectors.groupingBy(
-                        paiement -> paiement.getInscriptionStudent() != null
-                                && paiement.getInscriptionStudent().getClasseRoom() != null
-                                && paiement.getInscriptionStudent().getClasseRoom().getNameClasse() != null
-                                        ? paiement.getInscriptionStudent().getClasseRoom().getNameClasse()
+                        paiement -> paiement.getEnrollment() != null
+                                && paiement.getEnrollment().getClassroom() != null
+                                && paiement.getEnrollment().getClassroom().getNameClasse() != null
+                                        ? paiement.getEnrollment().getClassroom().getNameClasse()
                                         : "INCONNU",
                         LinkedHashMap::new,
                         Collectors.reducing(
@@ -247,19 +248,20 @@ public class PaymentService {
 
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Eleve", "id", studentId));
-        InscriptionStudent inscription = inscriptionRepository.findFirstByStudentIdOrderByIdDesc(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Inscription", "studentId", studentId));
-        if (inscription.getClasseRoom() == null || inscription.getClasseRoom().getId() == null) {
+        Enrollment enrollment = enrollmentRepository
+                .findTopByStudentIdAndStatusOrderByEnrollmentDateDesc(studentId, EnrollmentStatus.CONFIRMED)
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment", "studentId", studentId));
+        if (enrollment.getClassroom() == null || enrollment.getClassroom().getId() == null) {
             throw new BadRequestException("L'eleve n'est rattache a aucune classe.");
         }
 
         TypePaiement type = request.getType() != null
                 ? request.getType()
                 : payment.getTypePaiement() == null ? TypePaiement.FRAIS_AUTRES : payment.getTypePaiement();
-        Montant montant = montantRepository.findByClasseRoomIdAndTypePaiement(inscription.getClasseRoom().getId(), type)
-                .orElseGet(() -> montantRepository.findByClasseRoomId(inscription.getClasseRoom().getId())
+        Montant montant = montantRepository.findByClasseRoomIdAndTypePaiement(enrollment.getClassroom().getId(), type)
+                .orElseGet(() -> montantRepository.findByClasseRoomId(enrollment.getClassroom().getId())
                         .orElseThrow(() -> new ResourceNotFoundException(
-                                "Montant", "classeRoomId", inscription.getClasseRoom().getId())));
+                                "Montant", "classeRoomId", enrollment.getClassroom().getId())));
 
         BigDecimal amount = request.getAmount() != null ? request.getAmount() : payment.getMontantPaye();
         if (amount == null) {
@@ -297,7 +299,7 @@ public class PaymentService {
                 : payment.getDueDate() == null ? paymentDate : payment.getDueDate();
 
         payment.setStudent(student);
-        payment.setInscriptionStudent(inscription);
+        payment.setEnrollment(enrollment);
         payment.setMontant(montant);
         payment.setTypePaiement(type);
         payment.setMontantPaye(amount);

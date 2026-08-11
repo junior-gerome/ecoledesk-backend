@@ -7,5 +7,5 @@ import lombok.Data;
 public class TrimestreDTO{
   private Long id;
   private String libelleTrimestre;
-  private AnneeScolaireDTO anneeScolaire;
+  private AcademicYearDTO academicYear;
 }

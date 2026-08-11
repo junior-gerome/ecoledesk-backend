@@ -3,7 +3,7 @@ package com.school.platform.identityaccess.web;
 import java.util.List;
 import java.util.Map;
 
-import com.school.platform.identityaccess.application.UserAccountManagementService;
+import com.school.platform.identityaccess.application.interfaces.IUserAccountManagementService;
 import com.school.platform.identityaccess.application.dto.UserAccountSummaryDTO;
 import com.school.platform.identityaccess.application.dto.auth.PasswordResetRequest;
 import com.school.platform.identityaccess.application.dto.auth.PasswordResetTokenRequest;
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UserManagementController {
 
-    private final UserAccountManagementService usersService;
+    private final IUserAccountManagementService usersService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")

@@ -12,7 +12,7 @@ import lombok.Data;
 public class StudentProgressReport {
     private StudentDTO student;
     private String classLevel;
-    private String LibelleanneeSection;
+    private String LibelleyearSection;
     private Double averageGrade = 0.0;
     private Map<String, Double> gradesBySubject = new HashMap<>();
     private Integer rank = 0;

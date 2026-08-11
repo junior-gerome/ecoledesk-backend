@@ -3,7 +3,7 @@ package com.school.platform.academic.application.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.school.platform.academic.domain.model.GradeStatus;
+import com.school.platform.academic.domain.enums.GradeStatus;
 
 import lombok.Builder;
 import lombok.Data;

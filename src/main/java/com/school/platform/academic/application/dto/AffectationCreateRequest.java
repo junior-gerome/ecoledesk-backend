@@ -26,7 +26,7 @@ public class AffectationCreateRequest {
 
     @NotNull(message = "L'annee scolaire est obligatoire")
     @Positive(message = "L'identifiant de l'annee scolaire doit etre positif")
-    private Long anneeScolaireId;
+    private Long academicYearId;
 
     private LocalDate dateDebut;
     private LocalDate dateFin;

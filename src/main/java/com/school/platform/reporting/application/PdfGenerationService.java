@@ -16,7 +16,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.school.platform.academic.application.ClassRoomService;
+import com.school.platform.academic.application.interfaces.ClassRoomService;
 import com.school.platform.reporting.application.dto.ClassPerformanceReport;
 import com.school.platform.academic.application.dto.ClasseRoomDTO;
 import com.school.platform.academic.application.dto.GradeDTO;
@@ -247,7 +247,7 @@ public class PdfGenerationService {
     private void addSignatures(Document document) {
         Table signatureTable = new Table(3).setWidth(UnitValue.createPercentValue(100));
 
-        signatureTable.addCell(createCell("Parent"));
+        signatureTable.addCell(createCell("Responsable legal"));
         signatureTable.addCell(createCell("Enseignant"));
         signatureTable.addCell(createCell("Directeur"));
 

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 import com.school.platform.academic.application.dto.SequenceDTO;
-import com.school.platform.academic.application.SequenceService;
+import com.school.platform.academic.application.interfaces.SequenceService;
   
 
 

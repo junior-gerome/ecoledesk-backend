@@ -21,6 +21,8 @@ import com.school.platform.identityaccess.application.dto.auth.LoginRequest;
 import com.school.platform.identityaccess.application.dto.auth.LoginResponse;
 import com.school.platform.identityaccess.application.dto.auth.RefreshTokenRequest;
 import com.school.platform.identityaccess.application.dto.auth.RegisterRequest;
+import com.school.platform.identityaccess.application.interfaces.IAuthenticationAuditService;
+import com.school.platform.identityaccess.application.interfaces.IUserAccountManagementService;
 import com.school.platform.identityaccess.domain.model.RefreshToken;
 import com.school.platform.identityaccess.domain.model.Role;
 import com.school.platform.identityaccess.domain.model.UserAccount;
@@ -44,8 +46,8 @@ public class AuthentificationService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenRepository refreshTokenRepository;
     private final LoginAttemptService loginAttemptService;
-    private final AuthenticationAuditService authenticationAuditService;
-    private final UserAccountManagementService usersService;
+    private final IAuthenticationAuditService authenticationAuditService;
+    private final IUserAccountManagementService usersService;
 
     @Transactional
     public LoginResponse login(LoginRequest request, String clientIp) {

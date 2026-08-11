@@ -15,7 +15,7 @@ import com.school.platform.academic.domain.model.ClasseRoom;
 import com.school.platform.academic.infrastructure.persistence.AffectationRepository;
 import com.school.platform.academic.infrastructure.persistence.ClasseRoomRepository;
 import com.school.platform.academic.application.dto.TeacherDTO;
-import com.school.platform.academic.application.TeacherService;
+import com.school.platform.academic.application.interfaces.TeacherService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -125,7 +125,7 @@ public class TeacherController {
                 "subjectName", affectation.getSubject().getNameSubject(),
                 "classId", affectation.getClasse().getId(),
                 "className", affectation.getClasse().getNameClasse(),
-                "schoolYear", affectation.getAnneeScolaire().getLibelleAnneeScolaire()
+                "schoolYear", affectation.getAcademicYear().getLibelleAcademicYear()
             ))
             .collect(Collectors.toList());
 
@@ -157,7 +157,7 @@ public class TeacherController {
         row.put("subjectName", affectation.getSubject().getNameSubject());
         row.put("classId", affectation.getClasse().getId());
         row.put("className", affectation.getClasse().getNameClasse());
-        row.put("schoolYear", affectation.getAnneeScolaire().getLibelleAnneeScolaire());
+        row.put("schoolYear", affectation.getAcademicYear().getLibelleAcademicYear());
         return row;
     }
 }

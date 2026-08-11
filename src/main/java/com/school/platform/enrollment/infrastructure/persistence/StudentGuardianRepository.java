@@ -10,5 +10,5 @@ import com.school.platform.enrollment.domain.model.StudentGuardian;
 @Repository
 public interface StudentGuardianRepository extends JpaRepository<StudentGuardian, Long> {
     List<StudentGuardian> findByStudentId(Long studentId);
-    List<StudentGuardian> findByGuardianPersonId(Long guardianPersonId);
+    List<StudentGuardian> findByGuardianId(Long guardianId);
 }

@@ -1,6 +1,6 @@
 package com.school.platform.enrollment.application.dto.student;
 
-import com.school.platform.enrollment.application.dto.parent.ParentBasicDTO;
+import com.school.platform.enrollment.application.dto.guardian.GuardianBasicDTO;
 import com.school.platform.identityaccess.application.dto.person.PersonFullDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,7 +19,7 @@ public class StudentFullDTO {
     private LocalDate admissionDate;
     private String currentLevel;
     private String ecolePrecedente;
-    private List<StudentParentDTO> parents;
+    private List<StudentGuardianDTO> guardians;
     private Boolean active;
     private LocalDateTime creationDate;
     private LocalDateTime updateDate;
@@ -27,8 +27,8 @@ public class StudentFullDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class StudentParentDTO {
-        private ParentBasicDTO parent;
+    public static class StudentGuardianDTO {
+        private GuardianBasicDTO guardian;
         private String relationshipType;
     }
 }

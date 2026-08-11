@@ -16,7 +16,8 @@ import com.school.platform.shared.domain.exception.compat.ValidationException;
 
 import lombok.RequiredArgsConstructor;
 
-@Service
+// Legacy class kept for reference - superseded by application.impl.PermissionServiceImpl
+// @Service
 @RequiredArgsConstructor
 @Transactional
 public class PermissionService {

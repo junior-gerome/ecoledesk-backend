@@ -13,8 +13,8 @@ import com.school.platform.billing.domain.model.Paiement;
 import com.school.platform.attendance.infrastructure.persistence.AbsenceRepository;
 import com.school.platform.academic.infrastructure.persistence.ClasseRoomRepository;
 import com.school.platform.academic.infrastructure.persistence.GradeRepository;
-import com.school.platform.enrollment.domain.model.PreinscriptionStatus;
-import com.school.platform.enrollment.infrastructure.persistence.InscriptionStudentRepository;
+import com.school.platform.enrollment.domain.enrollment.EnrollmentStatus;
+import com.school.platform.enrollment.infrastructure.persistence.EnrollmentRepository;
 import com.school.platform.reporting.infrastructure.persistence.LogActiviteRepository;
 import com.school.platform.billing.infrastructure.persistence.PaiementRepository;
 
@@ -30,7 +30,7 @@ public class DirectionDashboardService {
     private final PaiementRepository paiementRepository;
     private final GradeRepository gradeRepository;
     private final ClasseRoomRepository classeRoomRepository;
-    private final InscriptionStudentRepository inscriptionStudentRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final LogActiviteRepository logActiviteRepository;
 
     @Transactional(readOnly = true)
@@ -59,7 +59,7 @@ public class DirectionDashboardService {
                 gradeRepository.countByGradeGreaterThanEqual(EXCELLENT_GRADE_LIMIT),
                 gradeRepository.countByGradeLessThan(WEAK_GRADE_LIMIT),
                 overloadedClasses,
-                inscriptionStudentRepository.countByStatutPreinscriptionIn(List.of(PreinscriptionStatus.BROUILLON, PreinscriptionStatus.EN_ATTENTE)),
+                enrollmentRepository.countByStatus(EnrollmentStatus.PENDING_CONFIRMATION),
                 logActiviteRepository.count());
     }
 
@@ -69,6 +69,6 @@ public class DirectionDashboardService {
             return false;
         }
 
-        return inscriptionStudentRepository.countByClasseRoomId(classeRoom.getId()) > capacity;
+        return enrollmentRepository.countByClassroomIdAndStatus(classeRoom.getId(), EnrollmentStatus.CONFIRMED) > capacity;
     }
 }

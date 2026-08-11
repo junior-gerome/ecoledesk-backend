@@ -1,6 +1,6 @@
 package com.school.platform.academic.infrastructure.persistence.converter;
 
-import com.school.platform.academic.domain.model.TypeTrimestre;
+import com.school.platform.academic.domain.enums.TypeTrimestre;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 import com.school.platform.academic.application.dto.TrimestreDTO;
-import com.school.platform.academic.application.TrimestreService;
+import com.school.platform.academic.application.interfaces.TrimestreService;
 
 //import jakarta.validation.Valid;  
 

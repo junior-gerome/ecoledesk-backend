@@ -19,7 +19,7 @@ public interface ClasseRoomRepository extends JpaRepository<ClasseRoom, Long> {
     @Query("select c from ClasseRoom c where c.id = :id")
     Optional<ClasseRoom> findByIdForUpdate(Long id);
 
-    @Query("SELECT c FROM ClasseRoom c LEFT JOIN FETCH c.teacher t LEFT JOIN FETCH c.anneeScolaire a")
+    @Query("SELECT c FROM ClasseRoom c LEFT JOIN FETCH c.teacher t LEFT JOIN FETCH c.academicYear a")
     List<ClasseRoom> findAllWithDetails();
 
     boolean existsByNameClasse(String nameClasse);

@@ -8,26 +8,20 @@ import com.school.platform.identityaccess.domain.model.valueobject.BirthDate;
 import com.school.platform.identityaccess.domain.model.valueobject.Email;
 import com.school.platform.identityaccess.domain.model.valueobject.PhoneNumber;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
-@Table(name = "persons")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
+@Table(name = "persons")
+@Inheritance(strategy = InheritanceType.JOINED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Person extends BaseEntity {
 
@@ -42,6 +36,9 @@ public class Person extends BaseEntity {
     @Size(min = 2, max = 100)
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
+
+    @Transient
+    private String fullName;
 
     @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "email", unique = true, length = 150))
@@ -73,24 +70,70 @@ public class Person extends BaseEntity {
     private String photoUrl;
 
     // Compatibility accessors keep the established DTO and repository contracts scalar.
-    public String getEmail() { return email == null ? null : email.value(); }
-    public void setEmail(Email email) { this.email = email; }
-    public void setEmail(String value) { this.email = Email.of(value); }
-    public Email email() { return email; }
+    public String getEmail() {
+        return email == null ? null : email.value();
+    }
+         
+    // public void setEmail(Email email) {
+    //     this.email = email; 
+    // }
 
-    public String getPhone() { return phone == null ? null : phone.value(); }
-    public void setPhone(String value) { this.phone = PhoneNumber.of(value); }
-    public PhoneNumber phoneNumber() { return phone; }
+    public void setEmail(String value) { 
+        this.email = Email.of(value); 
+    }
 
-    public LocalDate getBirthDate() { return birthDate == null ? null : birthDate.value(); }
-    public void setBirthDate(LocalDate value) { this.birthDate = BirthDate.of(value); }
-    public BirthDate birthDate() { return birthDate; }
+    // public Email email() { 
+    //     return email;
+    // }
 
-    public String getAddress() { return address == null ? null : address.line(); }
-    public void setAddress(String value) { this.address = Address.of(value, getCity(), null, getCountry(), null); }
-    public String getCity() { return address == null ? null : address.city(); }
-    public void setCity(String value) { this.address = Address.of(getAddress(), value, null, getCountry(), null); }
-    public String getCountry() { return address == null ? null : address.country(); }
-    public void setCountry(String value) { this.address = Address.of(getAddress(), getCity(), null, value, null); }
+    public String getPhone() { 
+        return phone == null ? null : phone.value();
+     }
+     
+     public void setPhone(String value) {
+         this.phone = PhoneNumber.of(value);
+     }
+         
+     public PhoneNumber phoneNumber() {
+         return phone;
+     }
+        
+
+    public LocalDate getBirthDate() {
+         return birthDate == null ? null : birthDate.value();
+         }
+
+    public void setBirthDate(LocalDate value) { 
+        this.birthDate = BirthDate.of(value);
+     }
+
+    public BirthDate birthDate() {
+         return birthDate;
+     }
+
+    public String getAddress() {
+         return address == null ? null : address.line();
+     }
+
+    public void setAddress(String value) { 
+        this.address = Address.of(value, getCity(), null, getCountry(), null);
+     }
+
+    public String getCity() { 
+        return address == null ? null : address.city();
+     }
+
+    public void setCity(String value) { 
+        this.address = Address.of(getAddress(), value, null, getCountry(), null);
+     }
+
+    public String getCountry() {
+         return address == null ? null : address.country(); 
+     }
+
+     public void setCountry(String value) {
+         this.address = Address.of(getAddress(), getCity(), null, value, null);
+     }
+     
     public Address address() { return address; }
 }

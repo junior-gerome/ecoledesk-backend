@@ -2,7 +2,7 @@ package com.school.platform.academic.web;
 
 import java.util.List;
 
-import com.school.platform.academic.application.AffectationService;
+import com.school.platform.academic.application.interfaces.AffectationService;
 import com.school.platform.academic.application.dto.AffectationCreateRequest;
 import com.school.platform.academic.application.dto.AffectationResponse;
 import com.school.platform.academic.application.dto.AffectationUpdateRequest;

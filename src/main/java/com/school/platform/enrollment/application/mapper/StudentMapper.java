@@ -14,16 +14,18 @@ import org.mapstruct.ReportingPolicy;
 import com.school.platform.enrollment.application.dto.StudentDTO;
 import com.school.platform.enrollment.domain.model.Student;
 
-@Mapper(componentModel = "spring", uses = ParentMapper.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", uses = GuardianMapper.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface StudentMapper extends EntityMapper<StudentDTO, Student> {
 
   StudentDTO toDto(Student entity);
 
-  @Mapping(target = "studentParents", ignore = true)
+  @Mapping(target = "studentGuardians", ignore = true)
+  @Mapping(target = "guardian", ignore = true)
   Student toEntity(StudentDTO dto);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "studentParents", ignore = true)
+  @Mapping(target = "studentGuardians", ignore = true)
+  @Mapping(target = "guardian", ignore = true)
   @Mapping(target = "creationDate", ignore = true)
   @Mapping(target = "updateDate", ignore = true)
   @Mapping(target = "active", ignore = true)

@@ -1,14 +1,17 @@
 package com.school.platform.academic.domain.model;
 
+import com.school.platform.academic.domain.enums.GradeStatus;
+
 import com.school.platform.enrollment.domain.model.Student;
+import com.school.platform.identityaccess.domain.model.BaseEntity;
 
 import lombok.EqualsAndHashCode;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.experimental.SuperBuilder;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -22,17 +25,14 @@ import jakarta.validation.constraints.Digits;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @ToString(exclude = {"student", "subject", "classe", "sequence", "trimestre"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name = "academic_grade")
-public class Grade {
+public class Grade extends BaseEntity {
     
-    @Id
-    @EqualsAndHashCode.Include
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    // Relation vers l'élève (obligatoire)
+        // Relation vers l'élève (obligatoire)
     @NotNull(message = "L'élève est obligatoire")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
@@ -82,15 +82,6 @@ public class Grade {
     // Date de l'évaluation (différente de la création)
     @Column(name = "assessment_date", nullable = false)
     private LocalDateTime assessmentDate;
-
-    // Métadonnées automatiques
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     // Version pour le contrôle d'accès concurrentiel
     @Version

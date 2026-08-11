@@ -22,7 +22,7 @@ public interface PaiementRepository extends JpaRepository<Paiement, Long> {
     Page<Paiement> findByDatePaiementBetween(LocalDate startDate, LocalDate endDate, Pageable pageable);
     boolean existsByReceiptNumber(String receiptNumber);
     boolean existsByReceiptNumberAndIdNot(String receiptNumber, Long id);
-    boolean existsByInscriptionStudentIdAndTypePaiementAndCancelledAtIsNull(Long inscriptionStudentId, TypePaiement typePaiement);
+    boolean existsByEnrollmentIdAndTypePaiementAndCancelledAtIsNull(Long enrollmentId, TypePaiement typePaiement);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Paiement p where p.id = :id")
@@ -31,8 +31,8 @@ public interface PaiementRepository extends JpaRepository<Paiement, Long> {
     @Query("""
             select p from Paiement p
             left join fetch p.student student
-            left join fetch p.inscriptionStudent inscription
-            left join fetch inscription.classeRoom classe
+            left join fetch p.enrollment enrollment
+            left join fetch enrollment.classroom classroom
             left join fetch p.montant montant
             where (:studentId is null or student.id = :studentId)
               and (:type is null or p.typePaiement = :type)

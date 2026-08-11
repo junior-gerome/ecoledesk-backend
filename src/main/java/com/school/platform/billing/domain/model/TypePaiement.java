@@ -16,7 +16,7 @@ public enum TypePaiement {
     FRAIS_PHOTO,
     FRAIS_AUTRES,
     
-    // Catégorie : Services de soutien
+    // CatÃ©gorie : Services de soutien
     SOUTIEN_PSYCHOLOGIQUE,
     SOUTIEN_MEDICAL,
     SOUTIEN_SOCIAL,

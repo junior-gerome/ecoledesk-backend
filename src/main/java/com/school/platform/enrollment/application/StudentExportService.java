@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
@@ -29,10 +28,11 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.school.platform.shared.domain.exception.BusinessException;
-import com.school.platform.enrollment.domain.model.InscriptionStudent;
-import com.school.platform.enrollment.domain.model.Parent;
+import com.school.platform.enrollment.domain.enrollment.Enrollment;
+import com.school.platform.enrollment.domain.enrollment.EnrollmentStatus;
+import com.school.platform.enrollment.domain.model.Guardian;
 import com.school.platform.enrollment.domain.model.Student;
-import com.school.platform.enrollment.infrastructure.persistence.InscriptionStudentRepository;
+import com.school.platform.enrollment.infrastructure.persistence.EnrollmentRepository;
 import com.school.platform.enrollment.infrastructure.persistence.StudentRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -45,7 +45,7 @@ public class StudentExportService {
     private static final int EXPORT_BATCH_SIZE = 500;
 
     private final StudentRepository studentRepository;
-    private final InscriptionStudentRepository inscriptionStudentRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     @Transactional(readOnly = true)
     public byte[] generateStudentsExcel(String keyword) {
@@ -76,7 +76,7 @@ public class StudentExportService {
             Row header = sheet.createRow(3);
             String[] columns = {
                     "ID", "Nom", "Prenom", "Date de naissance", "Genre",
-                    "Classe", "Section", "Telephone parent"
+                    "Classe", "Section", "Telephone responsable legal"
             };
             for (int index = 0; index < columns.length; index++) {
                 header.createCell(index).setCellValue(columns[index]);
@@ -93,7 +93,7 @@ public class StudentExportService {
                 excelRow.createCell(4).setCellValue(row.gender());
                 excelRow.createCell(5).setCellValue(row.className());
                 excelRow.createCell(6).setCellValue(row.section());
-                excelRow.createCell(7).setCellValue(row.parentPhone());
+                excelRow.createCell(7).setCellValue(row.guardianPhone());
             }
 
             for (int index = 0; index < columns.length; index++) {
@@ -124,7 +124,7 @@ public class StudentExportService {
 
             Table table = new Table(UnitValue.createPercentArray(new float[] { 8, 16, 16, 16, 10, 14, 12, 18 }))
                     .useAllAvailableWidth();
-            List.of("ID", "Nom", "Prenom", "Naissance", "Genre", "Classe", "Section", "Tel. parent")
+            List.of("ID", "Nom", "Prenom", "Naissance", "Genre", "Classe", "Section", "Tel. responsable legal")
                     .forEach(label -> table.addHeaderCell(headerCell(label)));
 
             if (rows.isEmpty()) {
@@ -138,7 +138,7 @@ public class StudentExportService {
                     table.addCell(cell(row.gender()));
                     table.addCell(cell(row.className()));
                     table.addCell(cell(row.section()));
-                    table.addCell(cell(row.parentPhone()));
+                    table.addCell(cell(row.guardianPhone()));
                 });
             }
 
@@ -151,12 +151,14 @@ public class StudentExportService {
     }
 
     private List<StudentExportRow> loadRows(String keyword) {
-        Map<Long, InscriptionStudent> latestEnrollmentByStudent = readAllInBatches(inscriptionStudentRepository).stream()
-                .filter(inscription -> inscription.getStudent() != null && inscription.getStudent().getId() != null)
+        Map<Long, Enrollment> latestByStudent = enrollmentRepository.findByStatus(EnrollmentStatus.CONFIRMED)
+                .stream()
+                .filter(e -> e.getStudent() != null && e.getStudent().getId() != null)
                 .collect(Collectors.toMap(
-                        inscription -> inscription.getStudent().getId(),
-                        inscription -> inscription,
-                        this::latestEnrollment));
+                        e -> e.getStudent().getId(),
+                        e -> e,
+                        (left, right) -> left.getEnrollmentDate() != null && right.getEnrollmentDate() != null
+                                && left.getEnrollmentDate().isAfter(right.getEnrollmentDate()) ? left : right));
 
         String normalizedKeyword = normalize(keyword);
 
@@ -166,7 +168,7 @@ public class StudentExportService {
         do {
             page = studentRepository.findAll(PageRequest.of(pageNumber++, EXPORT_BATCH_SIZE));
             page.getContent().stream()
-                    .map(student -> toExportRow(student, latestEnrollmentByStudent.get(student.getId())))
+                    .map(student -> toExportRow(student, latestByStudent.get(student.getId())))
                     .filter(row -> normalizedKeyword.isBlank() || matches(row, normalizedKeyword))
                     .forEach(rows::add);
         } while (page.hasNext());
@@ -178,25 +180,15 @@ public class StudentExportService {
                 .toList();
     }
 
-    private InscriptionStudent latestEnrollment(InscriptionStudent left, InscriptionStudent right) {
-        if (left.getDateInscription() != null && right.getDateInscription() != null) {
-            return left.getDateInscription().isAfter(right.getDateInscription()) ? left : right;
-        }
-        if (left.getId() != null && right.getId() != null) {
-            return left.getId() > right.getId() ? left : right;
-        }
-        return right;
-    }
-
-    private StudentExportRow toExportRow(Student student, InscriptionStudent enrollment) {
-        Parent parent = student.getParent();
-        String className = enrollment != null && enrollment.getClasseRoom() != null
-                ? safe(enrollment.getClasseRoom().getNameClasse())
+    private StudentExportRow toExportRow(Student student, Enrollment enrollment) {
+        Guardian guardian = student.getGuardian();
+        String className = enrollment != null && enrollment.getClassroom() != null
+                ? safe(enrollment.getClassroom().getNameClasse())
                 : "Non inscrit";
         String section = enrollment != null
-                && enrollment.getClasseRoom() != null
-                && enrollment.getClasseRoom().getSection() != null
-                        ? safe(enrollment.getClasseRoom().getSection().getLibelle())
+                && enrollment.getClassroom() != null
+                && enrollment.getClassroom().getSection() != null
+                        ? safe(enrollment.getClassroom().getSection().getLibelle())
                         : "";
 
         return new StudentExportRow(
@@ -207,7 +199,7 @@ public class StudentExportService {
                 student.getGender() == null ? "" : student.getGender().name(),
                 className,
                 section,
-                parent == null ? "" : safe(parent.getPhoneNumber()));
+                guardian == null || guardian.getPerson() == null ? "" : safe(guardian.getPerson().getPhone()));
     }
 
     private boolean matches(StudentExportRow row, String keyword) {
@@ -216,7 +208,7 @@ public class StudentExportService {
                 || normalize(row.firstName()).contains(keyword)
                 || normalize(row.className()).contains(keyword)
                 || normalize(row.section()).contains(keyword)
-                || normalize(row.parentPhone()).contains(keyword);
+                || normalize(row.guardianPhone()).contains(keyword);
     }
 
     private Cell headerCell(String text) {
@@ -235,17 +227,6 @@ public class StudentExportService {
         return value == null ? "" : value.trim();
     }
 
-    private <T> List<T> readAllInBatches(JpaRepository<T, ?> repository) {
-        List<T> rows = new ArrayList<>();
-        int pageNumber = 0;
-        Page<T> page;
-        do {
-            page = repository.findAll(PageRequest.of(pageNumber++, EXPORT_BATCH_SIZE));
-            rows.addAll(page.getContent());
-        } while (page.hasNext());
-        return rows;
-    }
-
     private record StudentExportRow(
             Long id,
             String lastName,
@@ -254,6 +235,6 @@ public class StudentExportService {
             String gender,
             String className,
             String section,
-            String parentPhone) {
+            String guardianPhone) {
     }
 }

@@ -6,7 +6,7 @@ import com.school.platform.reporting.application.dto.SubjectGradeDTO;
 import com.school.platform.academic.domain.model.ClasseRoom;
 import com.school.platform.academic.domain.model.Grade;
 import com.school.platform.enrollment.domain.model.Student;
-import com.school.platform.academic.domain.model.Teacher;
+import com.school.platform.staff.domain.model.StaffMember;
 import com.school.platform.attendance.infrastructure.persistence.AbsenceRepository;
 import com.school.platform.academic.infrastructure.persistence.GradeRepository;
 import com.school.platform.enrollment.infrastructure.persistence.StudentRepository;
@@ -69,13 +69,13 @@ public class StudentReportService {
             ClasseRoom classe = latestGrade.getClasse();
             report.setNameClasse(classe.getNameClasse());
 
-            if (classe.getSection() != null || classe.getAnneeScolaire() != null) {
+            if (classe.getSection() != null || classe.getAcademicYear() != null) {
                 String section = classe.getSection() != null ? classe.getSection().getLibelle() : "";
-                String annee = classe.getAnneeScolaire() != null ? classe.getAnneeScolaire().getLibelleAnneeScolaire() : "";
-                report.setLibelleanneeSection((section + " " + annee).trim());
+                String year = classe.getAcademicYear() != null ? classe.getAcademicYear().getLibelleAcademicYear() : "";
+                report.setLibelleyearSection((section + " " + year).trim());
             }
 
-            Teacher teacher = classe.getTeacher();
+            StaffMember teacher = classe.getTeacher();
             if (teacher != null) {
                 report.setLastnameTeacher(teacher.getLastnameTeacher());
                 report.setFirstnameteacher(teacher.getFirstnameTeacher());
@@ -94,7 +94,7 @@ public class StudentReportService {
             report.setRank(0);
             report.setTotalStudents(0);
             report.setNameClasse("N/A");
-            report.setLibelleanneeSection("N/A");
+            report.setLibelleyearSection("N/A");
         }
 
         report.setTeacherComments(buildTeacherComment(average));

@@ -27,11 +27,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.school.platform.reporting.application.ReportService;
 import com.school.platform.attendance.domain.model.Absence;
 import com.school.platform.academic.domain.model.Grade;
-import com.school.platform.enrollment.domain.model.InscriptionStudent;
+import com.school.platform.enrollment.domain.enrollment.Enrollment;
+import com.school.platform.enrollment.domain.enrollment.EnrollmentStatus;
 import com.school.platform.billing.domain.model.Paiement;
 import com.school.platform.attendance.infrastructure.persistence.AbsenceRepository;
 import com.school.platform.academic.infrastructure.persistence.GradeRepository;
-import com.school.platform.enrollment.infrastructure.persistence.InscriptionStudentRepository;
+import com.school.platform.enrollment.infrastructure.persistence.EnrollmentRepository;
 import com.school.platform.billing.infrastructure.persistence.PaiementRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,7 +50,7 @@ import lombok.RequiredArgsConstructor;
 public class ReportController {
 
     private final ReportService reportService;
-    private final InscriptionStudentRepository inscriptionRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final GradeRepository gradeRepository;
     private final AbsenceRepository absenceRepository;
     private final PaiementRepository paiementRepository;
@@ -62,12 +63,12 @@ public class ReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo) {
         LocalDate start = dateFrom != null ? dateFrom : LocalDate.now().minusDays(30);
         LocalDate end = dateTo != null ? dateTo : LocalDate.now();
-        List<InscriptionStudent> inscriptions = classId == null
-                ? inscriptionRepository.findAll()
-                : inscriptionRepository.findByClasseRoomId(classId);
+        List<Enrollment> enrollments = classId == null
+                ? enrollmentRepository.findByStatus(EnrollmentStatus.CONFIRMED)
+                : enrollmentRepository.findByClassroomIdAndStatus(classId, EnrollmentStatus.CONFIRMED);
 
-        List<Map<String, Object>> rows = inscriptions.stream().map(inscription -> {
-            Long studentId = inscription.getStudent().getId();
+        List<Map<String, Object>> rows = enrollments.stream().map(enrollment -> {
+            Long studentId = enrollment.getStudent().getId();
             List<Grade> grades = gradeRepository.findByStudentId(studentId);
             double average = grades.stream().mapToDouble(grade -> grade.getGrade().doubleValue()).average().orElse(0);
             long absences = absenceRepository.findByStudentIdInAndDateBetween(List.of(studentId), start, end).stream()
@@ -76,8 +77,8 @@ public class ReportController {
             double attendanceRate = Math.max(0, 100 - absences * 5);
             Map<String, Object> row = new HashMap<>();
             row.put("studentId", studentId);
-            row.put("studentName", inscription.getStudent().getFirstNameStudent() + " " + inscription.getStudent().getLastNameStudent());
-            row.put("className", inscription.getClasseRoom().getNameClasse());
+            row.put("studentName", enrollment.getStudent().getFirstNameStudent() + " " + enrollment.getStudent().getLastNameStudent());
+            row.put("className", enrollment.getClassroom().getNameClasse());
             row.put("averageGrade", average);
             row.put("attendanceRate", attendanceRate);
             row.put("rank", 0);
@@ -158,7 +159,8 @@ public class ReportController {
                 .limit(10)
                 .map(p -> Map.of(
                         "studentName", p.getStudent().getFirstNameStudent() + " " + p.getStudent().getLastNameStudent(),
-                        "className", p.getInscriptionStudent().getClasseRoom().getNameClasse(),
+                        "className", p.getEnrollment() != null && p.getEnrollment().getClassroom() != null
+                                ? p.getEnrollment().getClassroom().getNameClasse() : "",
                         "amount", p.getMontantRestant()))
                 .collect(Collectors.toList()));
         return ResponseEntity.ok(response);
@@ -203,19 +205,19 @@ public class ReportController {
     public ResponseEntity<byte[]> generateClassBulletinsZip(
             @PathVariable Long classId,
             @RequestParam(required = false) String period) {
-        List<InscriptionStudent> inscriptions = inscriptionRepository.findByClasseRoomId(classId);
+        List<Enrollment> enrollments = enrollmentRepository.findByClassroomIdAndStatus(classId, EnrollmentStatus.CONFIRMED);
 
         try {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             try (ZipOutputStream zip = new ZipOutputStream(output)) {
-                for (InscriptionStudent inscription : inscriptions) {
-                    if (inscription.getStudent() == null || inscription.getStudent().getId() == null) {
+                for (Enrollment enrollment : enrollments) {
+                    if (enrollment.getStudent() == null || enrollment.getStudent().getId() == null) {
                         continue;
                     }
 
-                    byte[] pdf = reportService.generateStudentReport(inscription.getStudent().getId(), period);
-                    String studentName = inscription.getStudent().getLastNameStudent() + "-"
-                            + inscription.getStudent().getFirstNameStudent();
+                    byte[] pdf = reportService.generateStudentReport(enrollment.getStudent().getId(), period);
+                    String studentName = enrollment.getStudent().getLastNameStudent() + "-"
+                            + enrollment.getStudent().getFirstNameStudent();
                     ZipEntry entry = new ZipEntry(sanitizeFileName("bulletin-" + studentName + ".pdf"));
                     zip.putNextEntry(entry);
                     zip.write(pdf);

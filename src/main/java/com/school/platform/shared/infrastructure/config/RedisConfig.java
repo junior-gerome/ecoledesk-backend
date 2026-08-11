@@ -24,7 +24,7 @@ public class RedisConfig {
         Map<String, RedisCacheConfiguration> cacheConfigurations = Map.of(
                 "students", cacheConfiguration(Duration.ofMinutes(10)),
                 "grades", cacheConfiguration(Duration.ofMinutes(5)),
-                "parents", cacheConfiguration(Duration.ofMinutes(10))
+                "guardians", cacheConfiguration(Duration.ofMinutes(10))
         );
 
         return RedisCacheManager.builder(connectionFactory)

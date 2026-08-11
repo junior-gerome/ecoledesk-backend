@@ -22,9 +22,9 @@ import com.school.platform.academic.application.dto.GradeBatchStatusRequest;
 import com.school.platform.academic.application.dto.GradeCreateRequestDTO;
 import com.school.platform.academic.application.dto.GradeResponseDTO;
 import com.school.platform.shared.web.PageResponse;
-import com.school.platform.academic.application.GradeCalculationService;
-import com.school.platform.academic.application.GradeCommandService;
-import com.school.platform.academic.application.GradeQueryService;
+import com.school.platform.academic.application.interfaces.GradeCalculationService;
+import com.school.platform.academic.application.interfaces.GradeCommandService;
+import com.school.platform.academic.application.interfaces.GradeQueryService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

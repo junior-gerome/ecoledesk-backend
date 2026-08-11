@@ -1,7 +1,8 @@
 package com.school.platform.identityaccess.web;
 
 import com.school.platform.identityaccess.application.dto.person.*;
-import com.school.platform.identityaccess.application.PersonService;
+import com.school.platform.identityaccess.application.interfaces.IPersonService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PersonController {
 
-    private final PersonService personService;
+    private final IPersonService personService;
 
     @PostMapping
     public ResponseEntity<PersonFullDTO> create(@RequestBody PersonFullDTO dto) {

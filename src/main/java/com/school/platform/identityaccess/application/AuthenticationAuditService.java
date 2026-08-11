@@ -1,41 +1,49 @@
 package com.school.platform.identityaccess.application;
 
+import com.school.platform.identityaccess.application.interfaces.IAuthenticationAuditService;
 import com.school.platform.identityaccess.domain.model.AuthenticationAuditEvent;
 import com.school.platform.identityaccess.domain.model.UserAccount;
 import com.school.platform.identityaccess.infrastructure.persistence.AuthenticationAuditEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
+@Primary
 @RequiredArgsConstructor
-public class AuthenticationAuditService {
+public class AuthenticationAuditService implements IAuthenticationAuditService {
 
     private final AuthenticationAuditEventRepository auditEventRepository;
 
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordLoginSuccess(UserAccount user, String clientIp) {
         record(user == null ? null : user.getId(), user == null ? null : user.getUsername(), "LOGIN_SUCCESS", true, null, clientIp);
     }
 
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordLoginFailure(String username, String clientIp, String reason) {
         record(null, username, "LOGIN_FAILURE", false, reason, clientIp);
     }
 
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordRefreshSuccess(UserAccount user, String clientIp) {
         record(user == null ? null : user.getId(), user == null ? null : user.getUsername(), "REFRESH_SUCCESS", true, null, clientIp);
     }
 
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordRefreshRejected(Long userId, String username, String clientIp, String reason) {
         record(userId, username, "REFRESH_REJECTED", false, reason, clientIp);
     }
 
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordRefreshReuse(UserAccount user, String clientIp) {
         record(user == null ? null : user.getId(), user == null ? null : user.getUsername(), "REFRESH_REUSE", false, "Refresh token reuse detected", clientIp);

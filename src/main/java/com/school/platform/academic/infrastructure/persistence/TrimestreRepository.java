@@ -10,7 +10,7 @@ import com.school.platform.academic.domain.model.Trimestre;
 
 @Repository
 public interface TrimestreRepository extends JpaRepository<Trimestre, Long> {
-    List<Trimestre> findByAnneeScolaireId(Long anneeScolaireId);
+    List<Trimestre> findByAcademicYearId(Long AcademicYearId);
     Optional<Trimestre> findByLibelleTrimestre(String libelleTrimestre);
     boolean existsByLibelleTrimestre(String libelleTrimestre);
 }

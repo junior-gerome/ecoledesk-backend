@@ -1,8 +1,9 @@
 package com.school.platform.enrollment.application;
 
 import com.school.platform.enrollment.application.dto.StudentDTO;
+import com.school.platform.enrollment.domain.enrollment.EnrollmentStatus;
 import com.school.platform.enrollment.application.mapper.StudentMapper;
-import com.school.platform.enrollment.infrastructure.persistence.InscriptionStudentRepository;
+import com.school.platform.enrollment.infrastructure.persistence.EnrollmentRepository;
 import com.school.platform.enrollment.infrastructure.persistence.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudentQueryService {
 
     private final StudentRepository studentRepository;
-    private final InscriptionStudentRepository inscriptionStudentRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final StudentMapper studentMapper;
 
     @Transactional(readOnly = true)
@@ -30,14 +31,14 @@ public class StudentQueryService {
     }
 
     @Transactional(readOnly = true)
-    public Page<StudentDTO> findByParent(Long parentId, Pageable pageable) {
-        return studentRepository.findByParentId(parentId, pageable).map(studentMapper::toDto);
+    public Page<StudentDTO> findByGuardian(Long guardianId, Pageable pageable) {
+        return studentRepository.findByGuardianId(guardianId, pageable).map(studentMapper::toDto);
     }
 
     @Transactional(readOnly = true)
     public Page<StudentDTO> findByClasseRoom(Long classeRoomId, Pageable pageable) {
-        return inscriptionStudentRepository.findByClasseRoomId(classeRoomId, pageable)
-                .map(inscription -> studentMapper.toDto(inscription.getStudent()));
+        return enrollmentRepository.findByClassroomIdAndStatus(classeRoomId, EnrollmentStatus.CONFIRMED, pageable)
+                .map(enrollment -> studentMapper.toDto(enrollment.getStudent()));
     }
 
     @Transactional(readOnly = true)

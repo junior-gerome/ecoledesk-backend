@@ -18,6 +18,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import com.school.platform.identityaccess.application.dto.UserAccountSummaryDTO;
 import com.school.platform.identityaccess.application.dto.auth.RegisterRequest;
+import com.school.platform.identityaccess.application.interfaces.IUserAccountManagementService;
 import com.school.platform.identityaccess.domain.model.Person;
 import com.school.platform.identityaccess.domain.model.Role;
 import com.school.platform.identityaccess.domain.model.UserAccount;
@@ -28,9 +29,10 @@ import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
-@Service
+// Legacy class kept for reference - superseded by application.impl.UserAccountManagementServiceImpl
+// @Service
 @RequiredArgsConstructor
-public class UserAccountManagementService {
+public class UserAccountManagementService implements IUserAccountManagementService {
 
     private final UserAccountRepository userAccountRepository;
     private final RoleRepository roleRepository;
@@ -38,21 +40,26 @@ public class UserAccountManagementService {
     private final PasswordResetDeliveryService passwordResetDeliveryService;
     private final PasswordResetRateLimitService passwordResetRateLimitService;
 
+    @Override
     @Transactional(readOnly = true)
     public List<UserAccountSummaryDTO> getAllAccounts() {
         return userAccountRepository.findAll().stream().map(this::toDto).toList();
     }
 
+    @Override
     public boolean existsByUsername(String username) { return userAccountRepository.existsByUsername(username); }
 
+    @Override
     @Transactional(readOnly = true)
     public UserAccountSummaryDTO getAccountById(Long id) { return toDto(findAccount(id)); }
 
+    @Override
     @Transactional
     public UserAccountSummaryDTO registerAccount(RegisterRequest request) {
         return toDto(createAccount(request, false));
     }
 
+    @Override
     @Transactional
     public UserAccountSummaryDTO updateAccount(Long id, UserAccountSummaryDTO dto) {
         UserAccount account = findAccount(id);
@@ -72,6 +79,7 @@ public class UserAccountManagementService {
         return toDto(userAccountRepository.save(account));
     }
 
+    @Override
     @Transactional
     public UserAccountSummaryDTO assignRole(Long userId, Long roleId) {
         UserAccount account = findAccount(userId);
@@ -79,6 +87,7 @@ public class UserAccountManagementService {
         return toDto(userAccountRepository.save(account));
     }
 
+    @Override
     @Transactional
     public UserAccountSummaryDTO clearDynamicRole(Long userId) {
         UserAccount account = findAccount(userId);
@@ -86,6 +95,7 @@ public class UserAccountManagementService {
         return toDto(userAccountRepository.save(account));
     }
 
+    @Override
     @Transactional
     public UserAccountSummaryDTO updateStatus(Long id, String status) {
         UserAccount account = findAccount(id);
@@ -93,6 +103,7 @@ public class UserAccountManagementService {
         return toDto(userAccountRepository.save(account));
     }
 
+    @Override
     @Transactional
     public void deactivateAccount(Long id) {
         UserAccount account = findAccount(id);
@@ -100,6 +111,7 @@ public class UserAccountManagementService {
         userAccountRepository.save(account);
     }
 
+    @Override
     @Transactional
     public void updateLastLogin(Long id) {
         UserAccount account = findAccount(id);
@@ -107,6 +119,7 @@ public class UserAccountManagementService {
         userAccountRepository.save(account);
     }
 
+    @Override
     @Transactional
     public void requestPasswordReset(String email, String clientIp) {
         passwordResetRateLimitService.assertAllowed(email, clientIp);
@@ -121,6 +134,7 @@ public class UserAccountManagementService {
         });
     }
 
+    @Override
     @Transactional
     public void resetPassword(String email, String resetToken, String newPassword) {
         UserAccount account = userAccountRepository.findByUsername(email)
@@ -136,7 +150,8 @@ public class UserAccountManagementService {
         userAccountRepository.save(account);
     }
 
-    UserAccount createAccount(RegisterRequest request, boolean selfRegistration) {
+    @Override
+    public UserAccount createAccount(RegisterRequest request, boolean selfRegistration) {
         if (userAccountRepository.existsByUsername(request.getEmail())) throw new BusinessException("Email deja utilise");
         Role role = findActiveRole(request);
         if (selfRegistration && !Set.of("PARENT", "ELEVE").contains(role.getCode().toUpperCase())) {

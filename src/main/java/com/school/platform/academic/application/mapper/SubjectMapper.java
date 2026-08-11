@@ -18,14 +18,10 @@ public interface SubjectMapper extends EntityMapper<SubjectDTO,Subject> {
 
   SubjectDTO toDto(Subject entity);
 
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "actif", ignore = true)
   Subject toEntity(SubjectDTO dto);
 
   @Mapping(target ="id", ignore =true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "actif", ignore = true)
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
   void updateEntityFromDto(SubjectDTO dto, @MappingTarget Subject entity);

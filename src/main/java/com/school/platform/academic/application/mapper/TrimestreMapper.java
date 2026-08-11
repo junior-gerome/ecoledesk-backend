@@ -13,12 +13,11 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import com.school.platform.academic.application.dto.TrimestreDTO;
 import com.school.platform.academic.domain.model.Trimestre;
 
-@Mapper(componentModel = "spring", uses=AnneeScolaireMapper.class)
+@Mapper(componentModel = "spring", uses=AcademicYearMapper.class)
 public interface TrimestreMapper extends EntityMapper<TrimestreDTO, Trimestre> {
   
   TrimestreDTO toDto(Trimestre entity);
 
- // @Mapping(target = "anneeScolaire", ignore=true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   Trimestre toEntity(TrimestreDTO dto);

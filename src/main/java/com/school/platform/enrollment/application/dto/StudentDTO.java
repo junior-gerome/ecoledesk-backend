@@ -36,6 +36,6 @@ public class StudentDTO {
     private String photoUrl;
 
     @Valid
-    @NotNull(message = "Le parent est obligatoire")
-    private ParentDTO parent;
+    @NotNull(message = "Le responsable legal est obligatoire")
+    private GuardianDTO guardian;
 }

@@ -1,0 +1,166 @@
+Picked up JAVA_TOOL_OPTIONS: -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8
+
+> Task :compileJava
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\ClasseRoom.java:57: warning: @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+    private Boolean actif = true;
+                    ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\identityaccess\domain\model\BaseEntity.java:31: warning: @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+    private Boolean active = true;
+                    ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\Grade.java:76: warning: @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+    private BigDecimal coefficient = BigDecimal.ONE;
+                       ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\Grade.java:92: warning: @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+    private GradeStatus status = GradeStatus.DRAFT;
+                        ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\ClasseRoom.java:24: warning: Generating equals/hashCode implementation but without a call to superclass, even though this class does not extend java.lang.Object. If this is intentional, add '@EqualsAndHashCode(callSuper=false)' to your type.
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\Grade.java:31: warning: Generating equals/hashCode implementation but without a call to superclass, even though this class does not extend java.lang.Object. If this is intentional, add '@EqualsAndHashCode(callSuper=false)' to your type.
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\Sequence.java:12: warning: Generating equals/hashCode implementation but without a call to superclass, even though this class does not extend java.lang.Object. If this is intentional, add '@EqualsAndHashCode(callSuper=false)' to your type.
+@Data
+^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\Trimestre.java:12: warning: Generating equals/hashCode implementation but without a call to superclass, even though this class does not extend java.lang.Object. If this is intentional, add '@EqualsAndHashCode(callSuper=false)' to your type.
+@Data
+^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\SequenceMapper.java:23: warning: Unmapped target properties: "active, creationDate, updateDate".
+  Sequence toEntity(SequenceDTO dto);
+           ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\SequenceMapper.java:29: warning: Unmapped target properties: "active, creationDate, updateDate".
+  void updateEntityFromDto(SequenceDTO dto, @MappingTarget Sequence entity);
+       ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\ClasseRoomMapper.java:24: warning: Unmapped target properties: "active, creationDate, updateDate, person, employeeNumber, employmentDate, level". Mapping from property "TeacherDTO teacher" to "StaffMember teacher".
+  ClasseRoom toEntity(ClasseRoomDTO dto);
+             ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\ClasseRoomMapper.java:24: warning: Unmapped target properties: "active, creationDate, updateDate".
+  ClasseRoom toEntity(ClasseRoomDTO dto);
+             ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\ClasseRoomMapper.java:31: warning: Unmapped target properties: "active, creationDate, updateDate, person, employeeNumber, employmentDate, level". Mapping from property "TeacherDTO teacher" to "StaffMember teacher".
+  void updateEntityFromDto(ClasseRoomDTO dto, @MappingTarget ClasseRoom entity);
+       ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\ClasseRoomMapper.java:31: warning: Unmapped target properties: "active, creationDate, updateDate".
+  void updateEntityFromDto(ClasseRoomDTO dto, @MappingTarget ClasseRoom entity);
+       ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\SubjectMapper.java:22: warning: Unmapped target properties: "active, creationDate, updateDate".
+  Subject toEntity(SubjectDTO dto);
+          ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\SubjectMapper.java:27: warning: Unmapped target properties: "active, creationDate, updateDate".
+  void updateEntityFromDto(SubjectDTO dto, @MappingTarget Subject entity);
+       ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\GradeMapper.java:28: warning: Unmapped target properties: "active, creationDate, updateDate".
+    Grade toEntity(GradeCreateRequestDTO dto);
+          ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\GradeMapper.java:53: warning: Unmapped target properties: "active, creationDate, updateDate".
+    void updateEntityFromRequest(GradeCreateRequestDTO dto, @MappingTarget Grade entity);
+         ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\AcademicYearMapper.java:24: warning: Unmapped target property: "active".
+    AcademicYear toEntity(AcademicYearDTO dto);
+                 ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\AcademicYearMapper.java:30: warning: Unmapped target property: "active".
+    void updateEntityFromDto(AcademicYearDTO dto, @MappingTarget AcademicYear entity);
+         ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\TrimestreMapper.java:23: warning: Unmapped target properties: "active, creationDate, updateDate".
+  Trimestre toEntity(TrimestreDTO dto);
+            ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\TrimestreMapper.java:29: warning: Unmapped target properties: "active, creationDate, updateDate".
+  void updateEntityFromDto(TrimestreDTO dto, @MappingTarget Trimestre entity);
+       ^
+C:\Projects\Primary-School\backend\src\main\java\com\school\platform\identityaccess\application\AuthentificationService.java:98: error: cannot find symbol
+    public void register(RegisterRequest request) { usersService.createAccount(request, true); }
+                                                                ^
+  symbol:   method createAccount(RegisterRequest,boolean)
+  location: variable usersService of type IUserAccountManagementService
+1 error
+22 warnings
+
+> Task :compileJava FAILED
+
+[Incubating] Problems report is available at: file:///C:/Projects/Primary-School/backend/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+> Compilation failed; see the compiler output below.
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\ClasseRoom.java:57: warning: @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+      private Boolean actif = true;
+                      ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\identityaccess\domain\model\BaseEntity.java:31: warning: @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+      private Boolean active = true;
+                      ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\Grade.java:76: warning: @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+      private BigDecimal coefficient = BigDecimal.ONE;
+                         ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\Grade.java:92: warning: @SuperBuilder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+      private GradeStatus status = GradeStatus.DRAFT;
+                          ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\ClasseRoom.java:24: warning: Generating equals/hashCode implementation but without a call to superclass, even though this class does not extend java.lang.Object. If this is intentional, add '@EqualsAndHashCode(callSuper=false)' to your type.
+  @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+  ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\Grade.java:31: warning: Generating equals/hashCode implementation but without a call to superclass, even though this class does not extend java.lang.Object. If this is intentional, add '@EqualsAndHashCode(callSuper=false)' to your type.
+  @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+  ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\Sequence.java:12: warning: Generating equals/hashCode implementation but without a call to superclass, even though this class does not extend java.lang.Object. If this is intentional, add '@EqualsAndHashCode(callSuper=false)' to your type.
+  @Data
+  ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\domain\model\Trimestre.java:12: warning: Generating equals/hashCode implementation but without a call to superclass, even though this class does not extend java.lang.Object. If this is intentional, add '@EqualsAndHashCode(callSuper=false)' to your type.
+  @Data
+  ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\SequenceMapper.java:23: warning: Unmapped target properties: "active, creationDate, updateDate".
+    Sequence toEntity(SequenceDTO dto);
+             ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\SequenceMapper.java:29: warning: Unmapped target properties: "active, creationDate, updateDate".
+    void updateEntityFromDto(SequenceDTO dto, @MappingTarget Sequence entity);
+         ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\ClasseRoomMapper.java:24: warning: Unmapped target properties: "active, creationDate, updateDate, person, employeeNumber, employmentDate, level". Mapping from property "TeacherDTO teacher" to "StaffMember teacher".
+    ClasseRoom toEntity(ClasseRoomDTO dto);
+               ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\ClasseRoomMapper.java:24: warning: Unmapped target properties: "active, creationDate, updateDate".
+    ClasseRoom toEntity(ClasseRoomDTO dto);
+               ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\ClasseRoomMapper.java:31: warning: Unmapped target properties: "active, creationDate, updateDate, person, employeeNumber, employmentDate, level". Mapping from property "TeacherDTO teacher" to "StaffMember teacher".
+    void updateEntityFromDto(ClasseRoomDTO dto, @MappingTarget ClasseRoom entity);
+         ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\ClasseRoomMapper.java:31: warning: Unmapped target properties: "active, creationDate, updateDate".
+    void updateEntityFromDto(ClasseRoomDTO dto, @MappingTarget ClasseRoom entity);
+         ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\SubjectMapper.java:22: warning: Unmapped target properties: "active, creationDate, updateDate".
+    Subject toEntity(SubjectDTO dto);
+            ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\SubjectMapper.java:27: warning: Unmapped target properties: "active, creationDate, updateDate".
+    void updateEntityFromDto(SubjectDTO dto, @MappingTarget Subject entity);
+         ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\GradeMapper.java:28: warning: Unmapped target properties: "active, creationDate, updateDate".
+      Grade toEntity(GradeCreateRequestDTO dto);
+            ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\GradeMapper.java:53: warning: Unmapped target properties: "active, creationDate, updateDate".
+      void updateEntityFromRequest(GradeCreateRequestDTO dto, @MappingTarget Grade entity);
+           ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\AcademicYearMapper.java:24: warning: Unmapped target property: "active".
+      AcademicYear toEntity(AcademicYearDTO dto);
+                   ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\AcademicYearMapper.java:30: warning: Unmapped target property: "active".
+      void updateEntityFromDto(AcademicYearDTO dto, @MappingTarget AcademicYear entity);
+           ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\TrimestreMapper.java:23: warning: Unmapped target properties: "active, creationDate, updateDate".
+    Trimestre toEntity(TrimestreDTO dto);
+              ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\academic\application\mapper\TrimestreMapper.java:29: warning: Unmapped target properties: "active, creationDate, updateDate".
+    void updateEntityFromDto(TrimestreDTO dto, @MappingTarget Trimestre entity);
+         ^
+  C:\Projects\Primary-School\backend\src\main\java\com\school\platform\identityaccess\application\AuthentificationService.java:98: error: cannot find symbol
+      public void register(RegisterRequest request) { usersService.createAccount(request, true); }
+                                                                  ^
+    symbol:   method createAccount(RegisterRequest,boolean)
+    location: variable usersService of type IUserAccountManagementService
+  1 error
+  22 warnings
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 47s
+1 actionable task: 1 executed

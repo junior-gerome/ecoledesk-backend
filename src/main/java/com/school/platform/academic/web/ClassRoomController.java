@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import com.school.platform.academic.application.dto.ClasseRoomDTO;
 import com.school.platform.academic.application.dto.TeacherDTO;
-import com.school.platform.academic.application.ClassRoomService;
+import com.school.platform.academic.application.interfaces.ClassRoomService;
 
 import lombok.RequiredArgsConstructor;
 

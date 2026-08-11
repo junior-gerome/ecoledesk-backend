@@ -48,8 +48,8 @@ public class ClassValidator implements Validator {
         }
 
         // Année scolaire (ID obligatoire)
-        if (classe.getAnneeScolaire().getId() == null) {
-            errors.rejectValue("anneeScolaireId", "field.required", "L'année scolaire est obligatoire");
+        if (classe.getAcademicYear() == null || classe.getAcademicYear().getId() == null) {
+            errors.rejectValue("academicYear", "field.required", "L'année scolaire est obligatoire");
             validationMessages.add("L'année scolaire est obligatoire");
         }
 

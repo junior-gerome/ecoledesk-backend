@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.school.platform.identityaccess.application.dto.role.RoleFullDTO;
-import com.school.platform.identityaccess.application.RoleService;
+import com.school.platform.identityaccess.application.interfaces.IRoleService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 @PreAuthorize("hasRole('ADMIN')")
 public class RoleController {
 
-    private final RoleService roleService;
+    private final IRoleService roleService;
 
     @PostMapping
     public ResponseEntity<RoleFullDTO> create(@Valid @RequestBody RoleFullDTO dto) {

@@ -13,11 +13,11 @@ public class AffectationDTO {
     private Long teachertId;
     private Long classeId;
     private Long subjectId;
-    private Long anneeScolaireId;
+    private Long academicYearId;
     private String LastnameTeacher;
     private String NameClasse;
     private String nameSubject;
-    private String libelleAnneeScolaire;
+    private String libelleAcademicYear;
     private LocalDate dateDebut;
     private LocalDate dateFin;
    

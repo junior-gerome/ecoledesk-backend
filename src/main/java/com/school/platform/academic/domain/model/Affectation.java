@@ -2,6 +2,7 @@ package com.school.platform.academic.domain.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import com.school.platform.staff.domain.model.StaffMember;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,8 +32,8 @@ public class Affectation {
     private LocalDate dateFin;
 
     @ManyToOne
-    @JoinColumn(name = "teacher_id", nullable = false)
-    private Teacher teacher;
+    @JoinColumn(name = "staff_member_id", nullable = false)
+    private StaffMember teacher;
 
     @ManyToOne
     @JoinColumn(name = "classe_id", nullable = false)
@@ -43,8 +44,8 @@ public class Affectation {
     private Subject subject;
 
     @ManyToOne
-    @JoinColumn(name = "annee_scolaire_id", nullable = false)
-    private AnneeScolaire anneeScolaire;
+    @JoinColumn(name = "academicYearId", nullable = false)
+    private AcademicYear academicYear;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;

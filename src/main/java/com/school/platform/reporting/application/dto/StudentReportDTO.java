@@ -19,7 +19,7 @@ public class StudentReportDTO {
 
     private String firstNameStudent ;
 
-    private String LibelleanneeSection;
+    private String LibelleyearSection;
 
     private String period;
 

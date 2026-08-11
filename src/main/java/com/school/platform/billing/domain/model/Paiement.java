@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import com.school.platform.billing.domain.model.TypePaiement;
-import com.school.platform.enrollment.domain.model.InscriptionStudent;
+import com.school.platform.enrollment.domain.enrollment.Enrollment;
 import com.school.platform.billing.domain.model.Montant;
 import com.school.platform.enrollment.domain.model.Student;
 
@@ -18,7 +18,7 @@ import com.school.platform.enrollment.domain.model.Student;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(exclude = {"student", "inscriptionStudent", "montant"})
+@ToString(exclude = {"student", "enrollment", "montant"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name = "paiements")
 public class Paiement {
@@ -61,9 +61,9 @@ public class Paiement {
     @Column(name = "cancellation_reason", length = 500)
     private String cancellationReason;
 
-    @ManyToOne
-    @JoinColumn(name = "inscription_student_id", nullable = false)
-    private InscriptionStudent inscriptionStudent;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "enrollment_id", nullable = false)
+    private Enrollment enrollment;
 
     @ManyToOne
     @JoinColumn(name = "montant_id", nullable = false)

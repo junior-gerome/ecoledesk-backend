@@ -24,9 +24,9 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     Optional<Student> findByIdForUpdate(@Param("id") Long id);
 
     @Query(
-            value = "select distinct s from Student s join s.studentParents sp where sp.parent.id = :parentId",
-            countQuery = "select count(distinct s) from Student s join s.studentParents sp where sp.parent.id = :parentId")
-    Page<Student> findByParentId(@Param("parentId") Long parentId, Pageable pageable);
+            value = "select distinct s from Student s join s.studentGuardians sg where sg.guardian.id = :guardianId",
+            countQuery = "select count(distinct s) from Student s join s.studentGuardians sg where sg.guardian.id = :guardianId")
+    Page<Student> findByGuardianId(@Param("guardianId") Long guardianId, Pageable pageable);
 
     Page<Student> findByActiveTrue(Pageable pageable);
 

@@ -13,11 +13,11 @@ public class AffectationResponse {
     private Long teacherId;
     private Long classeId;
     private Long subjectId;
-    private Long anneeScolaireId;
+    private Long academicYearId;
     private String teacherName;
     private String classeName;
     private String subjectName;
-    private String libelleAnneeScolaire;
+    private String libelleAcademicYear;
     private LocalDate dateDebut;
     private LocalDate dateFin;
 }

@@ -44,7 +44,7 @@ public class StudentController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
     public StudentDTO createStudent(@Valid @RequestBody StudentDTO studentDTO) {
-        return studentCommandService.createStudentWithParent(studentDTO);
+        return studentCommandService.createStudentWithGuardian(studentDTO);
     }
 
     @PutMapping("/{id}")

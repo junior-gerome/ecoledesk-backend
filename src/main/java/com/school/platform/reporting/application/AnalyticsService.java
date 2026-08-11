@@ -38,10 +38,10 @@ public class AnalyticsService {
 
     private List<Map<String, Object>> getEffectifParSection() {
         String sql = """
-            SELECT s.libelle as section, COUNT(DISTINCT i.student_id) as effectif
+            SELECT s.libelle as section, COUNT(DISTINCT e.student_id) as effectif
             FROM sections s
             LEFT JOIN classes c ON c.section_id = s.id
-            LEFT JOIN inscription_student i ON i.classe_room_id = c.id
+            LEFT JOIN enrollments e ON e.classroom_id = c.id AND e.status = 'CONFIRMED'
             GROUP BY s.id, s.libelle
         """;
         return jdbcTemplate.queryForList(sql);
@@ -118,8 +118,8 @@ public class AnalyticsService {
                    ROUND(COUNT(CASE WHEN a.status = 'PRESENT' THEN 1 END) * 100.0 / COUNT(*), 2) as taux_presence
             FROM absences a
             JOIN students s ON a.student_id = s.id
-            JOIN inscription_student i ON i.student_id = s.id
-            JOIN classes c ON i.classe_room_id = c.id
+            JOIN enrollments e ON e.student_id = s.id AND e.status = 'CONFIRMED'
+            JOIN classes c ON e.classroom_id = c.id
             GROUP BY c.id, c.name_classe
         """;
         return jdbcTemplate.queryForList(sql);

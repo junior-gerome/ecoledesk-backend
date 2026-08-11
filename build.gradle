@@ -1,41 +1,49 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.5.14'
-    id 'io.spring.dependency-management' version '1.1.5'
+    id 'java' // Ajoute les taches de compilation, de test et de packaging Java.
+    id 'org.springframework.boot' version '3.5.14' // Integre Spring Boot et ses taches, notamment bootRun et bootJar.
+    id 'io.spring.dependency-management' version '1.1.5' // Gere les versions coherentes des dependances Spring Boot.
 }
 
-group = 'school'
-version = '0.0.1-SNAPSHOT'
+group = 'school' // Espace de noms Maven du projet, utilise dans les artefacts publies.
+version = '0.0.1-SNAPSHOT' // Version actuelle ; SNAPSHOT indique une version encore en developpement.
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(21) // Force Gradle a compiler et executer avec Java 21.
     }
 }
 
+// Definit les ensembles de sources. 'main' represente le code de production.
 sourceSets {
     main {
         java {
+            // Configuration Java par defaut : les sources sont dans src/main/java.
         }
     }
 }
+// Depot public depuis lequel Gradle telecharge les bibliotheques declarees ci-dessous.
 repositories {
     mavenCentral()
 }
 
 configurations {
+    // Les dependances compileOnly sont necessaires a la compilation mais ne sont pas embarquees a l'execution.
     compileOnly {
+        // Rend aussi visibles les processeurs d'annotations (par exemple Lombok) pendant la compilation.
         extendsFrom annotationProcessor
     }
 
+    // Regle appliquee a toutes les configurations de dependances.
     all {
-        exclude group: 'commons-logging', module: 'commons-logging' // Ã©viter conflit avec spring-boot
+        exclude group: 'commons-logging', module: 'commons-logging' // Evite un conflit avec le systeme de journalisation de Spring Boot.
     }
 }
 
+// Lit un fichier .env simple et retourne ses couples cle/valeur sous forme de map Groovy.
 def loadDotEnv = { File envFile ->
     def values = [:]
 
+    // Un fichier absent n'est pas une erreur : aucune variable n'est alors ajoutee.
     if (!envFile?.exists()) {
         return values
     }
@@ -43,17 +51,21 @@ def loadDotEnv = { File envFile ->
     envFile.eachLine('UTF-8') { rawLine ->
         def line = rawLine.trim()
 
+        // Ignore les lignes vides et les commentaires commencant par #.
         if (line && !line.startsWith('#')) {
+            // Accepte egalement la syntaxe shell : export MA_VARIABLE=valeur.
             if (line.startsWith('export ')) {
                 line = line.substring('export '.length()).trim()
             }
 
             def separatorIndex = line.indexOf('=')
 
+            // Seules les lignes de la forme CLE=VALEUR sont chargees.
             if (separatorIndex > 0) {
                 def key = line.substring(0, separatorIndex).trim()
                 def value = line.substring(separatorIndex + 1).trim()
 
+                // Retire les guillemets englobants, simples ou doubles, s'ils sont presents.
                 if (value.length() >= 2
                         && ((value.startsWith('"') && value.endsWith('"'))
                         || (value.startsWith("'") && value.endsWith("'")))) {
@@ -69,80 +81,112 @@ def loadDotEnv = { File envFile ->
 }
 
 dependencies {
-    // Spring Boot Starters
+    // Spring Boot : API Web REST et serveur HTTP embarque.
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Spring Boot : abstraction de cache et implementations compatibles.
     implementation 'org.springframework.boot:spring-boot-starter-cache'
+    // Spring Boot : persistance des entites avec JPA / Hibernate.
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // Spring Boot : authentification, autorisation et filtres de securite.
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    // Spring Boot : validation des entrees avec les annotations Jakarta Validation.
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // Spring Boot : endpoints et communications WebSocket.
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    // Spring Boot : integration de Redis, notamment pour le cache ou les donnees rapides.
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // Spring Boot : points de supervision (sante, metriques, informations applicatives).
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // Flyway : moteur de migration versionnee du schema de base de donnees.
     implementation 'org.flywaydb:flyway-core'
+    // Flyway : prise en charge specifique de MySQL.
     implementation 'org.flywaydb:flyway-mysql'
 
-    // Base de donnÃ©es
+    // Pilote JDBC MySQL, requis uniquement lors de l'execution de l'application.
     runtimeOnly 'com.mysql:mysql-connector-j'
 
-    // SÃ©curitÃ© - JWT (JJWT)
+    // JWT : API pour creer et verifier les jetons d'authentification signes.
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    // JWT : implementation interne disponible uniquement a l'execution.
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    // JWT : serialisation et deserialisation JSON des jetons via Jackson.
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    // Validation Jakarta (optionnel : dÃ©jÃ  inclus partiellement dans starter-validation)
+    // API Jakarta Validation et implementation Hibernate Validator (deja apportees en grande partie par le starter).
     implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
     implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
 
-    // Excel
+    // Apache POI : lecture et ecriture des anciens fichiers Excel (.xls).
     implementation 'org.apache.poi:poi:5.2.3'
+    // Apache POI OOXML : lecture et ecriture des fichiers Excel modernes (.xlsx).
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
 
-    // PDF avec iText 7 (dÃ©pendances groupÃ©es ici)
+    // iText 7 : outils de creation et manipulation de documents PDF.
     implementation 'com.itextpdf:itext7-core:7.2.5'
+    // iText 5 : compatibilite avec du code ou des fonctionnalites utilisant cette ancienne API.
     implementation 'com.itextpdf:itextpdf:5.5.13.3'
 
-    // Firebase Admin SDK
+    // SDK administrateur Firebase : interaction serveur avec les services Firebase.
     implementation 'com.google.firebase:firebase-admin:9.1.1'
 
-    // Redis Pool (nÃ©cessaire pour Lettuce ou Jedis)
+    // Pool de connexions Redis (a activer si l'application utilise explicitement Lettuce ou Jedis avec un pool).
     // implementation 'org.apache.commons:commons-pool2'
 
-    // OpenAPI (Swagger avec Springdoc)
+    // Springdoc : generation et interface Swagger UI pour la documentation OpenAPI de l'API REST.
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    // Annotations Swagger/OpenAPI permettant de documenter les endpoints et modeles.
     implementation 'io.swagger.core.v3:swagger-annotations:2.2.8'
 
-    // Monitoring / Prometheus
+    // Micrometer : export des metriques applicatives au format Prometheus.
     implementation 'io.micrometer:micrometer-registry-prometheus'
+    // Micrometer : facade commune de collecte des metriques.
     implementation 'io.micrometer:micrometer-core'
 
+    // MapStruct : generation a la compilation de convertisseurs entre DTO et entites.
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    // Processeur qui genere le code MapStruct.
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    // Assure la bonne cooperation entre les processeurs Lombok et MapStruct.
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
-    // Lombok is explicit so VS Code/JDT can resolve lombok.* imports after Gradle refresh.
+    // Lombok : annotations qui generent du code repetitif (getters, builders, etc.) sans etre embarquees au runtime.
     compileOnly 'org.projectlombok:lombok:1.18.38'
+    // Processeur d'annotations Lombok pour le code de production.
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
+    // Lombok est aussi disponible a la compilation des tests.
     testCompileOnly 'org.projectlombok:lombok:1.18.38'
+    // Processeur Lombok utilise pendant la compilation des tests.
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
 
-    // Tests
+    // Suite de test Spring Boot, incluant notamment JUnit, Mockito et les utilitaires Spring Test.
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Framework de test unitaire JUnit 5.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    // Creation de doublures (mocks) pour isoler les tests unitaires.
     testImplementation 'org.mockito:mockito-core:5.11.0'
+    // Assertions expressives et lisibles pour les tests.
     testImplementation 'org.assertj:assertj-core:3.25.3'
+    // Utilitaires de test pour les composants Spring Security.
     testImplementation 'org.springframework.security:spring-security-test'
+    // Integration JUnit 5 de Testcontainers pour executer des dependances reelles dans des conteneurs.
     testImplementation 'org.testcontainers:junit-jupiter:1.19.5'
+    // Bibliotheque principale Testcontainers.
     testImplementation 'org.testcontainers:testcontainers:1.19.5'
 }
 
+// Configure la tache de test Gradle pour utiliser la plateforme JUnit 5.
 tasks.named('test') {
     useJUnitPlatform()
 }
 
+// Charge les variables des fichiers .env lorsque l'application est lancee avec bootRun.
 tasks.named('bootRun') {
+    // Cherche d'abord un .env a la racine du depot (dossier parent de backend).
     def repoEnvFile = rootProject.projectDir.parentFile?.toPath()?.resolve('.env')?.normalize()?.toFile()
+    // Puis cherche un .env propre au module backend.
     def backendEnvFile = rootProject.file('.env')
 
+    // Les deux fichiers sont lus dans cet ordre ; une variable deja definie par le systeme n'est jamais ecrasee.
     [repoEnvFile, backendEnvFile].each { envFile ->
         loadDotEnv(envFile).each { key, value ->
             if (!System.getenv().containsKey(key) && !getEnvironment().containsKey(key)) {
@@ -152,10 +196,11 @@ tasks.named('bootRun') {
     }
 }
 
+// Ajoute la commande Gradle 'repairFlyway' pour reparer l'historique des migrations Flyway.
 tasks.register('repairFlyway', JavaExec) {
-    group = 'database'
-    description = 'Repairs Flyway schema history using the application datasource configuration.'
-    dependsOn 'classes'
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'com.school.platform.shared.infrastructure.flyway.FlywayRepairTool'
+    group = 'database' // Classe la tache dans le groupe 'database' de Gradle.
+    description = 'Repairs Flyway schema history using the application datasource configuration.' // Description affichee par Gradle.
+    dependsOn 'classes' // Compile le projet avant de lancer l'outil Java.
+    classpath = sourceSets.main.runtimeClasspath // Utilise le code compile et toutes les dependances d'execution.
+    mainClass = 'com.school.platform.shared.infrastructure.flyway.FlywayRepairTool' // Point d'entree Java de la reparation.
 }

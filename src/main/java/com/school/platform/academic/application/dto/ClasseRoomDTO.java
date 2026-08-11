@@ -10,7 +10,7 @@ public class ClasseRoomDTO {
     private SectionDTO section;
     private Integer capacity;
     private TeacherDTO teacher;    
-    private AnneeScolaireDTO anneeScolaire;
+    private AcademicYearDTO academicYear;
     private String description;
     
 

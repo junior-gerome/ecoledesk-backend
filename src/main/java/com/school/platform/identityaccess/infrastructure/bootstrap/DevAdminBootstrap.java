@@ -5,6 +5,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Profile("dev")
 public class DevAdminBootstrap implements ApplicationRunner {
     private final UserAccountRepository userAccountRepository;
     private final RoleRepository roleRepository;
@@ -33,26 +35,55 @@ public class DevAdminBootstrap implements ApplicationRunner {
     @Value("${app.bootstrap.admin.password:}") private String adminPassword;
 
     @Override
-    @Transactional
+@Transactional
     public void run(ApplicationArguments arguments) {
-        if (!enabled) return;
-        if (!StringUtils.hasText(adminEmail) || !StringUtils.hasText(adminPassword)) {
-            throw new IllegalStateException("Bootstrap admin is enabled, but app.bootstrap.admin.email/password are not configured");
+
+        if (!enabled) {
+            log.info("Bootstrap administrateur désactivé.");
+            return;
         }
-        if (userAccountRepository.existsByUsernameIgnoreCase(adminEmail)) return;
-        Role admin = roleRepository.findByCodeIgnoreCase("ADMIN")
-                .orElseThrow(() -> new IllegalStateException("Le role ADMIN doit etre initialise avant le bootstrap"));
+
+        if (!StringUtils.hasText(adminEmail)
+                || !StringUtils.hasText(adminPassword)) {
+
+            throw new IllegalStateException(
+                    "Bootstrap administrateur activé, mais l'email "
+                            + "ou le mot de passe n'est pas configuré.");
+        }
+
+        if (userAccountRepository
+                .existsByUsernameIgnoreCase(adminEmail)) {
+
+            log.info(
+                    "Le compte administrateur existe déjà : {}",
+                    adminEmail);
+            return;
+        }
+
+        Role admin = roleRepository
+                .findByCodeIgnoreCase("ADMIN")
+                .orElseThrow(() -> new IllegalStateException(
+                        "Le rôle ADMIN doit être créé par Flyway "
+                                + "avant le bootstrap administrateur."));
+
         Person person = new Person();
         person.setFirstName("Admin");
         person.setLastName("System");
-        person.setEmail(Email.of(adminEmail));
+        person.setEmail(adminEmail);
+
         UserAccount account = new UserAccount();
         account.setPerson(person);
         account.setUsername(adminEmail);
-        account.setPassword(passwordEncoder.encode(adminPassword));
+        account.setPassword(
+                passwordEncoder.encode(adminPassword));
         account.setEnabled(true);
         account.setRoles(Set.of(admin));
+
         userAccountRepository.save(account);
-        log.warn("Created development admin account: {}", adminEmail);
+
+        log.warn(
+                "Compte administrateur de développement créé : {}",
+                adminEmail);
     }
+
 }

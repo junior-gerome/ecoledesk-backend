@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.school.platform.identityaccess.application.dto.UserAccountSummaryDTO;
 import com.school.platform.identityaccess.application.dto.role.RoleFullDTO;
-import com.school.platform.identityaccess.application.RoleService;
-import com.school.platform.identityaccess.application.UserAccountManagementService;
+import com.school.platform.identityaccess.application.interfaces.IRoleService;
+import com.school.platform.identityaccess.application.interfaces.IUserAccountManagementService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +30,8 @@ import lombok.RequiredArgsConstructor;
 @PreAuthorize("hasRole('ADMIN')")
 public class ProfileController {
 
-    private final RoleService roleService;
-    private final UserAccountManagementService usersService;
+    private final IRoleService roleService;
+    private final IUserAccountManagementService usersService;
 
     @GetMapping
     public ResponseEntity<Page<RoleFullDTO>> findAll(Pageable pageable) {

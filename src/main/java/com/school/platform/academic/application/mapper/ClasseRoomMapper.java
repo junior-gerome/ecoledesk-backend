@@ -13,7 +13,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import com.school.platform.academic.application.dto.ClasseRoomDTO;
 import com.school.platform.academic.domain.model.ClasseRoom;
 
-@Mapper(componentModel = "spring", uses = {SectionMapper.class, TeacherMapper.class, AnneeScolaireMapper.class})
+@Mapper(componentModel = "spring", uses = {SectionMapper.class, TeacherMapper.class, AcademicYearMapper.class})
 public interface ClasseRoomMapper extends EntityMapper<ClasseRoomDTO, ClasseRoom> {
   
   ClasseRoomDTO toDto(ClasseRoom entity);

@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.school.platform.academic.application.GradeService;
+import com.school.platform.academic.application.interfaces.GradeService;
 import com.school.platform.enrollment.application.StudentService;
 
 import com.school.platform.shared.domain.exception.BusinessException;
@@ -85,7 +85,7 @@ public class ReportService {
         StudentDTO student = report.getId() != null ? studentService.getStudentById(report.getId()) : null;
         progress.setStudent(student);
         progress.setClassLevel(report.getNameClasse());
-        progress.setLibelleanneeSection(report.getLibelleanneeSection());
+        progress.setLibelleyearSection(report.getLibelleyearSection());
         progress.setAverageGrade(report.getAverageGrade());
         progress.setRank(report.getRank());
         progress.setTotalStudents(report.getTotalStudents());

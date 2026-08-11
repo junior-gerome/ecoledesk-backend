@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.school.platform.identityaccess.application.dto.permission.PermissionFullDTO;
-import com.school.platform.identityaccess.application.PermissionService;
+import com.school.platform.identityaccess.application.interfaces.IPermissionService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @PreAuthorize("hasRole('ADMIN')")
 public class PermissionController {
 
-    private final PermissionService permissionService;
+    private final IPermissionService permissionService;
 
     @PostMapping
     public ResponseEntity<PermissionFullDTO> create(@Valid @RequestBody PermissionFullDTO dto) {
