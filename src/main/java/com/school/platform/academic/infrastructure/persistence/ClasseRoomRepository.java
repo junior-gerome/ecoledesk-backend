@@ -24,6 +24,12 @@ public interface ClasseRoomRepository extends JpaRepository<ClasseRoom, Long> {
 
     boolean existsByNameClasse(String nameClasse);
 
+    /** Vérifie l'unicité du nom de classe dans une section donnée */
+    boolean existsByNameClasseAndSectionId(String nameClasse, Long sectionId);
+
+    /** Vérifie l'unicité du nom de classe dans une section et une année scolaire */
+    boolean existsByNameClasseAndSectionIdAndAcademicYearId(String nameClasse, Long sectionId, Long academicYearId);
+
     List<ClasseRoom> findBySectionId(Long sectionId);
 
     List<ClasseRoom> findBySection(Section section);

@@ -35,9 +35,28 @@ public class ClassRoomServiceImpl implements ClassRoomService {
 
     public ClasseRoomDTO createClassRoom(ClasseRoomDTO dto) {
         ClasseRoom classeRoom = mapper.toEntity(dto);
-        if (classeRoomRepository.existsByNameClasse(classeRoom.getNameClasse())) {
-            throw new IllegalArgumentException("La classe avec le nom " + classeRoom.getNameClasse() + " existe déjà.");
+
+        // Vérifie l'unicité du nom dans la section + année scolaire (pas globalement)
+        Long sectionId = (classeRoom.getSection() != null) ? classeRoom.getSection().getId() : null;
+        Long academicYearId = (classeRoom.getAcademicYear() != null) ? classeRoom.getAcademicYear().getId() : null;
+
+        boolean alreadyExists;
+        if (sectionId != null && academicYearId != null) {
+            alreadyExists = classeRoomRepository.existsByNameClasseAndSectionIdAndAcademicYearId(
+                    classeRoom.getNameClasse(), sectionId, academicYearId);
+        } else if (sectionId != null) {
+            alreadyExists = classeRoomRepository.existsByNameClasseAndSectionId(
+                    classeRoom.getNameClasse(), sectionId);
+        } else {
+            alreadyExists = classeRoomRepository.existsByNameClasse(classeRoom.getNameClasse());
         }
+
+        if (alreadyExists) {
+            throw new IllegalArgumentException(
+                    "Une classe avec le nom '" + classeRoom.getNameClasse()
+                    + "' existe déjà dans cette section pour cette année scolaire.");
+        }
+
         ClasseRoom saved = classeRoomRepository.save(classeRoom);
         return mapper.toDto(saved);
     }

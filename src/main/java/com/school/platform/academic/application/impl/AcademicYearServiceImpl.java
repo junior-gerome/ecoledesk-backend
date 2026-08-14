@@ -33,6 +33,12 @@ public class AcademicYearServiceImpl implements AcademicYearService {
     @Override
     @Transactional
     public AcademicYearDTO createAcademicYear(AcademicYearDTO dto) {
+        // Vérifie si un libellé identique existe déjà avant d'insérer
+        if (dto.getLibelleAcademicYear() != null
+                && academicYearRepository.existsByLibelleAcademicYear(dto.getLibelleAcademicYear())) {
+            throw new IllegalArgumentException(
+                    "Une année scolaire avec le libellé '" + dto.getLibelleAcademicYear() + "' existe déjà.");
+        }
         AcademicYear entity = mapper.toEntity(dto);
         return mapper.toDto(academicYearRepository.save(entity));
     }

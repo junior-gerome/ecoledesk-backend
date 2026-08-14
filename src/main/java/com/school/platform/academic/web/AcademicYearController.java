@@ -40,7 +40,13 @@ public class AcademicYearController {
     @GetMapping("/active")
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
     public ResponseEntity<AcademicYearDTO> getActiveAcademicYear() {
-        return ResponseEntity.ok(academicYearService.getActiveAcademicYear());
+        try {
+            return ResponseEntity.ok(academicYearService.getActiveAcademicYear());
+        } catch (com.school.platform.shared.domain.exception.ResourceNotFoundException ex) {
+            // No active academic year configured yet — return 200 with empty body
+            // so the frontend can handle it gracefully without a 404 error.
+            return ResponseEntity.ok().build();
+        }
     }
 
     @PutMapping("/{id}")
