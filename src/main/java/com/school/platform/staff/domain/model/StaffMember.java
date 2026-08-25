@@ -47,6 +47,7 @@ public class StaffMember extends BaseEntity {
     @Column(name = "cni_photo_url", length = 500)
     private String cniPhotoUrl;
 
+
     // Transitional accessors keep academic clients stable while Teacher is removed.
     public String getFirstnameTeacher() { return person == null ? null : person.getFirstName(); }
     public void setFirstnameTeacher(String value) { ensurePerson().setFirstName(value); }

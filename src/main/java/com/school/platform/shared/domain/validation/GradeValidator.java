@@ -5,7 +5,7 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
-import com.school.platform.academic.application.dto.GradeDTO;
+import com.school.platform.academic.application.dto.grade.GradeDTO;
 
 @Component
 public class GradeValidator implements Validator {

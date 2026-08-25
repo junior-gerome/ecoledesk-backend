@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.school.platform.academic.application.dto.SectionDTO;
+import com.school.platform.academic.application.dto.section.SectionDTO;
 import com.school.platform.academic.application.interfaces.SectionService;
 
 import jakarta.validation.Valid;

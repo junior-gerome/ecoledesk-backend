@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/authentication-audit-events")
+@RequestMapping("/authentication-audit-events")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class AuthenticationAuditController {

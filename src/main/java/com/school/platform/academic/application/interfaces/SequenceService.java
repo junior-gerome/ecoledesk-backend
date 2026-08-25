@@ -1,6 +1,6 @@
 package com.school.platform.academic.application.interfaces;
 
-import com.school.platform.academic.application.dto.SequenceDTO;
+import com.school.platform.academic.application.dto.sequence.SequenceDTO;
 import java.util.List;
 
 public interface SequenceService {

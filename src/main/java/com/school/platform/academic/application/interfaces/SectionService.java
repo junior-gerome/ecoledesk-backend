@@ -1,6 +1,6 @@
 package com.school.platform.academic.application.interfaces;
 
-import com.school.platform.academic.application.dto.SectionDTO;
+import com.school.platform.academic.application.dto.section.SectionDTO;
 import java.util.List;
 
 public interface SectionService {

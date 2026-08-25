@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import com.school.platform.academic.domain.model.Sequence;
-import com.school.platform.academic.application.dto.SequenceDTO;
+import com.school.platform.academic.application.dto.sequence.SequenceDTO;
 import com.school.platform.academic.application.interfaces.SequenceService;
 import com.school.platform.academic.infrastructure.persistence.SequenceRepository;
 

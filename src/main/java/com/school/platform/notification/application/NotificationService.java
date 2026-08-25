@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import com.school.platform.academic.application.dto.GradeDTO;
-import com.school.platform.academic.application.dto.GradeResponseDTO;
+import com.school.platform.academic.application.dto.grade.GradeDTO;
+import com.school.platform.academic.application.dto.grade.GradeResponseDTO;
 import com.school.platform.notification.application.dto.NotificationDTO;
 import com.school.platform.academic.domain.model.Grade;
 import com.school.platform.notification.domain.model.Notification;

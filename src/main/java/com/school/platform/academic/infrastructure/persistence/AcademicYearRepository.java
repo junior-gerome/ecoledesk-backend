@@ -12,6 +12,7 @@ import jakarta.persistence.LockModeType;
 @Repository
 public interface AcademicYearRepository extends JpaRepository<AcademicYear, Long> {
     Optional<AcademicYear> findByStatutCode(boolean statutCode);
+    Optional<AcademicYear> findByLibelleAcademicYear(String libelleAcademicYear);
     boolean existsByLibelleAcademicYear(String libelleAcademicYear);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

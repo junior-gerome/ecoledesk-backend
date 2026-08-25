@@ -8,8 +8,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import com.school.platform.academic.application.dto.GradeCreateRequestDTO;
-import com.school.platform.academic.application.dto.GradeResponseDTO;
+import com.school.platform.academic.application.dto.grade.GradeCreateRequestDTO;
+import com.school.platform.academic.application.dto.grade.GradeResponseDTO;
 import com.school.platform.academic.domain.model.Grade;
 
 @Mapper(componentModel = "spring")

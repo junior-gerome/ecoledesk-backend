@@ -18,17 +18,17 @@ public class AdmissionPolicy {
         if (!enrollment.getAcademicYear().isStatutCode()) {
             throw new BadRequestException("The academic year is not open");
         }
-        if (Boolean.FALSE.equals(lockedClassroom.getActif())) {
-            throw new BadRequestException("The classroom is not active");
+        if (Boolean.FALSE.equals(lockedClassroom.getActive())) {
+            throw new BadRequestException("The classeroom is not active");
         }
         if (lockedClassroom.getAcademicYear() != null
                 && !lockedClassroom.getAcademicYear().getId().equals(enrollment.getAcademicYear().getId())) {
-            throw new BadRequestException("The classroom does not belong to the enrollment academic year");
+            throw new BadRequestException("The classeroom does not belong to the enrollment academic year");
         }
         String requestedLevel = enrollment.getPreEnrollment().getRequestedLevel();
         if (requestedLevel != null && !requestedLevel.isBlank()
                 && !requestedLevel.trim().equalsIgnoreCase(lockedClassroom.getLevel())) {
-            throw new BadRequestException("The classroom level does not match the requested level");
+            throw new BadRequestException("The classeroom level does not match the requested level");
         }
         Integer capacity = lockedClassroom.getCapacity();
         if (capacity != null && capacity > 0) {

@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.school.platform.academic.domain.model.ClasseRoom;
 import com.school.platform.academic.domain.model.Section;
+import com.school.platform.staff.domain.model.StaffMember;
+
 
 import jakarta.persistence.LockModeType;
 
@@ -19,7 +21,7 @@ public interface ClasseRoomRepository extends JpaRepository<ClasseRoom, Long> {
     @Query("select c from ClasseRoom c where c.id = :id")
     Optional<ClasseRoom> findByIdForUpdate(Long id);
 
-    @Query("SELECT c FROM ClasseRoom c LEFT JOIN FETCH c.teacher t LEFT JOIN FETCH c.academicYear a")
+    @Query("SELECT c  FROM ClasseRoom c LEFT JOIN FETCH c.section s LEFT JOIN FETCH c.teacher st LEFT JOIN FETCH c.academicYear a")
     List<ClasseRoom> findAllWithDetails();
 
     boolean existsByNameClasse(String nameClasse);
@@ -30,7 +32,16 @@ public interface ClasseRoomRepository extends JpaRepository<ClasseRoom, Long> {
     /** Vérifie l'unicité du nom de classe dans une section et une année scolaire */
     boolean existsByNameClasseAndSectionIdAndAcademicYearId(String nameClasse, Long sectionId, Long academicYearId);
 
+    boolean existsByNameClasseAndSectionIdAndAcademicYearIdAndIdNot(String nameClasse, Long sectionId, Long academicYearId, Long id);
+
+    @Query("SELECT c FROM ClasseRoom c LEFT JOIN FETCH c.section LEFT JOIN FETCH c.teacher LEFT JOIN FETCH c.academicYear WHERE c.academicYear.id = :academicYearId")
     List<ClasseRoom> findBySectionId(Long sectionId);
+
+    List<ClasseRoom> findBySectionIdAndAcademicYearId(Long sectionId, Long academicYearId);
+
+    @Query("SELECT c FROM ClasseRoom c LEFT JOIN FETCH c.section LEFT JOIN FETCH c.teacher LEFT JOIN FETCH c.academicYear WHERE c.academicYear.id = :academicYearId")
+    List<ClasseRoom> findByAcademicYearId(Long academicYearId);
 
     List<ClasseRoom> findBySection(Section section);
 }
+

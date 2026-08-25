@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import com.school.platform.academic.application.dto.TrimestreDTO;
+import com.school.platform.academic.application.dto.trimestre.TrimestreDTO;
 import com.school.platform.academic.domain.model.Trimestre;
 
 @Mapper(componentModel = "spring", uses=AcademicYearMapper.class)

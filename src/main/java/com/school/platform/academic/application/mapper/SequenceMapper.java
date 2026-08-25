@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import com.school.platform.academic.application.dto.SequenceDTO;
+import com.school.platform.academic.application.dto.sequence.SequenceDTO;
 import com.school.platform.academic.domain.model.Sequence;
 
 @Mapper(componentModel = "spring", uses=TrimestreMapper.class)

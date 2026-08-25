@@ -2,7 +2,7 @@ package com.school.platform.academic.application.interfaces;
 
 import java.util.List;
 
-import com.school.platform.academic.application.dto.AcademicYearDTO;
+import com.school.platform.academic.application.dto.year.AcademicYearDTO;
 
 public interface AcademicYearService {
 

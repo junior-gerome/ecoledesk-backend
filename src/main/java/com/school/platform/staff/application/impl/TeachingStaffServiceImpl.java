@@ -36,12 +36,36 @@ public class TeachingStaffServiceImpl implements ITeachingStaffService {
     @Override
     @Transactional(readOnly = true)
     public List<StaffMember> getTeachingStaffMembers() {
-        return staffAssignmentRepository.findByPosition(StaffPosition.TEACHER).stream()
+        // findByPositionType charge tous les assignments TEACHER (avec ou sans endDate)
+        // puis isActiveToday filtre ceux dont la période couvre aujourd'hui.
+        List<StaffMember> activeTeachers = staffAssignmentRepository.findByPositionType(StaffPosition.TEACHER).stream()
                 .filter(this::isActiveToday)
                 .map(StaffAssignment::getStaffMember)
-                .filter(staff -> Boolean.TRUE.equals(staff.getActive()))
+                .filter(staff -> staff != null && Boolean.TRUE.equals(staff.getActive()))
+                .filter(staff -> staff.getPerson() != null)
                 .distinct()
-                .sorted(Comparator.comparing(staff -> staff.getPerson().getLastName(), String.CASE_INSENSITIVE_ORDER))
+                .sorted(Comparator.comparing(
+                        staff -> staff.getPerson().getLastName() != null
+                                ? staff.getPerson().getLastName()
+                                : "",
+                        String.CASE_INSENSITIVE_ORDER))
+                .toList();
+
+        if (!activeTeachers.isEmpty()) {
+            return activeTeachers;
+        }
+
+        // Fallback: charge tous les membres ayant une affectation TEACHER sans filtre de date
+        return staffAssignmentRepository.findByPositionType(StaffPosition.TEACHER).stream()
+                .map(StaffAssignment::getStaffMember)
+                .filter(staff -> staff != null && Boolean.TRUE.equals(staff.getActive()))
+                .filter(staff -> staff.getPerson() != null)
+                .distinct()
+                .sorted(Comparator.comparing(
+                        staff -> staff.getPerson().getLastName() != null
+                                ? staff.getPerson().getLastName()
+                                : "",
+                        String.CASE_INSENSITIVE_ORDER))
                 .toList();
     }
 
@@ -56,7 +80,11 @@ public class TeachingStaffServiceImpl implements ITeachingStaffService {
     }
 
     private boolean isActiveOn(StaffAssignment assignment, LocalDate date) {
-        return !assignment.getStartDate().isAfter(date)
-                && (assignment.getEndDate() == null || !assignment.getEndDate().isBefore(date));
+        if (assignment == null) {
+            return false;
+        }
+        boolean startOk = (assignment.getStartDate() == null || !assignment.getStartDate().isAfter(date));
+        boolean endOk = (assignment.getEndDate() == null || !assignment.getEndDate().isBefore(date));
+        return startOk && endOk;
     }
 }

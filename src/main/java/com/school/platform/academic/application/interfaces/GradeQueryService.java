@@ -1,6 +1,6 @@
 package com.school.platform.academic.application.interfaces;
 
-import com.school.platform.academic.application.dto.GradeResponseDTO;
+import com.school.platform.academic.application.dto.grade.GradeResponseDTO;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

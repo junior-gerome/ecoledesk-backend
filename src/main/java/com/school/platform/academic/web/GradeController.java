@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
-import com.school.platform.academic.application.dto.BulkGradeCreateRequest;
-import com.school.platform.academic.application.dto.GradeBatchStatusRequest;
-import com.school.platform.academic.application.dto.GradeCreateRequestDTO;
-import com.school.platform.academic.application.dto.GradeResponseDTO;
+import com.school.platform.academic.application.dto.grade.BulkGradeCreateRequest;
+import com.school.platform.academic.application.dto.grade.GradeBatchStatusRequest;
+import com.school.platform.academic.application.dto.grade.GradeCreateRequestDTO;
+import com.school.platform.academic.application.dto.grade.GradeResponseDTO;
 import com.school.platform.shared.web.PageResponse;
 import com.school.platform.academic.application.interfaces.GradeCalculationService;
 import com.school.platform.academic.application.interfaces.GradeCommandService;

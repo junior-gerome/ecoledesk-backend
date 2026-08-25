@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StaffAssignmentMediumDTO {
-    private Long id;
+//    private Long id;
 
     @NotNull(message = "Le membre du personnel est obligatoire")
     private Long staffMemberId;

@@ -10,23 +10,33 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import com.school.platform.academic.application.dto.ClasseRoomDTO;
+import com.school.platform.academic.application.dto.classeroom.ClasseRoomDTO;
 import com.school.platform.academic.domain.model.ClasseRoom;
+import com.school.platform.staff.application.mapper.StaffMemberMapper;
 
-@Mapper(componentModel = "spring", uses = {SectionMapper.class, TeacherMapper.class, AcademicYearMapper.class})
+@Mapper(componentModel = "spring", uses = {SectionMapper.class, StaffMemberMapper.class, AcademicYearMapper.class})
 public interface ClasseRoomMapper extends EntityMapper<ClasseRoomDTO, ClasseRoom> {
   
   ClasseRoomDTO toDto(ClasseRoom entity);
 
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "actif", ignore = true)
+  @Mapping(target = "id", ignore = true)
+//  @Mapping(target = "actif", ignore = true)
+  @Mapping(target = "active", ignore = true)
+  @Mapping(target = "creationDate", ignore = true)
+  @Mapping(target = "updateDate", ignore = true)
+  @Mapping(target = "section", ignore = true)
+  @Mapping(target = "academicYear", ignore = true)
+  @Mapping(target = "teacher", ignore = true)
   ClasseRoom toEntity(ClasseRoomDTO dto);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "actif", ignore = true)
+//  @Mapping(target = "actif", ignore = true)
+  @Mapping(target = "active", ignore = true)
+  @Mapping(target = "creationDate", ignore = true)
+  @Mapping(target = "updateDate", ignore = true)
+  @Mapping(target = "section", ignore = true)
+  @Mapping(target = "academicYear", ignore = true)
+  @Mapping(target = "teacher", ignore = true)
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
   void updateEntityFromDto(ClasseRoomDTO dto, @MappingTarget ClasseRoom entity);
 

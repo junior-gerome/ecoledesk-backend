@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.school.platform.academic.application.interfaces.AcademicYearService;
-import com.school.platform.academic.application.dto.AcademicYearDTO;
+import com.school.platform.academic.application.dto.year.AcademicYearDTO;
 import com.school.platform.academic.application.mapper.AcademicYearMapper;
 import com.school.platform.academic.domain.model.AcademicYear;
 import com.school.platform.academic.infrastructure.persistence.AcademicYearRepository;

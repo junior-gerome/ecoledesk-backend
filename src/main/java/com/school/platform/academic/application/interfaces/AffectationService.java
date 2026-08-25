@@ -1,9 +1,9 @@
 package com.school.platform.academic.application.interfaces;
 
-import com.school.platform.academic.application.dto.AffectationCreateRequest;
-import com.school.platform.academic.application.dto.AffectationDTO;
-import com.school.platform.academic.application.dto.AffectationResponse;
-import com.school.platform.academic.application.dto.AffectationUpdateRequest;
+import com.school.platform.academic.application.dto.affectation.AffectationCreateRequest;
+import com.school.platform.academic.application.dto.affectation.AffectationDTO;
+import com.school.platform.academic.application.dto.affectation.AffectationResponse;
+import com.school.platform.academic.application.dto.affectation.AffectationUpdateRequest;
 import java.util.List;
 
 public interface AffectationService {

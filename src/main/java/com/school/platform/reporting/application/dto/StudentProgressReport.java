@@ -3,7 +3,7 @@ package com.school.platform.reporting.application.dto;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
-import com.school.platform.academic.application.dto.GradeDTO;
+import com.school.platform.academic.application.dto.grade.GradeDTO;
 import com.school.platform.enrollment.application.dto.StudentDTO;
 
 import lombok.Data;

@@ -69,7 +69,7 @@ public class Enrollment extends BaseEntity {
         if (status != EnrollmentStatus.PENDING_CONFIRMATION)
             throw new IllegalStateException("Only pending enrollment can be confirmed");
         if (student == null || classroom == null)
-            throw new IllegalStateException("Student and classroom are required");
+            throw new IllegalStateException("Student and classeroom are required");
         status = EnrollmentStatus.CONFIRMED;
         confirmationDate = LocalDate.now();
     }

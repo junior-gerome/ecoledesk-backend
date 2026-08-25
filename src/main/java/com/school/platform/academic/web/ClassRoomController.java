@@ -8,8 +8,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
-import com.school.platform.academic.application.dto.ClasseRoomDTO;
-import com.school.platform.academic.application.dto.TeacherDTO;
+import com.school.platform.academic.application.dto.classeroom.ClasseRoomDTO;
+import com.school.platform.staff.application.dto.StaffMemberBasicDTO;
 import com.school.platform.academic.application.interfaces.ClassRoomService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,9 +23,18 @@ public class ClassRoomController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
-    public ResponseEntity<ClasseRoomDTO> createClassRoom(@RequestBody ClasseRoomDTO dto) {
-        ClasseRoomDTO createdClassRoom = classRoomService.createClassRoom(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdClassRoom);
+    public ResponseEntity<?> createClassRoom(@RequestBody ClasseRoomDTO dto) {
+        try {
+            ClasseRoomDTO createdClassRoom = classRoomService.createClassRoom(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdClassRoom);
+        } catch (IllegalArgumentException ex) {
+            if (ex.getMessage() != null && ex.getMessage().contains("existe")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(java.util.Map.of("message", ex.getMessage()));
+            }
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", ex.getMessage()));
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(java.util.Map.of("message", ex.getMessage()));
+        }
     }
 
 
@@ -68,16 +77,19 @@ public class ClassRoomController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
-    public ResponseEntity<List<ClasseRoomDTO>> getAllClassRooms() {
-       List<ClasseRoomDTO> classRooms = classRoomService.getAllClassRooms();
+    public ResponseEntity<List<ClasseRoomDTO>> getAllClassRooms(
+            @RequestParam(required = false) Long academicYearId) {
+       List<ClasseRoomDTO> classRooms = classRoomService.getAllClassRooms(academicYearId);
         return ResponseEntity.ok(classRooms);
     }
 
     @GetMapping("/by-section/{sectionId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
-    public ResponseEntity<List<ClasseRoomDTO>> getClassesBySection(@PathVariable Long sectionId) {
+    public ResponseEntity<List<ClasseRoomDTO>> getClassesBySection(
+            @PathVariable Long sectionId,
+            @RequestParam(required = false) Long academicYearId) {
         // List<ClasseRoom> classRooms = classRoomService.getClassRoomsBySection(sectionId);
-        return ResponseEntity.ok(classRoomService.getClassRoomsBySection(sectionId));
+        return ResponseEntity.ok(classRoomService.getClassRoomsBySection(sectionId, academicYearId));
     }
 
     @GetMapping("/count")
@@ -89,8 +101,14 @@ public class ClassRoomController {
 
     @GetMapping("/teachers/available")
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
-    public ResponseEntity<List<TeacherDTO>> getAvailableTeachers() {
+    public ResponseEntity<List<StaffMemberBasicDTO>> getAvailableTeachers() {
         return ResponseEntity.ok(classRoomService.getAvailableTeachers());
+    }
+
+    @GetMapping("/teachers")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<List<StaffMemberBasicDTO>> getTeachers() {
+        return ResponseEntity.ok(classRoomService.getTeachers());
     }
 
     @PostMapping("/{classId}/teacher/{teacherId}")

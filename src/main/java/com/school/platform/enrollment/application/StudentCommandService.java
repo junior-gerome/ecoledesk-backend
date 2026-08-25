@@ -35,6 +35,10 @@ public class StudentCommandService {
         student.setGuardian(guardian);
         student.setRegistrationDate(LocalDateTime.now());
         student.setActive(true);
+        // Génère un matricule unique si non fourni
+        if (student.getStudentNumber() == null || student.getStudentNumber().isBlank()) {
+            student.setStudentNumber(generateStudentNumber());
+        }
         return studentMapper.toDto(studentRepository.save(student));
     }
 
@@ -103,4 +107,13 @@ public class StudentCommandService {
     }
 
     private boolean hasText(String value) { return value != null && !value.isBlank(); }
+
+    /**
+     * Génère un matricule unique au format GSBP-XXXXXX (6 chiffres séquentiels zéro-paddés).
+     * Exemple : GSBP-000001, GSBP-000042
+     */
+    private String generateStudentNumber() {
+        long count = studentRepository.count() + 1;
+        return String.format("GSBP-%06d", count);
+    }
 }

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import com.school.platform.academic.domain.model.Trimestre;
-import com.school.platform.academic.application.dto.TrimestreDTO;
+import com.school.platform.academic.application.dto.trimestre.TrimestreDTO;
 import com.school.platform.academic.application.interfaces.TrimestreService;
 import com.school.platform.academic.infrastructure.persistence.TrimestreRepository;
 

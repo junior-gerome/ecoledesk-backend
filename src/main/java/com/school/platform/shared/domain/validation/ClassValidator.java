@@ -1,7 +1,7 @@
 package com.school.platform.shared.domain.validation;
 
 import com.school.platform.shared.domain.exception.ValidationException;
-import com.school.platform.academic.application.dto.ClasseRoomDTO;
+import com.school.platform.academic.application.dto.classeroom.ClasseRoomDTO;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;

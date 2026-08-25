@@ -1,9 +1,9 @@
 package com.school.platform.academic.application.interfaces;
 
-import com.school.platform.academic.application.dto.BulkGradeCreateRequest;
-import com.school.platform.academic.application.dto.GradeBatchStatusRequest;
-import com.school.platform.academic.application.dto.GradeCreateRequestDTO;
-import com.school.platform.academic.application.dto.GradeResponseDTO;
+import com.school.platform.academic.application.dto.grade.BulkGradeCreateRequest;
+import com.school.platform.academic.application.dto.grade.GradeBatchStatusRequest;
+import com.school.platform.academic.application.dto.grade.GradeCreateRequestDTO;
+import com.school.platform.academic.application.dto.grade.GradeResponseDTO;
 import java.util.List;
 
 public interface GradeCommandService {

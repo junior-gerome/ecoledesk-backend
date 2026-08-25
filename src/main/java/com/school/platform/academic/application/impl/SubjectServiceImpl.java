@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
-import com.school.platform.academic.application.dto.SubjectDTO;
+import com.school.platform.academic.application.dto.subject.SubjectDTO;
 import com.school.platform.academic.application.interfaces.SubjectService;
 import com.school.platform.academic.application.mapper.SubjectMapper;
 import com.school.platform.academic.domain.model.Subject;

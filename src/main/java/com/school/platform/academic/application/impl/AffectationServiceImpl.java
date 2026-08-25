@@ -6,10 +6,10 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.school.platform.academic.application.dto.AffectationCreateRequest;
-import com.school.platform.academic.application.dto.AffectationDTO;
-import com.school.platform.academic.application.dto.AffectationResponse;
-import com.school.platform.academic.application.dto.AffectationUpdateRequest;
+import com.school.platform.academic.application.dto.affectation.AffectationCreateRequest;
+import com.school.platform.academic.application.dto.affectation.AffectationDTO;
+import com.school.platform.academic.application.dto.affectation.AffectationResponse;
+import com.school.platform.academic.application.dto.affectation.AffectationUpdateRequest;
 import com.school.platform.academic.application.interfaces.AffectationService;
 import com.school.platform.academic.domain.model.Affectation;
 import com.school.platform.academic.infrastructure.persistence.AffectationRepository;

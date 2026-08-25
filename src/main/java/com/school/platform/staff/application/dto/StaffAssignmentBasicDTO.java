@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StaffAssignmentBasicDTO {
-    private Long id;
+//    private Long id;
     private StaffPosition position;
     private LocalDate startDate;
     private LocalDate endDate;

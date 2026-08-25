@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StaffAssignmentFullDTO {
-    private Long id;
+//    private Long id;
     private StaffMemberBasicDTO staffMember;
     private StaffPosition position;
     private LocalDate startDate;

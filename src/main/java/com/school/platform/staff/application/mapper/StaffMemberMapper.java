@@ -15,14 +15,14 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface StaffMemberMapper {
 
-    @Mapping(target = "employeeNumber", source = "employeeNumber.value")
+    @Mapping(target = "employeeNumber", expression = "java(entity.getEmployeeNumber() != null ? entity.getEmployeeNumber().getValue() : null)")
     @Mapping(target = "firstName", source = "person.firstName")
     @Mapping(target = "lastName", source = "person.lastName")
     @Mapping(target = "photoUrl", source = "person.photoUrl")
     @Mapping(target = "gender", source = "person.gender")
     StaffMemberBasicDTO toBasicDTO(StaffMember entity);
 
-    @Mapping(target = "employeeNumber", source = "employeeNumber.value")
+    @Mapping(target = "employeeNumber", expression = "java(entity.getEmployeeNumber() != null ? entity.getEmployeeNumber().getValue() : null)")
     @Mapping(target = "firstName", source = "person.firstName")
     @Mapping(target = "lastName", source = "person.lastName")
     @Mapping(target = "email", source = "person.email")
@@ -32,7 +32,7 @@ public interface StaffMemberMapper {
     @Mapping(target = "photoUrl", source = "person.photoUrl")
     StaffMemberMediumDTO toMediumDTO(StaffMember entity);
 
-    @Mapping(target = "employeeNumber", source = "employeeNumber.value")
+    @Mapping(target = "employeeNumber", expression = "java(entity.getEmployeeNumber() != null ? entity.getEmployeeNumber().getValue() : null)")
     @Mapping(target = "firstName", source = "person.firstName")
     @Mapping(target = "lastName", source = "person.lastName")
     @Mapping(target = "email", source = "person.email")

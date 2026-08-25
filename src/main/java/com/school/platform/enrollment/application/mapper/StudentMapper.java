@@ -17,6 +17,7 @@ import com.school.platform.enrollment.domain.model.Student;
 @Mapper(componentModel = "spring", uses = GuardianMapper.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface StudentMapper extends EntityMapper<StudentDTO, Student> {
 
+  @Mapping(target = "studentNumber", source = "studentNumber")
   StudentDTO toDto(Student entity);
 
   @Mapping(target = "studentGuardians", ignore = true)

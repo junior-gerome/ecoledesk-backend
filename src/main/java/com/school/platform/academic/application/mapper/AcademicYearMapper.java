@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import com.school.platform.academic.application.dto.AcademicYearDTO;
+import com.school.platform.academic.application.dto.year.AcademicYearDTO;
 import com.school.platform.academic.domain.model.AcademicYear;
 
 @Mapper(componentModel = "spring")

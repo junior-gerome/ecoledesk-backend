@@ -1,6 +1,6 @@
 package com.school.platform.academic.application.impl;
 
-import com.school.platform.academic.application.dto.GradeResponseDTO;
+import com.school.platform.academic.application.dto.grade.GradeResponseDTO;
 import com.school.platform.academic.application.interfaces.GradeQueryService;
 import com.school.platform.academic.application.interfaces.GradeService;
 import java.util.List;

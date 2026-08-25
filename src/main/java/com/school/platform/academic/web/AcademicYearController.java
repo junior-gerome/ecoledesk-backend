@@ -8,7 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.school.platform.academic.application.interfaces.AcademicYearService;
-import com.school.platform.academic.application.dto.AcademicYearDTO;
+import com.school.platform.academic.application.dto.year.AcademicYearDTO;
 
 import lombok.RequiredArgsConstructor;
 

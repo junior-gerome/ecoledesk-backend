@@ -5,6 +5,8 @@ import com.school.platform.staff.application.dto.StaffMemberCreateRequest;
 import com.school.platform.staff.application.dto.StaffMemberFullDTO;
 import com.school.platform.staff.application.dto.StaffMemberMediumDTO;
 import com.school.platform.staff.application.interfaces.StaffMemberService;
+import com.school.platform.staff.application.interfaces.ITeachingStaffService;
+import com.school.platform.staff.application.mapper.StaffMemberMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,11 +17,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/staff/members")
+@RequestMapping("/staff/members")
 @RequiredArgsConstructor
 public class StaffMemberController {
 
     private final StaffMemberService staffMemberService;
+    private final ITeachingStaffService teachingStaffService;
+    private final StaffMemberMapper staffMemberMapper;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
@@ -31,6 +35,22 @@ public class StaffMemberController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
     public ResponseEntity<List<StaffMemberBasicDTO>> getAllBasic() {
         return ResponseEntity.ok(staffMemberService.getAllBasic());
+    }
+
+    /**
+     * GET /api/staff/members/teachers
+     * Returns StaffMembers with an active TEACHER assignment.
+     * Filters out members with null person to avoid NPE in mapper.
+     */
+    @GetMapping("/teachers")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
+    public ResponseEntity<List<StaffMemberBasicDTO>> getTeachers() {
+        List<StaffMemberBasicDTO> teachers = teachingStaffService.getTeachingStaffMembers()
+                .stream()
+                .filter(sm -> sm.getPerson() != null)
+                .map(staffMemberMapper::toBasicDTO)
+                .toList();
+        return ResponseEntity.ok(teachers);
     }
 
     @GetMapping("/{id}")

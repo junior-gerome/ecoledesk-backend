@@ -1,26 +1,33 @@
 package com.school.platform.academic.application.impl;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
-import com.school.platform.academic.application.dto.ClasseRoomDTO;
-import com.school.platform.academic.application.dto.TeacherDTO;
+import com.school.platform.academic.application.dto.classeroom.ClasseRoomDTO;
 import com.school.platform.academic.application.interfaces.ClassRoomService;
 import com.school.platform.academic.application.mapper.ClasseRoomMapper;
-//import com.school.platform.academic.application.mapper.SectionMapper;
+import com.school.platform.academic.application.dto.section.SectionDTO;
+import com.school.platform.academic.application.dto.year.AcademicYearDTO;
+import com.school.platform.academic.domain.model.AcademicYear;
 import com.school.platform.academic.domain.model.ClasseRoom;
 import com.school.platform.academic.domain.model.Section;
+import com.school.platform.academic.infrastructure.persistence.AcademicYearRepository;
+import com.school.platform.staff.application.dto.StaffMemberBasicDTO;
 import com.school.platform.staff.application.interfaces.ITeachingStaffService;
+import com.school.platform.staff.application.mapper.StaffMemberMapper;
 import com.school.platform.staff.domain.model.StaffMember;
+import com.school.platform.staff.infrastructure.persistence.StaffMemberRepository;
 import com.school.platform.academic.infrastructure.persistence.ClasseRoomRepository;
 import com.school.platform.academic.infrastructure.persistence.SectionRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,16 +36,30 @@ public class ClassRoomServiceImpl implements ClassRoomService {
 
     private final ClasseRoomRepository classeRoomRepository;
     private final SectionRepository sectionRepository;
+    private final AcademicYearRepository academicYearRepository;
     private final ClasseRoomMapper mapper;
     private final ITeachingStaffService teachingStaffService;
-   /// private final SectionMapper sectionMapper;
+    private final StaffMemberRepository staffMemberRepository;
+    private final StaffMemberMapper staffMemberMapper;
+
 
     public ClasseRoomDTO createClassRoom(ClasseRoomDTO dto) {
         ClasseRoom classeRoom = mapper.toEntity(dto);
 
-        // Vérifie l'unicité du nom dans la section + année scolaire (pas globalement)
-        Long sectionId = (classeRoom.getSection() != null) ? classeRoom.getSection().getId() : null;
-        Long academicYearId = (classeRoom.getAcademicYear() != null) ? classeRoom.getAcademicYear().getId() : null;
+        // Safely resolve Section
+        Section section = resolveSection(dto.getSection());
+        classeRoom.setSection(section);
+
+        // Safely resolve AcademicYear (with active year fallback)
+        AcademicYear academicYear = resolveAcademicYear(dto.getAcademicYear());
+        classeRoom.setAcademicYear(academicYear);
+
+        // Safely resolve Teacher (StaffMember)
+        StaffMember teacher = resolveTeacher(dto.getTeacher());
+        classeRoom.setTeacher(teacher);
+
+        Long sectionId = (section != null) ? section.getId() : null;
+        Long academicYearId = (academicYear != null) ? academicYear.getId() : null;
 
         boolean alreadyExists;
         if (sectionId != null && academicYearId != null) {
@@ -54,7 +75,7 @@ public class ClassRoomServiceImpl implements ClassRoomService {
         if (alreadyExists) {
             throw new IllegalArgumentException(
                     "Une classe avec le nom '" + classeRoom.getNameClasse()
-                    + "' existe déjà dans cette section pour cette année scolaire.");
+                    + "' existe deja dans cette section pour cette annee scolaire.");
         }
 
         ClasseRoom saved = classeRoomRepository.save(classeRoom);
@@ -68,63 +89,141 @@ public class ClassRoomServiceImpl implements ClassRoomService {
 
     public ClasseRoomDTO updateClassRoom(Long id, ClasseRoomDTO dto) {
         ClasseRoom existingclassroom = classeRoomRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("Classe non trouver par ID:" + id));
-        
+                .orElseThrow(() -> new ResourceNotFoundException("Classe non trouver par ID:" + id));
+
         mapper.updateEntityFromDto(dto, existingclassroom);
 
-        // 🟢 Mettre à jour la relation Teacher
-    if (dto.getTeacher() != null && dto.getTeacher().getId() != null) {
-        // Supposons que vous ayez un TeacherRepository pour trouver l'entité complète
-        StaffMember newTeacher = teachingStaffService.getTeachingStaffMember(dto.getTeacher().getId());
-        existingclassroom.setTeacher(newTeacher);
-    } else {
-        // Si l'ID est null, vous pourriez vouloir délier l'enseignant (mettre à null)
-        existingclassroom.setTeacher(null); 
-    }
+        // Safely resolve Section
+        if (dto.getSection() != null) {
+            Section section = resolveSection(dto.getSection());
+            if (section != null) {
+                existingclassroom.setSection(section);
+            }
+        }
 
-        
+        // Safely resolve AcademicYear
+        if (dto.getAcademicYear() != null) {
+            AcademicYear academicYear = resolveAcademicYear(dto.getAcademicYear());
+            if (academicYear != null) {
+                existingclassroom.setAcademicYear(academicYear);
+            }
+        }
+
+        // Safely resolve teacher
+        if (dto.getTeacher() != null) {
+            StaffMember teacher = resolveTeacher(dto.getTeacher());
+            existingclassroom.setTeacher(teacher);
+        } else {
+            existingclassroom.setTeacher(null);
+        }
+
         ClasseRoom updated = classeRoomRepository.save(existingclassroom);
-        log.info("classroom mis a jour avec succes: {}", updated.getId());
+        log.info("classeroom mis a jour avec succes: {}", updated.getId());
         return mapper.toDto(updated);
     }
 
-    public void deleteClassRoom(Long id) {
+    private Section resolveSection(SectionDTO sectionDTO) {
+        if (sectionDTO == null) {
+            return null;
+        }
+        if (sectionDTO.getLibelle() != null && !sectionDTO.getLibelle().isBlank()) {
+            String libelle = sectionDTO.getLibelle().trim();
+            Optional<Section> found = sectionRepository.findByLibelle(libelle);
+            if (found.isPresent()) {
+                return found.get();
+            }
+            List<Section> all = sectionRepository.findAll();
+            for (Section s : all) {
+                if (s.getLibelle() != null && s.getLibelle().trim().equalsIgnoreCase(libelle)) {
+                    return s;
+                }
+            }
+        }
+        return null;
+    }
 
+    private AcademicYear resolveAcademicYear(AcademicYearDTO academicYearDTO) {
+        if (academicYearDTO != null) {
+            if (academicYearDTO.getLibelleAcademicYear() != null && !academicYearDTO.getLibelleAcademicYear().isBlank()) {
+                String libelle = academicYearDTO.getLibelleAcademicYear().trim();
+                Optional<AcademicYear> found = academicYearRepository.findByLibelleAcademicYear(libelle);
+                if (found.isPresent()) {
+                    return found.get();
+                }
+                List<AcademicYear> all = academicYearRepository.findAll();
+                for (AcademicYear a : all) {
+                    if (a.getLibelleAcademicYear() != null && a.getLibelleAcademicYear().trim().equalsIgnoreCase(libelle)) {
+                        return a;
+                    }
+                }
+            }
+            if (academicYearDTO.getId() != null && academicYearDTO.getId() > 0) {
+                Optional<AcademicYear> found = academicYearRepository.findById(academicYearDTO.getId());
+                if (found.isPresent()) {
+                    return found.get();
+                }
+            }
+        }
+        // Fallback: search for active academic year
+        return academicYearRepository.findByStatutCode(true).orElse(null);
+    }
+
+    private StaffMember resolveTeacher(StaffMemberBasicDTO teacherDTO) {
+        if (teacherDTO == null) {
+            return null;
+        }
+        if (teacherDTO.getEmployeeNumber() != null && !teacherDTO.getEmployeeNumber().isBlank()) {
+            Optional<StaffMember> found = staffMemberRepository.findByEmployeeNumberValue(teacherDTO.getEmployeeNumber().trim());
+            if (found.isPresent()) {
+                return found.get();
+            }
+        }
+        if (teacherDTO.getId() != null && teacherDTO.getId() > 0) {
+            Optional<StaffMember> found = staffMemberRepository.findById(teacherDTO.getId());
+            if (found.isPresent()) {
+                return found.get();
+            }
+            try {
+                return teachingStaffService.getTeachingStaffMember(teacherDTO.getId());
+            } catch (Exception ignored) { }
+        }
+        return null;
+    }
+
+    public void deleteClassRoom(Long id) {
         if (!classeRoomRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Classe non trouvée avec l'id: " + id);
+            throw new ResourceNotFoundException("Classe non trouvee avec l'id: " + id);
         }
         classeRoomRepository.deleteById(id);
     }
 
-    
+    @Transactional(readOnly = true)
     public List<ClasseRoomDTO> getAllClassRooms() {
-       return classeRoomRepository.findAllWithDetails().stream()
+        return classeRoomRepository.findAllWithDetails().stream()
                .map(mapper::toDto)
                .collect(Collectors.toList());
     }
 
     public ClasseRoomDTO getClassRoomByNameClasse(String nameClasse) {
-
-        // ClasseRoom entity = mapper.toEntity(nameClasse);
-        // ClasseRoom classseByName = classeRoomRepository.findByNameClasse(entity);
-        
         return classeRoomRepository.findByNameClasse(nameClasse).map(mapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("ClasseRoom", "nameClasse", nameClasse));
     }
 
+    @Transactional(readOnly = true)
     public List<ClasseRoomDTO> getClassRoomsBySection(Long sectionId) {
-        
         Section section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Section", "id", sectionId));
-        return classeRoomRepository.findBySectionId(section.getId()).stream().map(mapper::toDto).collect(Collectors.toList());
+        return classeRoomRepository.findBySectionId(section.getId()).stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
     }
 
     public long getTotalClassRooms() {
         return classeRoomRepository.count();
     }
 
-    public List<TeacherDTO> getAvailableTeachers() {
-        Set<Long> assignedTeacherIds = classeRoomRepository.findAllWithDetails().stream()
+    public List<StaffMemberBasicDTO> getAvailableTeachers() {
+        Set<Long> assignedTeacherIds = classeRoomRepository.findAll().stream()
                 .map(ClasseRoom::getTeacher)
                 .filter(teacher -> teacher != null && teacher.getId() != null)
                 .map(StaffMember::getId)
@@ -132,7 +231,7 @@ public class ClassRoomServiceImpl implements ClassRoomService {
 
         return teachingStaffService.getTeachingStaffMembers().stream()
                 .filter(teacher -> !assignedTeacherIds.contains(teacher.getId()))
-                .map(this::toTeacherDto)
+                .map(staffMemberMapper::toBasicDTO)
                 .collect(Collectors.toList());
     }
 
@@ -150,21 +249,35 @@ public class ClassRoomServiceImpl implements ClassRoomService {
         classeRoom.setTeacher(null);
         classeRoomRepository.save(classeRoom);
     }
-    private TeacherDTO toTeacherDto(StaffMember staffMember) {
-        return TeacherDTO.builder()
-                .id(staffMember.getId())
-                .firstnameTeacher(staffMember.getFirstnameTeacher())
-                .lastnameTeacher(staffMember.getLastnameTeacher())
-                .email(staffMember.getEmail())
-                .phoneNumber(staffMember.getPhoneNumber())
-                .gender(staffMember.getGender())
-                .niveau(staffMember.getNiveau())
-                .speciality(staffMember.getSpeciality())
-                .adress(staffMember.getAdress())
-                .dateEmbauche(staffMember.getDateEmbauche())
-                .photoUrl(staffMember.getPhotoUrl())
-                .cniNumber(staffMember.getCniNumber())
-                .cniPhotoUrl(staffMember.getCniPhotoUrl())
-                .build();
+
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClasseRoomDTO> getAllClassRooms(Long academicYearId) {
+        if (academicYearId == null) {
+            return getAllClassRooms();
+        }
+        return classeRoomRepository.findByAcademicYearId(academicYearId).stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ClasseRoomDTO> getClassRoomsBySection(Long sectionId, Long academicYearId) {
+        if (academicYearId == null) {
+            return getClassRoomsBySection(sectionId);
+        }
+        return classeRoomRepository.findBySectionIdAndAcademicYearId(sectionId, academicYearId).stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StaffMemberBasicDTO> getTeachers() {
+        return teachingStaffService.getTeachingStaffMembers().stream()
+                .filter(member -> member != null)
+                .map(staffMemberMapper::toBasicDTO)
+                .collect(Collectors.toList());
     }
 }

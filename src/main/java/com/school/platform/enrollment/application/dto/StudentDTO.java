@@ -15,6 +15,9 @@ import lombok.Data;
 public class StudentDTO {
     private Long id;
 
+    /** Matricule de l'étudiant — généré automatiquement à la création (ex: STU-A1B2C3D4) */
+    private String studentNumber;
+
     @NotBlank(message = "Le prenom est obligatoire")
     @Size(min = 2, max = 100, message = "Le prenom doit contenir entre 2 et 100 caracteres")
     private String firstNameStudent;

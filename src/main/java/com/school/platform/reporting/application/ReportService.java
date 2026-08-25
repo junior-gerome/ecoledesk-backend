@@ -15,7 +15,7 @@ import com.school.platform.enrollment.application.StudentService;
 import com.school.platform.shared.domain.exception.BusinessException;
 import com.school.platform.billing.application.PaymentService;
 import com.school.platform.reporting.application.dto.ClassPerformanceReport;
-import com.school.platform.academic.application.dto.GradeDTO;
+import com.school.platform.academic.application.dto.grade.GradeDTO;
 import com.school.platform.billing.application.dto.PaymentSummaryReport;
 import com.school.platform.enrollment.application.dto.StudentDTO;
 import com.school.platform.reporting.application.dto.StudentProgressReport;

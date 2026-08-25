@@ -1,6 +1,6 @@
 package com.school.platform.academic.application.interfaces;
 
-import com.school.platform.academic.application.dto.TrimestreDTO;
+import com.school.platform.academic.application.dto.trimestre.TrimestreDTO;
 import java.util.List;
 
 public interface TrimestreService {

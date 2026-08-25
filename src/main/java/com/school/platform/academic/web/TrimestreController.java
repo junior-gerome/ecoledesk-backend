@@ -6,7 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
-import com.school.platform.academic.application.dto.TrimestreDTO;
+import com.school.platform.academic.application.dto.trimestre.TrimestreDTO;
 import com.school.platform.academic.application.interfaces.TrimestreService;
 
 //import jakarta.validation.Valid;  

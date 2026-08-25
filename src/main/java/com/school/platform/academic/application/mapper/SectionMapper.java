@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import com.school.platform.academic.application.dto.SectionDTO;
+import com.school.platform.academic.application.dto.section.SectionDTO;
 import com.school.platform.academic.domain.model.Section;
 
 @Mapper(componentModel = "spring", uses = {})

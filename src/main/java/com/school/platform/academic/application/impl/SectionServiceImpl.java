@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
-import com.school.platform.academic.application.dto.SectionDTO;
+import com.school.platform.academic.application.dto.section.SectionDTO;
 import com.school.platform.academic.application.interfaces.SectionService;
 import com.school.platform.academic.application.mapper.SectionMapper;
 import com.school.platform.academic.domain.model.Section;

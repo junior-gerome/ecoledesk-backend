@@ -1,6 +1,6 @@
 package com.school.platform.academic.application.interfaces;
 
-import com.school.platform.academic.application.dto.SubjectDTO;
+import com.school.platform.academic.application.dto.subject.SubjectDTO;
 import java.util.List;
 
 public interface SubjectService {

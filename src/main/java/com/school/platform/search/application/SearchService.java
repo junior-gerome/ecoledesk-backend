@@ -93,7 +93,7 @@ public class SearchService {
         String level = normalized(criteria, "level");
         int limit = limit(criteria);
 
-        return classeRoomRepository.findAllWithDetails().stream()
+        return classeRoomRepository.findAll().stream()
                 .map(this::classRow)
                 .filter(row -> keyword.isBlank() || rowMatches(row, keyword))
                 .filter(row -> section.isBlank() || sectionMatches(text(row.get("section")), section))
@@ -249,7 +249,7 @@ public class SearchService {
         row.put("class", safe(classeRoom.getNameClasse()));
         row.put("level", safe(classeRoom.getLevel()));
         row.put("section", classeRoom.getSection() == null ? "" : safe(classeRoom.getSection().getLibelle()));
-        row.put("status", Boolean.FALSE.equals(classeRoom.getActif()) ? "INACTIVE" : "ACTIVE");
+        row.put("status", Boolean.FALSE.equals(classeRoom.getActive()) ? "INACTIVE" : "ACTIVE");
         return row;
     }
 
