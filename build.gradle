@@ -180,21 +180,38 @@ tasks.named('test') {
 }
 
 // Charge les variables des fichiers .env lorsque l'application est lancee avec bootRun.
-tasks.named('bootRun') {
-    // Cherche d'abord un .env a la racine du depot (dossier parent de backend).
-    def repoEnvFile = rootProject.projectDir.parentFile?.toPath()?.resolve('.env')?.normalize()?.toFile()
-    // Puis cherche un .env propre au module backend.
-    def backendEnvFile = rootProject.file('.env')
 
-    // Les deux fichiers sont lus dans cet ordre ; une variable deja definie par le systeme n'est jamais ecrasee.
-    [repoEnvFile, backendEnvFile].each { envFile ->
-        loadDotEnv(envFile).each { key, value ->
-            if (!System.getenv().containsKey(key) && !getEnvironment().containsKey(key)) {
-                environment key, value
-            }
+tasks.named('bootRun') {
+
+    // Fichier .env externe au projet
+    def envFile = file('C:/school/variable_environnement/.env')
+
+    // Charge les variables du fichier .env
+    loadDotEnv(envFile).each { key, value ->
+
+        // Une variable système existante reste prioritaire
+        if (!System.getenv().containsKey(key) && !getEnvironment().containsKey(key)) {
+            environment key, value
         }
     }
 }
+
+
+//tasks.named('bootRun') {
+//    // Cherche d'abord un .env a la racine du depot (dossier parent de backend).
+//    def repoEnvFile = rootProject.projectDir.parentFile?.toPath()?.resolve('.env')?.normalize()?.toFile()
+//    // Puis cherche un .env propre au module backend.
+//    def backendEnvFile = rootProject.file('.env')
+//
+//    // Les deux fichiers sont lus dans cet ordre ; une variable deja definie par le systeme n'est jamais ecrasee.
+//    [repoEnvFile, backendEnvFile].each { envFile ->
+//        loadDotEnv(envFile).each { key, value ->
+//            if (!System.getenv().containsKey(key) && !getEnvironment().containsKey(key)) {
+//                environment key, value
+//            }
+//        }
+//    }
+//}
 
 // Ajoute la commande Gradle 'repairFlyway' pour reparer l'historique des migrations Flyway.
 tasks.register('repairFlyway', JavaExec) {
