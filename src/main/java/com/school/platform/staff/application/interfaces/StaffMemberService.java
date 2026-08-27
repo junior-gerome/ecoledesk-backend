@@ -22,4 +22,6 @@ public interface StaffMemberService {
     void deactivate(Long id);
 
     long count();
+
+    long countTeachers();
 }

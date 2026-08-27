@@ -23,4 +23,6 @@ public interface StaffAssignmentRepository extends JpaRepository<StaffAssignment
 
     @Query("SELECT a FROM StaffAssignment a JOIN FETCH a.staffMember sm JOIN FETCH sm.person WHERE a.position = :position AND a.endDate IS NULL")
     List<StaffAssignment> findByPosition(@Param("position") StaffPosition position);
+
+    long countByPositionAndActive(StaffPosition position, boolean active);
 }

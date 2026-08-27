@@ -13,6 +13,7 @@ import com.school.platform.staff.application.mapper.StaffAssignmentMapper;
 import com.school.platform.staff.application.mapper.StaffMemberMapper;
 import com.school.platform.staff.domain.model.EmployeeNumber;
 import com.school.platform.staff.domain.model.StaffMember;
+import com.school.platform.staff.domain.model.StaffPosition;
 import com.school.platform.staff.infrastructure.persistence.StaffAssignmentRepository;
 import com.school.platform.staff.infrastructure.persistence.StaffMemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -150,5 +151,11 @@ public class StaffMemberServiceImpl implements StaffMemberService {
     @Transactional(readOnly = true)
     public long count() {
         return staffMemberRepository.count();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countTeachers() {
+        return staffAssignmentRepository.countByPositionAndActive(StaffPosition.TEACHER, true);
     }
 }

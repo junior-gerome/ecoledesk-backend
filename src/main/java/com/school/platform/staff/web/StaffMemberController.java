@@ -84,4 +84,10 @@ public class StaffMemberController {
     public ResponseEntity<Long> count() {
         return ResponseEntity.ok(staffMemberService.count());
     }
+
+    @GetMapping("/teachers/count")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<Long> countTeachers() {
+        return ResponseEntity.ok(staffMemberService.countTeachers());
+    }
 }
