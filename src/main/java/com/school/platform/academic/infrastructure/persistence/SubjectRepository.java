@@ -11,4 +11,5 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
     // Méthodes de base fournies par JpaRepository
     Optional<Subject> findByNameSubject(String nameSubject);
     boolean existsByNameSubject(String nameSubject);
+    boolean existsByCode(String code);
 }

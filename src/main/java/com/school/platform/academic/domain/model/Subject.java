@@ -34,7 +34,7 @@ public class Subject extends BaseEntity {
     @Column(name = "description", length = 500)
     private String description;
 
-    @Builder.Default
-    @Column(name = "actif", nullable = false)
-    private Boolean actif = true;
+//    @Builder.Default
+//    @Column(name = "actif", nullable = false)
+//    private Boolean actif = true;
 }

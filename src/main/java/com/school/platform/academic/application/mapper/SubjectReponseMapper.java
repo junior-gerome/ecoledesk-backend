@@ -1,5 +1,6 @@
 package com.school.platform.academic.application.mapper;
 
+import com.school.platform.academic.application.dto.subject.SubjectReponse;
 import com.school.platform.shared.application.mapper.EntityMapper;
 
 import java.util.List;
@@ -10,24 +11,23 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import com.school.platform.academic.application.dto.subject.SubjectDTO;
 import com.school.platform.academic.domain.model.Subject;
 
 @Mapper(componentModel = "spring", uses={})
-public interface SubjectMapper extends EntityMapper<SubjectDTO,Subject> {
+public interface SubjectReponseMapper extends EntityMapper<SubjectReponse,Subject> {
 
-  SubjectDTO toDto(Subject entity);
+  SubjectReponse toDto(Subject entity);
 
-  @Mapping(target = "actif", ignore = true)
-  Subject toEntity(SubjectDTO dto);
+  @Mapping(target = "active", ignore = true)
+  Subject toEntity(SubjectReponse dto);
 
   @Mapping(target ="id", ignore =true)
-  @Mapping(target = "actif", ignore = true)
+  @Mapping(target = "active", ignore = true)
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-  void updateEntityFromDto(SubjectDTO dto, @MappingTarget Subject entity);
+  void updateEntityFromDto(SubjectReponse dto, @MappingTarget Subject entity);
 
-  List<SubjectDTO> toDto(List<Subject> entityList);
+  List<SubjectReponse> toDto(List<Subject> entityList);
 
-  List<Subject> toEntity(List<SubjectDTO> dtoList);
+  List<Subject> toEntity(List<SubjectReponse> dtoList);
 
 }
