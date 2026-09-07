@@ -16,7 +16,29 @@ public class RequiredPreEnrollmentDocumentPolicy {
 
     private List<String> requiredDocumentTypes = List.of();
 
+    public boolean mandatoryDocumentsAreSubmitted(PreEnrollment preEnrollment) {
+        if (requiredDocumentTypes == null || requiredDocumentTypes.isEmpty()) {
+            return true;
+        }
+        return requiredDocumentTypes.stream()
+                .filter(type -> type != null && !type.isBlank())
+                .allMatch(requiredType -> preEnrollment.getDocuments().stream()
+                        .anyMatch(document -> requiredType.trim().equalsIgnoreCase(document.getDocumentType())
+                                && document.getReviewStatus() != null));
+    }
+
     public boolean mandatoryDocumentsAreApproved(PreEnrollment preEnrollment) {
+        boolean hasInvalidDocuments = preEnrollment.getDocuments().stream()
+                .anyMatch(d -> d.getReviewStatus() == DocumentReviewStatus.REJECTED
+                        || d.getReviewStatus() == DocumentReviewStatus.REPLACEMENT_REQUIRED);
+        if (hasInvalidDocuments) {
+            return false;
+        }
+
+        if (requiredDocumentTypes == null || requiredDocumentTypes.isEmpty()) {
+            return true;
+        }
+
         return requiredDocumentTypes.stream()
                 .filter(type -> type != null && !type.isBlank())
                 .allMatch(requiredType -> preEnrollment.getDocuments().stream()

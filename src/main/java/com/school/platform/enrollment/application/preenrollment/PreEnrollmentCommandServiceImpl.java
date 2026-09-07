@@ -126,7 +126,7 @@ public PreEnrollmentResponse reviewDocument(
     @Transactional
     public PreEnrollmentResponse submit(Long id) {
         PreEnrollment preEnrollment = find(id);
-        preEnrollment.submit(hasRequiredFeePayment(preEnrollment), documentPolicy.mandatoryDocumentsAreApproved(preEnrollment));
+        preEnrollment.submit(hasRequiredFeePayment(preEnrollment), documentPolicy.mandatoryDocumentsAreSubmitted(preEnrollment));
         return response(preEnrollmentRepository.save(preEnrollment));
     }
 
@@ -142,7 +142,7 @@ public PreEnrollmentResponse reviewDocument(
     @Transactional
     public PreEnrollmentResponse approve(Long id, Long reviewedBy) {
         PreEnrollment preEnrollment = find(id);
-        preEnrollment.approve(reviewedBy);
+        preEnrollment.approve(reviewedBy, hasRequiredFeePayment(preEnrollment), documentPolicy.mandatoryDocumentsAreApproved(preEnrollment));
         return response(preEnrollmentRepository.save(preEnrollment));
     }
 

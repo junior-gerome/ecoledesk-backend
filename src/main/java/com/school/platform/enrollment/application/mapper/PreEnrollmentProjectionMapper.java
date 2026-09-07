@@ -52,7 +52,7 @@ public interface PreEnrollmentProjectionMapper {
         if (entity.getGuardians() == null) return List.of();
         return entity.getGuardians().stream()
                 .map(g -> new PreEnrollmentFullDTO.PreEnrollmentGuardianDTO(
-                        g.getId(), g.getRelationshipType(), g.getFirstName(), g.getLastName(),
+                        g.getId(), g.getRelationshipType(), g.getRelationshipDetails(), g.getFirstName(), g.getLastName(),
                         g.getEmail(), g.getPhoneNumber(), g.getAddress(),
                         g.isPrimaryContact(), g.isFinancialResponsible(), g.isEmergencyContact()))
                 .collect(Collectors.toList());

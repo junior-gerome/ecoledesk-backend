@@ -65,16 +65,18 @@ public class PreEnrollment extends BaseEntity {
    return pre;
  }
  
- public void submit(boolean feeConfirmed, boolean mandatoryDocumentsApproved) {
-   if (status != PreEnrollmentStatus.DRAFT)
-     throw new IllegalStateException("Only a draft can be submitted");
-   if (applicant == null || !applicant.isComplete() || academicYear == null || requestedLevel == null
-       || requestedLevel.isBlank())
-     throw new IllegalStateException("Incomplete applicant file");
-   if (guardians.stream().noneMatch(PreEnrollmentGuardian::isPrimaryContactable))
-      throw new IllegalStateException("A contactable primary guardian is required"); 
-    if (!feeConfirmed || !mandatoryDocumentsApproved)
-      throw new IllegalStateException("Fee and mandatory documents must be confirmed");
+  public void submit(boolean feeConfirmed, boolean mandatoryDocumentsSubmitted) {
+    if (status != PreEnrollmentStatus.DRAFT)
+      throw new IllegalStateException("Only a draft can be submitted");
+    if (applicant == null || !applicant.isComplete() || academicYear == null || requestedLevel == null
+        || requestedLevel.isBlank())
+      throw new IllegalStateException("Incomplete applicant file");
+    if (guardians.stream().noneMatch(PreEnrollmentGuardian::isPrimaryContactable))
+      throw new IllegalStateException("A contactable primary guardian is required");
+    if (!feeConfirmed)
+      throw new IllegalStateException("Required pre-enrollment fee must be confirmed");
+    if (!mandatoryDocumentsSubmitted)
+      throw new IllegalStateException("Mandatory documents must be submitted");
     status = PreEnrollmentStatus.SUBMITTED;
     submittedAt = LocalDateTime.now();
   }
@@ -86,12 +88,19 @@ public class PreEnrollment extends BaseEntity {
     reviewedBy = userId;
     reviewedAt = LocalDateTime.now();
   }
-  
-  public void approve(Long userId) {
-  if(status!=PreEnrollmentStatus.UNDER_REVIEW) throw new IllegalStateException("Only reviewed files can be approved");
-  if (guardians.stream().noneMatch(PreEnrollmentGuardian::isPrimaryContactable))
-    throw new IllegalStateException("A contactable primary guardian is required"); status=PreEnrollmentStatus.APPROVED; reviewedBy=userId; 
-   reviewedAt = LocalDateTime.now();
+
+  public void approve(Long userId, boolean feeConfirmed, boolean mandatoryDocumentsApproved) {
+    if (status != PreEnrollmentStatus.UNDER_REVIEW)
+      throw new IllegalStateException("Only reviewed files can be approved");
+    if (guardians.stream().noneMatch(PreEnrollmentGuardian::isPrimaryContactable))
+      throw new IllegalStateException("A contactable primary guardian is required");
+    if (!feeConfirmed)
+      throw new IllegalStateException("Required pre-enrollment fee must be confirmed");
+    if (!mandatoryDocumentsApproved)
+      throw new IllegalStateException("All mandatory documents must be approved");
+    status = PreEnrollmentStatus.APPROVED;
+    reviewedBy = userId;
+    reviewedAt = LocalDateTime.now();
   }
 
   public void reject(Long userId, String reason) {

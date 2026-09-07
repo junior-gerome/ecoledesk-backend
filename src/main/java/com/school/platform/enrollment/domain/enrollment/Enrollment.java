@@ -55,6 +55,16 @@ public class Enrollment extends BaseEntity {
     @Column(name = "cancellation_reason", length = 500)
     private String cancellationReason;
 
+    public static Enrollment pending(EnrollmentNumber number, PreEnrollment preEnrollment, AcademicYear academicYear, ClasseRoom classroom) {
+        Enrollment enrollment = new Enrollment();
+        enrollment.number = number;
+        enrollment.preEnrollment = preEnrollment;
+        enrollment.student = null;
+        enrollment.academicYear = academicYear;
+        enrollment.classroom = classroom;
+        return enrollment;
+    }
+
     public static Enrollment pending(EnrollmentNumber number, PreEnrollment preEnrollment, Student student, AcademicYear academicYear, ClasseRoom classroom) {
         Enrollment enrollment = new Enrollment();
         enrollment.number = number;
@@ -65,13 +75,20 @@ public class Enrollment extends BaseEntity {
         return enrollment;
     }
 
-    public void confirm() {
+    public void confirm(Student student) {
         if (status != EnrollmentStatus.PENDING_CONFIRMATION)
             throw new IllegalStateException("Only pending enrollment can be confirmed");
-        if (student == null || classroom == null)
-            throw new IllegalStateException("Student and classeroom are required");
-        status = EnrollmentStatus.CONFIRMED;
-        confirmationDate = LocalDate.now();
+        if (student == null)
+            throw new IllegalStateException("Student is required for confirmation");
+        if (classroom == null)
+            throw new IllegalStateException("Classroom is required for confirmation");
+        this.student = student;
+        this.status = EnrollmentStatus.CONFIRMED;
+        this.confirmationDate = LocalDate.now();
+    }
+
+    public void confirm() {
+        confirm(this.student);
     }
 
     public void withdraw() {

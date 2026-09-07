@@ -22,7 +22,7 @@ import java.util.Set;
 public class Student extends BaseEntity {
 
     @EqualsAndHashCode.Include
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "person_id", nullable = false, unique = true)
     private Person person;
 

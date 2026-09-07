@@ -47,6 +47,7 @@ public class PreEnrollmentFullDTO {
     public static class PreEnrollmentGuardianDTO {
         private Long id;
         private RelationshipType relationshipType;
+        private String relationshipDetails;
         private String firstName;
         private String lastName;
         private String email;

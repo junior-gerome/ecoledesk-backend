@@ -6,6 +6,7 @@ import com.school.platform.enrollment.application.dto.enrollment.CreateEnrollmen
 import com.school.platform.enrollment.application.dto.enrollment.EnrollmentResponse;
 import com.school.platform.enrollment.domain.enrollment.Enrollment;
 import com.school.platform.enrollment.domain.enrollment.EnrollmentNumber;
+import com.school.platform.enrollment.domain.enrollment.EnrollmentStatus;
 import com.school.platform.enrollment.domain.model.Guardian;
 import com.school.platform.enrollment.domain.model.Student;
 import com.school.platform.enrollment.domain.model.StudentGuardian;
@@ -52,11 +53,10 @@ public class EnrollmentCommandServiceImp implements EnrollmentCommandService {
         if (enrollmentRepository.existsByPreEnrollmentId(preEnrollmentId)) {
             throw new BadRequestException("An enrollment already exists for this pre-enrollment");
         }
-        ClasseRoom classroom = classRepository.findByIdForUpdate(request.getClassroomId())
+        ClasseRoom classroom = classRepository.findById(request.getClassroomId())
                 .orElseThrow(() -> new ResourceNotFoundException("Classe", "id", request.getClassroomId()));
-        Student student = createStudent(preEnrollment);
         Enrollment enrollment = Enrollment.pending(
-                EnrollmentNumber.of(nextNumber()), preEnrollment, student, preEnrollment.getAcademicYear(), classroom);
+                EnrollmentNumber.of(nextNumber()), preEnrollment, preEnrollment.getAcademicYear(), classroom);
         return toResponse(enrollmentRepository.save(enrollment));
     }
 
@@ -64,10 +64,17 @@ public class EnrollmentCommandServiceImp implements EnrollmentCommandService {
     @Transactional
     public EnrollmentResponse confirm(Long enrollmentId) {
         Enrollment enrollment = find(enrollmentId);
+        if (enrollment.getStatus() != EnrollmentStatus.PENDING_CONFIRMATION) {
+            throw new BadRequestException("Only pending enrollments can be confirmed");
+        }
         ClasseRoom lockedClassroom = classRepository.findByIdForUpdate(enrollment.getClassroom().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Classe", "id", enrollment.getClassroom().getId()));
         admissionPolicy.assertConfirmationAllowed(enrollment, lockedClassroom);
-        enrollment.confirm();
+        Student student = enrollment.getStudent();
+        if (student == null) {
+            student = createStudent(enrollment.getPreEnrollment());
+        }
+        enrollment.confirm(student);
         return toResponse(enrollmentRepository.save(enrollment));
     }
 
