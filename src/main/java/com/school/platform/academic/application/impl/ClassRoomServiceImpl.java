@@ -82,6 +82,7 @@ public class ClassRoomServiceImpl implements ClassRoomService {
         return mapper.toDto(saved);
     }
 
+    @Transactional(readOnly = true)
     public ClasseRoomDTO getClassRoomById(Long id) {
         return classeRoomRepository.findById(id).map(mapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException("ClasseRoom", "id", id));
@@ -264,6 +265,7 @@ public class ClassRoomServiceImpl implements ClassRoomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ClasseRoomDTO> getClassRoomsBySection(Long sectionId, Long academicYearId) {
         if (academicYearId == null) {
             return getClassRoomsBySection(sectionId);

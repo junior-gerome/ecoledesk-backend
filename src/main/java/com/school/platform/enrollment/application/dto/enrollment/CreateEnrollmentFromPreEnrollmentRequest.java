@@ -1,2 +1,10 @@
 package com.school.platform.enrollment.application.dto.enrollment;
-import lombok.Data; @Data public class CreateEnrollmentFromPreEnrollmentRequest { private Long classroomId; }
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+@Data
+public class CreateEnrollmentFromPreEnrollmentRequest {
+
+    @NotNull(message = "La classe d'affectation est obligatoire")
+    private Long classroomId;
+}

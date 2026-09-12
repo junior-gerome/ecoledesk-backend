@@ -61,15 +61,15 @@ public class GradeServiceImpl implements GradeService {
     private final GradeMapper gradeMapper;
     private final BusinessAuditService businessAuditService;
 
-    @Cacheable(value = "grades", key = "'class:' + #classId + ':period:' + #period + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public Page<GradeResponseDTO> findByClassIdAndPeriod(Long classId, String period, Pageable pageable) {
         log.debug("Recherche des notes pour la classe {} et la periode {}", classId, period);
-        return gradeRepository.findByClasseIdAndPeriod(classId, period, pageable)
-                .map(gradeMapper::toResponseDto);
+        Page<Grade> grades = hasText(period)
+                ? gradeRepository.findByClasseIdAndPeriod(classId, period, pageable)
+                : gradeRepository.findByClasseId(classId, pageable);
+        return grades.map(gradeMapper::toResponseDto);
     }
 
-    @Cacheable(value = "grades", key = "'student:' + #studentId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public Page<GradeResponseDTO> findByStudentId(Long studentId, Pageable pageable) {
         log.debug("Recherche des notes pour l'etudiant {}", studentId);

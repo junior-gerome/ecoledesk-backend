@@ -13,11 +13,17 @@ import com.school.platform.enrollment.domain.preenrollment.*;
 import com.school.platform.academic.domain.model.AcademicYear;
 import com.school.platform.enrollment.application.dto.preenrollment.*;
 import com.school.platform.enrollment.application.mapper.PreEnrollmentMapper;
+import com.school.platform.shared.application.BusinessAuditService;
+import com.school.platform.shared.domain.exception.BadRequestException;
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import com.school.platform.academic.infrastructure.persistence.AcademicYearRepository;
 import com.school.platform.enrollment.domain.policy.RequiredPreEnrollmentDocumentPolicy;
 import com.school.platform.enrollment.infrastructure.persistence.PreEnrollmentRepository;
 import com.school.platform.billing.infrastructure.persistence.PreEnrollmentFeePaymentRepository;
+import com.school.platform.document.infrastructure.storage.MinioStorageService;
+
+import java.io.IOException;
+import java.util.Locale;
 
 
 
@@ -31,12 +37,17 @@ public class PreEnrollmentCommandServiceImpl implements PreEnrollmentCommandServ
     private final PreEnrollmentFeePaymentRepository feePaymentRepository;
     private final RequiredPreEnrollmentDocumentPolicy documentPolicy;
     private final PreEnrollmentMapper preEnrollmentMapper;
+    private final BusinessAuditService auditService;
+    private final MinioStorageService minioStorageService;
 
     @Override
     @Transactional
     public PreEnrollmentResponse createDraft(CreatePreEnrollmentRequest request) {
         AcademicYear year = yearRepository.findById(request.getAcademicYearId())
                 .orElseThrow(() -> new ResourceNotFoundException("Academicyear", "id", request.getAcademicYearId()));
+        if (!year.isStatutCode()) {
+            throw new BadRequestException("L'annee scolaire n'est pas ouverte : aucun dossier ne peut etre cree");
+        }
 
         ApplicantIdentity applicant = new ApplicantIdentity();
         applicant.setFirstName(request.getFirstName());
@@ -49,7 +60,9 @@ public class PreEnrollmentCommandServiceImpl implements PreEnrollmentCommandServ
                 + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         PreEnrollment preEnrollment = PreEnrollment.draft(
                 PreEnrollmentNumber.of(number), applicant, year, request.getRequestedLevel(), request.getRequiredFee());
-        return response(preEnrollmentRepository.save(preEnrollment));
+        PreEnrollmentResponse created = response(preEnrollmentRepository.save(preEnrollment));
+        auditService.record("PRE_ENROLLMENT_CREATED", "pre_enrollments", created.getId());
+        return created;
     }
 
     @Override
@@ -122,12 +135,56 @@ public PreEnrollmentResponse reviewDocument(
     return preEnrollmentMapper.toResponse(saved);
 }
 
+@Override
+@Transactional(readOnly = true)
+public PreEnrollmentDocumentContent downloadDocument(
+        Long preEnrollmentId,
+        Long documentId
+) {
+    PreEnrollment preEnrollment = find(preEnrollmentId);
+
+    PreEnrollmentDocument document = preEnrollment.getDocuments().stream()
+            .filter(currentDocument -> documentId.equals(currentDocument.getId()))
+            .findFirst()
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    "PreEnrollmentDocument", "id", documentId
+            ));
+
+    String storageReference = document.getStorageReference();
+    try {
+        byte[] content = minioStorageService.load(storageReference);
+        return new PreEnrollmentDocumentContent(
+                document.getId(),
+                minioStorageService.fileName(storageReference),
+                contentTypeOf(storageReference),
+                content);
+    } catch (IOException e) {
+        throw new BadRequestException(
+                "Impossible de lire le document depuis MinIO: " + storageReference
+        );
+    }
+}
+
+private String contentTypeOf(String storageReference) {
+    String name = storageReference.toLowerCase(Locale.ROOT);
+    if (name.endsWith(".pdf")) return "application/pdf";
+    if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
+    if (name.endsWith(".png")) return "image/png";
+    if (name.endsWith(".webp")) return "image/webp";
+    return "application/octet-stream";
+}
+
     @Override
     @Transactional
     public PreEnrollmentResponse submit(Long id) {
         PreEnrollment preEnrollment = find(id);
+        if (!preEnrollment.getAcademicYear().isStatutCode()) {
+            throw new BadRequestException("L'annee scolaire n'est pas ouverte : la soumission est refusee");
+        }
         preEnrollment.submit(hasRequiredFeePayment(preEnrollment), documentPolicy.mandatoryDocumentsAreSubmitted(preEnrollment));
-        return response(preEnrollmentRepository.save(preEnrollment));
+        PreEnrollmentResponse submitted = response(preEnrollmentRepository.save(preEnrollment));
+        auditService.record("PRE_ENROLLMENT_SUBMITTED", "pre_enrollments", submitted.getId());
+        return submitted;
     }
 
     @Override
@@ -135,7 +192,9 @@ public PreEnrollmentResponse reviewDocument(
     public PreEnrollmentResponse startReview(Long id, Long reviewedBy) {
         PreEnrollment preEnrollment = find(id);
         preEnrollment.startReview(reviewedBy);
-        return response(preEnrollmentRepository.save(preEnrollment));
+        PreEnrollmentResponse reviewed = response(preEnrollmentRepository.save(preEnrollment));
+        auditService.record("PRE_ENROLLMENT_REVIEW_STARTED", "pre_enrollments", reviewed.getId());
+        return reviewed;
     }
 
     @Override
@@ -143,7 +202,9 @@ public PreEnrollmentResponse reviewDocument(
     public PreEnrollmentResponse approve(Long id, Long reviewedBy) {
         PreEnrollment preEnrollment = find(id);
         preEnrollment.approve(reviewedBy, hasRequiredFeePayment(preEnrollment), documentPolicy.mandatoryDocumentsAreApproved(preEnrollment));
-        return response(preEnrollmentRepository.save(preEnrollment));
+        PreEnrollmentResponse approved = response(preEnrollmentRepository.save(preEnrollment));
+        auditService.record("PRE_ENROLLMENT_APPROVED", "pre_enrollments", approved.getId());
+        return approved;
     }
 
     @Override
@@ -151,7 +212,9 @@ public PreEnrollmentResponse reviewDocument(
     public PreEnrollmentResponse reject(Long id, Long reviewedBy, String reason) {
         PreEnrollment preEnrollment = find(id);
         preEnrollment.reject(reviewedBy, reason);
-        return response(preEnrollmentRepository.save(preEnrollment));
+        PreEnrollmentResponse rejected = response(preEnrollmentRepository.save(preEnrollment));
+        auditService.record("PRE_ENROLLMENT_REJECTED", "pre_enrollments", rejected.getId());
+        return rejected;
     }
     
     //Methode qui vérifie si les frais obligatoires de préinscription ont été payés.

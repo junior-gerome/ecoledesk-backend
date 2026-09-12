@@ -34,7 +34,7 @@ public class EnrollmentFinanceController {
     }
 
     @PostMapping("/pre-enrollment-fee-payments/{id}/verify")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
     public ResponseEntity<PreEnrollmentFeePaymentResponse> verifyPreEnrollmentFee(@PathVariable Long id) {
         return ResponseEntity.ok(feePaymentService.verify(id));
     }

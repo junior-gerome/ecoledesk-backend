@@ -22,6 +22,9 @@ public interface PreEnrollmentCommandService {
   //Ajouter un document 
   PreEnrollmentResponse addDocument(Long preEnrollmentId, AddPreEnrollmentDocumentRequest request);
 
+  //Recuperer le contenu d'un document du dossier pour telechargement
+  PreEnrollmentDocumentContent downloadDocument(Long preEnrollmentId, Long documentId);
+
   //permet à un agent administratif de vérifier un document et de lui attribuer un statut
   PreEnrollmentResponse reviewDocument(Long preEnrollmentId, Long documentId,  DocumentReviewStatus status, Long reviewedBy,  String reason);
    

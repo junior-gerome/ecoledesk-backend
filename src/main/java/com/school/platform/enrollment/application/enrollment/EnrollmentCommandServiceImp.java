@@ -19,7 +19,9 @@ import com.school.platform.enrollment.infrastructure.persistence.PreEnrollmentRe
 import com.school.platform.enrollment.infrastructure.persistence.GuardianRepository;
 import com.school.platform.enrollment.infrastructure.persistence.StudentRepository;
 import com.school.platform.identityaccess.domain.model.Person;
+import com.school.platform.identityaccess.domain.model.valueobject.PhoneNumber;
 import com.school.platform.identityaccess.infrastructure.persistence.PersonRepository;
+import com.school.platform.shared.application.BusinessAuditService;
 import com.school.platform.shared.domain.exception.BadRequestException;
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import java.time.LocalDate;
@@ -40,6 +42,7 @@ public class EnrollmentCommandServiceImp implements EnrollmentCommandService {
     private final PersonRepository personRepository;
     private final GuardianRepository guardianRepository;
     private final AdmissionPolicy admissionPolicy;
+    private final BusinessAuditService auditService;
 
     @Override
     @Transactional
@@ -57,7 +60,9 @@ public class EnrollmentCommandServiceImp implements EnrollmentCommandService {
                 .orElseThrow(() -> new ResourceNotFoundException("Classe", "id", request.getClassroomId()));
         Enrollment enrollment = Enrollment.pending(
                 EnrollmentNumber.of(nextNumber()), preEnrollment, preEnrollment.getAcademicYear(), classroom);
-        return toResponse(enrollmentRepository.save(enrollment));
+        EnrollmentResponse created = toResponse(enrollmentRepository.save(enrollment));
+        auditService.record("ENROLLMENT_CREATED", "enrollments", created.getId());
+        return created;
     }
 
     @Override
@@ -75,7 +80,9 @@ public class EnrollmentCommandServiceImp implements EnrollmentCommandService {
             student = createStudent(enrollment.getPreEnrollment());
         }
         enrollment.confirm(student);
-        return toResponse(enrollmentRepository.save(enrollment));
+        EnrollmentResponse confirmed = toResponse(enrollmentRepository.save(enrollment));
+        auditService.record("ENROLLMENT_CONFIRMED", "enrollments", confirmed.getId());
+        return confirmed;
     }
 
     @Override
@@ -83,7 +90,9 @@ public class EnrollmentCommandServiceImp implements EnrollmentCommandService {
     public EnrollmentResponse cancel(Long enrollmentId, String reason) {
         Enrollment enrollment = find(enrollmentId);
         enrollment.cancel(reason);
-        return toResponse(enrollmentRepository.save(enrollment));
+        EnrollmentResponse cancelled = toResponse(enrollmentRepository.save(enrollment));
+        auditService.record("ENROLLMENT_CANCELLED", "enrollments", cancelled.getId());
+        return cancelled;
     }
 
     @Override
@@ -91,7 +100,9 @@ public class EnrollmentCommandServiceImp implements EnrollmentCommandService {
     public EnrollmentResponse withdraw(Long enrollmentId) {
         Enrollment enrollment = find(enrollmentId);
         enrollment.withdraw();
-        return toResponse(enrollmentRepository.save(enrollment));
+        EnrollmentResponse withdrawn = toResponse(enrollmentRepository.save(enrollment));
+        auditService.record("ENROLLMENT_WITHDRAWN", "enrollments", withdrawn.getId());
+        return withdrawn;
     }
 
     private Student createStudent(PreEnrollment preEnrollment) {
@@ -129,6 +140,11 @@ public class EnrollmentCommandServiceImp implements EnrollmentCommandService {
             Guardian existing = guardianRepository.findByEmail(source.getEmail()).orElse(null);
             if (existing != null) return existing;
         }
+        String normalizedPhone = normalizePhone(source.getPhoneNumber());
+        if (normalizedPhone != null) {
+            Guardian existing = guardianRepository.findByPhoneNumber(normalizedPhone).orElse(null);
+            if (existing != null) return existing;
+        }
         Person person = source.getEmail() == null || source.getEmail().isBlank()
                 ? null
                 : personRepository.findByEmail(source.getEmail()).orElse(null);
@@ -144,6 +160,19 @@ public class EnrollmentCommandServiceImp implements EnrollmentCommandService {
         Guardian guardian = new Guardian();
         guardian.setPerson(person);
         return guardianRepository.save(guardian);
+    }
+
+    /** Normalise un numero de telephone (suppression espaces, ponctuation) pour une recherche fiable. */
+    private String normalizePhone(String rawPhone) {
+        if (rawPhone == null || rawPhone.isBlank()) {
+            return null;
+        }
+        try {
+            PhoneNumber phone = PhoneNumber.of(rawPhone.trim());
+            return phone == null ? null : phone.value();
+        } catch (IllegalArgumentException invalid) {
+            return rawPhone.trim().replaceAll("[\\s().-]", "");
+        }
     }
 
     private Enrollment find(Long id) {

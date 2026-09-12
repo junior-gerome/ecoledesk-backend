@@ -52,9 +52,7 @@ public class PreEnrollmentController {
             @PathVariable Long id,
             @PathVariable Long documentId,
             @Valid @RequestBody ReviewPreEnrollmentDocumentRequest request) {
-        Long reviewerId = (request != null && request.getReviewedBy() != null)
-                ? request.getReviewedBy()
-                : auditService.currentUserId().orElse(null);
+        Long reviewerId = auditorId();
         return ResponseEntity.ok(service.reviewDocument(
                 id, documentId, request.getStatus(), reviewerId, request.getReason()));
     }
@@ -67,35 +65,26 @@ public class PreEnrollmentController {
 
     @PostMapping("/{id}/start-review")
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('SECRETAIRE') or hasRole('DIRECTION')")
-    public ResponseEntity<PreEnrollmentResponse> startReview(
-            @PathVariable Long id,
-            @RequestBody(required = false) DecisionRequest request) {
-        Long reviewerId = (request != null && request.getReviewedBy() != null)
-                ? request.getReviewedBy()
-                : auditService.currentUserId().orElse(null);
-        return ResponseEntity.ok(service.startReview(id, reviewerId));
+    public ResponseEntity<PreEnrollmentResponse> startReview(@PathVariable Long id) {
+        return ResponseEntity.ok(service.startReview(id, auditorId()));
     }
 
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('SECRETAIRE') or hasRole('DIRECTION')")
-    public ResponseEntity<PreEnrollmentResponse> approve(
-            @PathVariable Long id,
-            @RequestBody(required = false) DecisionRequest request) {
-        Long reviewerId = (request != null && request.getReviewedBy() != null)
-                ? request.getReviewedBy()
-                : auditService.currentUserId().orElse(null);
-        return ResponseEntity.ok(service.approve(id, reviewerId));
+    public ResponseEntity<PreEnrollmentResponse> approve(@PathVariable Long id) {
+        return ResponseEntity.ok(service.approve(id, auditorId()));
     }
 
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('SECRETAIRE') or hasRole('DIRECTION')")
     public ResponseEntity<PreEnrollmentResponse> reject(
             @PathVariable Long id,
-            @RequestBody(required = false) DecisionRequest request) {
-        Long reviewerId = (request != null && request.getReviewedBy() != null)
-                ? request.getReviewedBy()
-                : auditService.currentUserId().orElse(null);
+            @Valid @RequestBody(required = false) DecisionRequest request) {
         String reason = request != null ? request.getReason() : null;
-        return ResponseEntity.ok(service.reject(id, reviewerId, reason));
+        return ResponseEntity.ok(service.reject(id, auditorId(), reason));
+    }
+
+    private Long auditorId() {
+        return auditService.currentUserId().orElse(null);
     }
 }

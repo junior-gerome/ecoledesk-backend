@@ -129,6 +129,9 @@ dependencies {
     // SDK administrateur Firebase : interaction serveur avec les services Firebase.
     implementation 'com.google.firebase:firebase-admin:9.1.1'
 
+    // MinIO : client S3-compatible pour le stockage objet des documents (preinscription, etc.).
+    implementation 'io.minio:minio:8.5.14'
+
     // Pool de connexions Redis (a activer si l'application utilise explicitement Lettuce ou Jedis avec un pool).
     // implementation 'org.apache.commons:commons-pool2'
 

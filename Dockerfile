@@ -1,11 +1,13 @@
 FROM gradle:8.14-jdk21 AS build
+#Pour faire fonctionner mon application, donne-moi un environnement Java 21
 
 WORKDIR /workspace
+#À l'intérieur du conteneur, mon application travaillera dans /app
 
 COPY --chown=gradle:gradle build.gradle settings.gradle gradle.properties ./
 COPY --chown=gradle:gradle gradle ./gradle
 COPY --chown=gradle:gradle src ./src
-COPY --chown=gradle:gradle services ./services
+#COPY --chown=gradle:gradle services ./services
 
 RUN gradle bootJar --no-daemon -x test
 

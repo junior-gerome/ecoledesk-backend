@@ -28,6 +28,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
         List<Grade> findBySubjectIdAndSequenceId(Long subjectId, Long sequenceId);
 
     // 1. Recherches paginÃ©es optimisÃ©es
+    Page<Grade> findByClasseId(Long classId, Pageable pageable);
     Page<Grade> findByClasseIdAndPeriod(Long classId, String period, Pageable pageable);
     Page<Grade> findByStudentId(Long studentId, Pageable pageable);
     Page<Grade> findByStudentIdAndPeriod(Long studentId, String period, Pageable pageable);

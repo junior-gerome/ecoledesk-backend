@@ -107,4 +107,16 @@ public class StudentController {
     public ResponseEntity<Map<String, Object>> getStudentStatistics() {
         return ResponseEntity.ok(studentStatisticsService.getStudentStatistics());
     }
+
+    @GetMapping("/statistics/by-class")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<List<com.school.platform.academic.application.dto.classeroom.ClasseRoomStudentCountDTO>> getStudentStatisticsByClass() {
+        return ResponseEntity.ok(studentStatisticsService.getStatsByClasse());
+    }
+
+    @GetMapping("/statistics/by-section")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<List<com.school.platform.academic.application.dto.section.SectionStudentCountDTO>> getStudentStatisticsBySection() {
+        return ResponseEntity.ok(studentStatisticsService.getStatsBySection());
+    }
 }

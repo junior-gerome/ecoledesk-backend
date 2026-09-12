@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class SectionBasicDTO {
-//    private Long id;
+    private Long id;
     private String libelle;
 }

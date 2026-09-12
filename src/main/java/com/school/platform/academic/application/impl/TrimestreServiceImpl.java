@@ -37,12 +37,12 @@ public class TrimestreServiceImpl implements TrimestreService {
 
   @Transactional
   public TrimestreDTO getTrimestreById(Long id){
-    return trimestreRepository.findById(id).map(mapper::toDto).orElseThrow(()-> new ResourceNotFoundException("Trimestre non trouve avec l'ID :" + id));
+    return trimestreRepository.findByIdWithAcademicYear(id).map(mapper::toDto).orElseThrow(()-> new ResourceNotFoundException("Trimestre non trouve avec l'ID :" + id));
   }
 
   @Transactional
   public List<TrimestreDTO> getALLTrimestre(){
-    return trimestreRepository.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
+    return trimestreRepository.findAllWithAcademicYear().stream().map(mapper::toDto).collect(Collectors.toList());
   }
 
   @Transactional

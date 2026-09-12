@@ -26,9 +26,13 @@ public class AdmissionPolicy {
             throw new BadRequestException("The classeroom does not belong to the enrollment academic year");
         }
         String requestedLevel = enrollment.getPreEnrollment().getRequestedLevel();
-        if (requestedLevel != null && !requestedLevel.isBlank()
-                && !requestedLevel.trim().equalsIgnoreCase(lockedClassroom.getLevel())) {
-            throw new BadRequestException("The classeroom level does not match the requested level");
+        if (requestedLevel != null && !requestedLevel.isBlank()) {
+            String normalizedRequested = requestedLevel.trim();
+            boolean levelMatches = normalizedRequested.equalsIgnoreCase(lockedClassroom.getLevel())
+                    || normalizedRequested.equalsIgnoreCase(lockedClassroom.getNameClasse());
+            if (!levelMatches) {
+                throw new BadRequestException("The classeroom level does not match the requested level");
+            }
         }
         Integer capacity = lockedClassroom.getCapacity();
         if (capacity != null && capacity > 0) {

@@ -8,12 +8,16 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.school.platform.academic.application.dto.classeroom.ClasseRoomStudentCountDTO;
+import com.school.platform.academic.application.dto.section.SectionStudentCountDTO;
 
 @Service
 @RequiredArgsConstructor
@@ -27,13 +31,7 @@ public class StudentStatisticsService {
         LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
         List<Enrollment> enrollments = enrollmentRepository.findByStatus(EnrollmentStatus.CONFIRMED);
 
-        Map<Long, Enrollment> latestByStudent = enrollments.stream()
-                .filter(e -> e.getStudent() != null && e.getStudent().getId() != null)
-                .collect(Collectors.toMap(
-                        e -> e.getStudent().getId(),
-                        e -> e,
-                        (left, right) -> left.getId() != null && right.getId() != null && left.getId() > right.getId()
-                                ? left : right));
+        Map<Long, Enrollment> latestByStudent = latestPerStudent(enrollments);
 
         long francophone = 0, anglophone = 0, newFrancophone = 0, newAnglophone = 0;
 
@@ -76,6 +74,69 @@ public class StudentStatisticsService {
     public Map<String, Object> getYearStats(Long academicYearId) {
         long totalStudents = enrollmentRepository.countByAcademicYearIdAndStatus(academicYearId, EnrollmentStatus.CONFIRMED);
         return Map.of("academicYearId", academicYearId, "totalStudents", totalStudents);
+    }
+
+    /**
+     * Nombre d'eleves confirmes par classe (inscription la plus recente par eleve).
+     * Chaque eleve est compte une seule fois dans sa classe actuelle.
+     */
+    @Transactional(readOnly = true)
+    public List<ClasseRoomStudentCountDTO> getStatsByClasse() {
+        LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
+        Map<Long, Enrollment> latestByStudent = latestPerStudent(
+                enrollmentRepository.findByStatus(EnrollmentStatus.CONFIRMED));
+
+        Map<String, long[]> countsByClasse = new LinkedHashMap<>();
+        for (Enrollment enrollment : latestByStudent.values()) {
+            String name = enrollment.getClassroom() == null || enrollment.getClassroom().getNameClasse() == null
+                    ? "Classe inconnue"
+                    : enrollment.getClassroom().getNameClasse();
+            long[] counts = countsByClasse.computeIfAbsent(name, key -> new long[2]);
+            counts[0]++;
+            if (enrollment.getEnrollmentDate() != null && !enrollment.getEnrollmentDate().isBefore(monthStart)) {
+                counts[1]++;
+            }
+        }
+
+        return countsByClasse.entrySet().stream()
+                .map(entry -> new ClasseRoomStudentCountDTO(entry.getKey(), entry.getValue()[0], entry.getValue()[1]))
+                .toList();
+    }
+
+    /**
+     * Nombre d'eleves confirmes par section (inscription la plus recente par eleve).
+     */
+    @Transactional(readOnly = true)
+    public List<SectionStudentCountDTO> getStatsBySection() {
+        LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
+        Map<Long, Enrollment> latestByStudent = latestPerStudent(
+                enrollmentRepository.findByStatus(EnrollmentStatus.CONFIRMED));
+
+        Map<String, long[]> countsBySection = new LinkedHashMap<>();
+        for (Enrollment enrollment : latestByStudent.values()) {
+            String name = sectionLabel(enrollment).isBlank()
+                    ? "Section inconnue"
+                    : sectionLabel(enrollment);
+            long[] counts = countsBySection.computeIfAbsent(name, key -> new long[2]);
+            counts[0]++;
+            if (enrollment.getEnrollmentDate() != null && !enrollment.getEnrollmentDate().isBefore(monthStart)) {
+                counts[1]++;
+            }
+        }
+
+        return countsBySection.entrySet().stream()
+                .map(entry -> new SectionStudentCountDTO(entry.getKey(), entry.getValue()[0], entry.getValue()[1]))
+                .toList();
+    }
+
+    private Map<Long, Enrollment> latestPerStudent(List<Enrollment> enrollments) {
+        return enrollments.stream()
+                .filter(e -> e.getStudent() != null && e.getStudent().getId() != null)
+                .collect(Collectors.toMap(
+                        e -> e.getStudent().getId(),
+                        e -> e,
+                        (left, right) -> left.getId() != null && right.getId() != null && left.getId() > right.getId()
+                                ? left : right));
     }
 
     private List<Long> getMonthlyEnrollmentTrend(List<Enrollment> enrollments) {

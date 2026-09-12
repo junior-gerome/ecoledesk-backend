@@ -17,6 +17,7 @@ import com.school.platform.academic.domain.model.Section;
 public interface SectionMapper extends EntityMapper<SectionDTO, Section> {
   SectionDTO toDto(Section entity);
 
+  @Mapping(target = "id", ignore = true)
   Section toEntity(SectionDTO dto);
 
   @Mapping(target = "id", ignore = true)

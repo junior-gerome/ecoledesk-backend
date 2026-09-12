@@ -55,7 +55,7 @@ public class GradeController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
     public ResponseEntity<PageResponse<GradeResponseDTO>> getGradesByClass(
             @Parameter(name = "classId", description = "ID de la classe", in = ParameterIn.PATH) @PathVariable Long classId,
-            @Parameter(name = "period", description = "Periode (ex: TRIMESTRE1)", in = ParameterIn.QUERY) @RequestParam String period,
+            @Parameter(name = "period", description = "Periode (ex: TRIMESTRE1) - optionnelle, toutes les notes si absente", in = ParameterIn.QUERY) @RequestParam(required = false) String period,
             @Parameter(name = "page", description = "Numero de page (commence a 0)", in = ParameterIn.QUERY) @RequestParam(defaultValue = "0") int page,
             @Parameter(name = "size", description = "Taille de la page", in = ParameterIn.QUERY) @RequestParam(defaultValue = "10") int size) {
         Page<GradeResponseDTO> gradePage = gradeQueryService.findByClassIdAndPeriod(classId, period, PageRequest.of(page, size));

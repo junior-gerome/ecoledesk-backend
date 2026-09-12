@@ -34,9 +34,10 @@ public interface ClasseRoomRepository extends JpaRepository<ClasseRoom, Long> {
 
     boolean existsByNameClasseAndSectionIdAndAcademicYearIdAndIdNot(String nameClasse, Long sectionId, Long academicYearId, Long id);
 
-    @Query("SELECT c FROM ClasseRoom c LEFT JOIN FETCH c.section LEFT JOIN FETCH c.teacher LEFT JOIN FETCH c.academicYear WHERE c.academicYear.id = :academicYearId")
+    @Query("SELECT c FROM ClasseRoom c LEFT JOIN FETCH c.section LEFT JOIN FETCH c.teacher LEFT JOIN FETCH c.academicYear WHERE c.section.id = :sectionId")
     List<ClasseRoom> findBySectionId(Long sectionId);
 
+    @Query("SELECT c FROM ClasseRoom c LEFT JOIN FETCH c.section LEFT JOIN FETCH c.teacher LEFT JOIN FETCH c.academicYear WHERE c.section.id = :sectionId AND c.academicYear.id = :academicYearId")
     List<ClasseRoom> findBySectionIdAndAcademicYearId(Long sectionId, Long academicYearId);
 
     @Query("SELECT c FROM ClasseRoom c LEFT JOIN FETCH c.section LEFT JOIN FETCH c.teacher LEFT JOIN FETCH c.academicYear WHERE c.academicYear.id = :academicYearId")

@@ -36,7 +36,7 @@ public class PreEnrollmentFeePaymentService {
         PreEnrollmentFeePayment payment = PreEnrollmentFeePayment.recorded(
                 preEnrollment,
                 request.getAmount(),
-                request.getPaymentDate(),
+                request.getPaymentDate() == null ? null : request.getPaymentDate().atStartOfDay(),
                 request.getTransactionReference(),
                 request.getReceiptNumber());
         return response(paymentRepository.save(payment));

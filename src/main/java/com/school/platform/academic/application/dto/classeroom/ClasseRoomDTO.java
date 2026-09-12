@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 public class ClasseRoomDTO {
-//    private Long id;
+    private Long id;
     private String nameClasse;
     private String level;
     private SectionDTO section;

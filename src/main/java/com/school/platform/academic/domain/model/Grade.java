@@ -7,6 +7,7 @@ import com.school.platform.identityaccess.domain.model.BaseEntity;
 
 import lombok.EqualsAndHashCode;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -72,6 +73,7 @@ public class Grade extends BaseEntity {
 
     // Coefficient de la note
     @DecimalMin(value = "0.1", message = "Le coefficient doit etre au moins 0.1")
+    @Builder.Default
     @Column(nullable = false, precision = 4, scale = 2)
     private BigDecimal coefficient = BigDecimal.ONE;
 
@@ -88,6 +90,7 @@ public class Grade extends BaseEntity {
     private Integer version;
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     @Column(nullable = false, length = 20)
     private GradeStatus status = GradeStatus.DRAFT;
 

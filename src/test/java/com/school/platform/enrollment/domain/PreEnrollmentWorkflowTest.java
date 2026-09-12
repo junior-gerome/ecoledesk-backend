@@ -120,6 +120,39 @@ class PreEnrollmentWorkflowTest {
     }
 
     @Test
+    @DisplayName("Un document refusé bloque l'approbation du dossier")
+    void testRejectedDocumentBlocksApproval() {
+        PreEnrollment pre = createDraftWithGuardian();
+        PreEnrollmentDocument doc1 = PreEnrollmentDocument.submitted(pre, "BIRTH_CERTIFICATE", "/docs/birth.pdf");
+        PreEnrollmentDocument doc2 = PreEnrollmentDocument.submitted(pre, "REPORT_CARD", "/docs/report.pdf");
+        pre.addDocument(doc1);
+        pre.addDocument(doc2);
+
+        pre.submit(true, documentPolicy.mandatoryDocumentsAreSubmitted(pre));
+        pre.startReview(100L);
+
+        doc1.review(DocumentReviewStatus.APPROVED, 100L, null);
+        doc2.review(DocumentReviewStatus.REJECTED, 100L, "Document illisible");
+
+        assertFalse(documentPolicy.mandatoryDocumentsAreApproved(pre));
+        assertThrows(IllegalStateException.class,
+                () -> pre.approve(100L, true, documentPolicy.mandatoryDocumentsAreApproved(pre)));
+        assertEquals(PreEnrollmentStatus.UNDER_REVIEW, pre.getStatus());
+    }
+
+    @Test
+    @DisplayName("Sans documents obligatoires configurés, la soumission reste possible")
+    void testSubmitSucceedsWhenNoMandatoryDocumentsConfigured() {
+        RequiredPreEnrollmentDocumentPolicy emptyPolicy = new RequiredPreEnrollmentDocumentPolicy();
+        emptyPolicy.setRequiredDocumentTypes(List.of());
+
+        PreEnrollment pre = createDraftWithGuardian();
+        pre.submit(true, emptyPolicy.mandatoryDocumentsAreSubmitted(pre));
+
+        assertEquals(PreEnrollmentStatus.SUBMITTED, pre.getStatus());
+    }
+
+    @Test
     @DisplayName("Rejet du dossier avec motif obligatoire")
     void testRejectWorkflow() {
         PreEnrollment pre = createDraftWithGuardian();

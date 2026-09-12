@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.school.platform.reporting.application.ReportService;
@@ -55,6 +56,7 @@ public class ReportController {
     private final AbsenceRepository absenceRepository;
     private final PaiementRepository paiementRepository;
 
+    @Transactional(readOnly = true)
     @GetMapping("/performance")
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
     public ResponseEntity<Map<String, Object>> getPerformanceReport(

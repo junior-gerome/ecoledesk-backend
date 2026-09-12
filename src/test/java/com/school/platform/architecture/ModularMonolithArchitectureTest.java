@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.school.platform.SchoolPlatformApplication;
-import com.school.platform.identityaccess.application.UserAccountManagementService;
+import com.school.platform.identityaccess.application.impl.UserAccountManagementServiceImpl;
 import com.school.platform.identityaccess.web.UserManagementController;
 
 class ModularMonolithArchitectureTest {
@@ -45,7 +45,7 @@ class ModularMonolithArchitectureTest {
 
     @Test
     void canonicalUserAccountApiIsActive() {
-        assertThat(UserAccountManagementService.class.isAnnotationPresent(Service.class)).isTrue();
+        assertThat(UserAccountManagementServiceImpl.class.isAnnotationPresent(Service.class)).isTrue();
         assertThat(UserManagementController.class.isAnnotationPresent(RestController.class)).isTrue();
 
         RequestMapping mapping = UserManagementController.class.getAnnotation(RequestMapping.class);
