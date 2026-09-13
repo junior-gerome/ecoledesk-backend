@@ -14,6 +14,7 @@ import com.school.platform.enrollment.domain.preenrollment.PreEnrollmentGuardian
 import com.school.platform.enrollment.domain.preenrollment.PreEnrollmentNumber;
 import com.school.platform.enrollment.domain.preenrollment.PreEnrollmentStatus;
 import com.school.platform.enrollment.infrastructure.persistence.PreEnrollmentRepository;
+import com.school.platform.document.infrastructure.storage.MinioStorageService;
 import com.school.platform.shared.application.BusinessAuditService;
 import com.school.platform.shared.domain.exception.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,7 @@ class PreEnrollmentCommandServiceTest {
     private RequiredPreEnrollmentDocumentPolicy documentPolicy;
     private PreEnrollmentMapper mapper;
     private BusinessAuditService auditService;
+    private MinioStorageService minioStorageService;
     private PreEnrollmentCommandServiceImpl service;
 
     @BeforeEach
@@ -52,8 +54,10 @@ class PreEnrollmentCommandServiceTest {
         documentPolicy.setRequiredDocumentTypes(List.of());
         mapper = mock(PreEnrollmentMapper.class);
         auditService = mock(BusinessAuditService.class);
+        minioStorageService = mock(MinioStorageService.class);
         service = new PreEnrollmentCommandServiceImpl(
-                preRepository, yearRepository, feePaymentRepository, documentPolicy, mapper, auditService);
+                preRepository, yearRepository, feePaymentRepository, documentPolicy, mapper, auditService,
+                minioStorageService);
 
         when(preRepository.save(any(PreEnrollment.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));

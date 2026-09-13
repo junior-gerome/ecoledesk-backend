@@ -18,6 +18,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 import com.school.platform.shared.domain.exception.BadRequestException;
 import com.school.platform.shared.domain.exception.BusinessException;
@@ -169,6 +170,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         return build(HttpStatus.BAD_REQUEST, "Parametre invalide: " + ex.getName());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        logger.info("Upload too large: {}", ex.getMessage());
+        return build(HttpStatus.PAYLOAD_TOO_LARGE,
+                "Fichier trop volumineux. La taille maximale autorisee est de 5 Mo.");
     }
 
     @ExceptionHandler(ResponseStatusException.class)
