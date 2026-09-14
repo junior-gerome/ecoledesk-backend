@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,16 @@ public class EnrollmentQueryServiceImpl implements EnrollmentQueryService {
         Enrollment enrollment = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Enrollment", "id", id));
         return mapper.toFullDTO(enrollment);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EnrollmentBasicDTO getByPreEnrollmentId(Long preEnrollmentId) {
+        Optional<Enrollment> enrollment =
+                enrollmentRepository.findByPreEnrollmentId(preEnrollmentId);
+        return enrollment.map(mapper::toBasicDTO)
+                .orElseThrow(() -> new NotFoundException(
+                        "Enrollment", "preEnrollmentId", preEnrollmentId));
     }
 
     @Override

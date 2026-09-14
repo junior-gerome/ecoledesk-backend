@@ -15,6 +15,7 @@ import java.util.List;
 public interface EnrollmentProjectionMapper {
 
     @Mapping(target = "number", source = "number.value")
+    @Mapping(target = "preEnrollmentId", source = "preEnrollment.id")
     @Mapping(target = "studentId", source = "student.id")
     @Mapping(target = "studentName", expression = "java(entity.getStudent() == null || entity.getStudent().getPerson() == null ? null : entity.getStudent().getPerson().getFirstName() + \" \" + entity.getStudent().getPerson().getLastName())")
     @Mapping(target = "classroomId", source = "classroom.id")

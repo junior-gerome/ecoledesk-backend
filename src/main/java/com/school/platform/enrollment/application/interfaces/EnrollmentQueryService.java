@@ -13,6 +13,8 @@ public interface EnrollmentQueryService {
 
     EnrollmentFullDTO getById(Long id);
 
+    EnrollmentBasicDTO getByPreEnrollmentId(Long preEnrollmentId);
+
     Page<EnrollmentMediumDTO> getAll(Pageable pageable);
 
     List<EnrollmentBasicDTO> getByClassroom(Long classroomId, EnrollmentStatus status);

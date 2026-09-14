@@ -159,8 +159,9 @@ public PreEnrollmentDocumentContent downloadDocument(
                 contentTypeOf(storageReference),
                 content);
     } catch (IOException e) {
-        throw new BadRequestException(
-                "Impossible de lire le document depuis MinIO: " + storageReference
+        throw new ResourceNotFoundException(
+                "Le fichier du document " + documentId
+                        + " est introuvable sur le stockage (MinIO): " + storageReference
         );
     }
 }

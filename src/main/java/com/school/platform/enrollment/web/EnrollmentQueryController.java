@@ -57,6 +57,19 @@ public class EnrollmentQueryController {
     }
 
     /**
+     * GET /enrollments/by-pre-enrollment/{preEnrollmentId}
+     * Inscription d'une préinscription donnée (404 si aucune n'existe encore).
+     * Utilisé par la page de détail d'une préinscription approuvée pour afficher
+     * l'inscription existante au lieu de proposer d'en créer une nouvelle.
+     */
+    @GetMapping("/by-pre-enrollment/{preEnrollmentId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
+    public ResponseEntity<EnrollmentBasicDTO> getByPreEnrollment(
+            @PathVariable Long preEnrollmentId) {
+        return ResponseEntity.ok(queryService.getByPreEnrollmentId(preEnrollmentId));
+    }
+
+    /**
      * GET /enrollments/by-class/{classroomId}
      * Liste des inscriptions d'une classe avec filtre optionnel sur le statut.
      * Utilisé notamment pour la saisie de notes et les documents scolaires.

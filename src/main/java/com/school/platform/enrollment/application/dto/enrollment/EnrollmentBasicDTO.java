@@ -14,6 +14,7 @@ import java.time.LocalDate;
 public class EnrollmentBasicDTO {
     private Long id;
     private String number;
+    private Long preEnrollmentId;
     private EnrollmentStatus status;
     private EnrollmentType type;
     private LocalDate enrollmentDate;
