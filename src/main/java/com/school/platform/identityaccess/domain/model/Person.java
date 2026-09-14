@@ -3,6 +3,7 @@ package com.school.platform.identityaccess.domain.model;
 import java.time.LocalDate;
 
 import com.school.platform.enrollment.domain.model.Gender;
+import com.school.platform.enrollment.infrastructure.persistence.converter.GenderConverter;
 import com.school.platform.identityaccess.domain.model.valueobject.Address;
 import com.school.platform.identityaccess.domain.model.valueobject.BirthDate;
 import com.school.platform.identityaccess.domain.model.valueobject.Email;
@@ -62,7 +63,7 @@ public class Person extends BaseEntity {
     })
     private Address address;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = GenderConverter.class)
     @Column(name = "gender")
     private Gender gender;
 

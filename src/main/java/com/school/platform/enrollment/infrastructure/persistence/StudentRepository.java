@@ -32,6 +32,26 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     List<Student> findByActiveTrue();
 
+    @Query(
+            value = """
+                    select s from Student s
+                    join fetch s.person
+                    where s.active = true
+                      and (:q is null or :q = ''
+                           or lower(s.studentNumber) like lower(concat('%', :q, '%'))
+                           or lower(s.person.firstName) like lower(concat('%', :q, '%'))
+                           or lower(s.person.lastName) like lower(concat('%', :q, '%')))
+                    """,
+            countQuery = """
+                    select count(s) from Student s
+                    where s.active = true
+                      and (:q is null or :q = ''
+                           or lower(s.studentNumber) like lower(concat('%', :q, '%'))
+                           or lower(s.person.firstName) like lower(concat('%', :q, '%'))
+                           or lower(s.person.lastName) like lower(concat('%', :q, '%')))
+                    """)
+    Page<Student> findActiveBySearch(@Param("q") String q, Pageable pageable);
+
     @Query("""
             select s from Student s
             join s.person person

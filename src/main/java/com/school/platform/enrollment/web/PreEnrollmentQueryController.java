@@ -36,14 +36,17 @@ public class PreEnrollmentQueryController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
     public ResponseEntity<PageResponse<PreEnrollmentMediumDTO>> getAll(
+            @RequestParam(required = false) PreEnrollmentStatus status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "creationDate,desc") String sort) {
         String[] sortParts = sort.split(",");
         Sort.Direction direction = sortParts.length > 1 && "asc".equalsIgnoreCase(sortParts[1])
                 ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParts[0]));
-        Page<PreEnrollmentMediumDTO> result = queryService.getAll(pageable);
+        Page<PreEnrollmentMediumDTO> result = status != null
+                ? queryService.getAll(status, pageable)
+                : queryService.getAll(pageable);
         return ResponseEntity.ok(PageResponse.from(result));
     }
 

@@ -3,6 +3,10 @@ package com.school.platform.enrollment.web;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +29,7 @@ import com.school.platform.enrollment.application.StudentExportService;
 import com.school.platform.enrollment.application.StudentQueryService;
 import com.school.platform.enrollment.application.StudentStatisticsService;
 import com.school.platform.reporting.application.StudentReportService;
+import com.school.platform.shared.web.PageResponse;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -70,9 +75,17 @@ public class StudentController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
-    public ResponseEntity<List<StudentDTO>> getAllStudents() {
-        List<StudentDTO> students = studentQueryService.findAllActive();
-        return ResponseEntity.ok(students);
+    public ResponseEntity<PageResponse<StudentDTO>> getAllStudents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id,asc") String sort,
+            @RequestParam(required = false) String q) {
+        String[] sortParts = sort.split(",");
+        Sort.Direction direction = sortParts.length > 1 && "desc".equalsIgnoreCase(sortParts[1])
+                ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, Math.min(size, 500), Sort.by(direction, sortParts[0]));
+        Page<StudentDTO> result = studentQueryService.search(q, pageable);
+        return ResponseEntity.ok(PageResponse.from(result));
     }
 
     @GetMapping("/export/excel")

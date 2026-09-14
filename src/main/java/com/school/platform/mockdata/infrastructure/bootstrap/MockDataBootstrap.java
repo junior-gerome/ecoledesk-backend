@@ -66,6 +66,7 @@ public class MockDataBootstrap implements ApplicationRunner {
     private final PreEnrollmentRepository preEnrollmentRepository;
     private final PreEnrollmentCommandService preEnrollmentCommandService;
     private final PreEnrollmentFeePaymentService preEnrollmentFeePaymentService;
+    private final jakarta.persistence.EntityManager entityManager;
 
     @Value("${app.bootstrap.mockdata.enabled:true}")
     private boolean enabled;
@@ -74,6 +75,8 @@ public class MockDataBootstrap implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments arguments) {
         log.info("=== MockDataBootstrap ===");
+        sanitizeGenderValues();
+        sanitizeEnrollmentTypes();
         if (!enabled) {
             log.info("Mock data désactivé.");
             return;
@@ -84,6 +87,25 @@ public class MockDataBootstrap implements ApplicationRunner {
         seedStudents();
         seedPreEnrollments();
         log.info("Mock data prêt.");
+    }
+
+    private void sanitizeGenderValues() {
+        try {
+            entityManager.createNativeQuery("UPDATE pre_enrollments SET gender = NULL WHERE gender = '' OR gender = ' '").executeUpdate();
+            entityManager.createNativeQuery("UPDATE persons SET gender = NULL WHERE gender = '' OR gender = ' '").executeUpdate();
+        } catch (Exception e) {
+            log.debug("Sanitize gender query: {}", e.getMessage());
+        }
+    }
+
+    private void sanitizeEnrollmentTypes() {
+        try {
+            entityManager.createNativeQuery(
+                    "UPDATE enrollments SET type = 'NEW_ADMISSION' WHERE TRIM(type) = ''")
+                    .executeUpdate();
+        } catch (Exception e) {
+            log.debug("Sanitize enrollment type query: {}", e.getMessage());
+        }
     }
 
     private void seedAcademicYear() {

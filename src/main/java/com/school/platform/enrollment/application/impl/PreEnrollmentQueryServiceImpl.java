@@ -35,7 +35,17 @@ public class PreEnrollmentQueryServiceImpl implements PreEnrollmentQueryService 
     @Override
     @Transactional(readOnly = true)
     public Page<PreEnrollmentMediumDTO> getAll(Pageable pageable) {
-        return preEnrollmentRepository.findAll(pageable).map(mapper::toMediumDTO);
+        // JOIN FETCH academicYear pour éviter LazyInitializationException
+        // lors de l'accès à academicYear.libelleAcademicYear dans le mapper.
+        return preEnrollmentRepository.findAllWithAcademicYear(pageable).map(mapper::toMediumDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PreEnrollmentMediumDTO> getAll(PreEnrollmentStatus status, Pageable pageable) {
+        // Filtre par statut avec JOIN FETCH pour éviter LazyInitializationException.
+        return preEnrollmentRepository.findAllWithAcademicYearByStatus(status, pageable)
+                .map(mapper::toMediumDTO);
     }
 
     @Override

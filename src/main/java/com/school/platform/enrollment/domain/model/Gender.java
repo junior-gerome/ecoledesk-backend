@@ -20,11 +20,21 @@ public enum Gender {
 
     @JsonCreator
     public static Gender fromValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        String normalized = value.trim().toUpperCase();
         for (Gender gender : Gender.values()) {
-            if (gender.value.equalsIgnoreCase(value)) {
+            if (gender.name().equals(normalized) || gender.value.equalsIgnoreCase(normalized)) {
                 return gender;
             }
         }
-        throw new IllegalArgumentException("Valeur inconnue: " + value);
+        if ("M".equals(normalized) || "MALE".equals(normalized) || "HOMME".equals(normalized) || "GARCON".equals(normalized) || "BOY".equals(normalized)) {
+            return MASCULIN;
+        }
+        if ("F".equals(normalized) || "FEMALE".equals(normalized) || "FEMME".equals(normalized) || "FILLE".equals(normalized) || "GIRL".equals(normalized)) {
+            return FEMININ;
+        }
+        return null;
     }
 }

@@ -41,6 +41,7 @@ public class Student extends BaseEntity {
     private String ecolePrecedente;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    @org.hibernate.annotations.BatchSize(size = 40)
     private Set<StudentGuardian> studentGuardians = new HashSet<>();
 
     public String getFirstNameStudent() {

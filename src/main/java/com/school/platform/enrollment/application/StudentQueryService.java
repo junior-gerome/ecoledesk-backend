@@ -25,6 +25,11 @@ public class StudentQueryService {
     }
 
     @Transactional(readOnly = true)
+    public Page<StudentDTO> search(String q, Pageable pageable) {
+        return studentRepository.findActiveBySearch(q, pageable).map(studentMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
     public StudentDTO findById(Long id) {
         return studentRepository.findById(id).map(studentMapper::toDto)
                 .orElseThrow(() -> new com.school.platform.shared.domain.exception.ResourceNotFoundException("Etudiant non trouve avec l'ID : " + id));
