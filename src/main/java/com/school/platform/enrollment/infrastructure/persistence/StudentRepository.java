@@ -32,6 +32,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     List<Student> findByActiveTrue();
 
+    long countByActiveTrue();
+
     @Query(
             value = """
                     select s from Student s

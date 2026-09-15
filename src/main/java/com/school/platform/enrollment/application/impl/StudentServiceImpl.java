@@ -128,7 +128,7 @@ public class StudentServiceImpl implements StudentService {
     @Transactional(readOnly = true)
     public Map<String, Object> getStatistics() {
         long total = studentRepository.count();
-        long active = studentRepository.findByActiveTrue().size();
+        long active = studentRepository.countByActiveTrue();
         long confirmed = enrollmentRepository.countByStatus(EnrollmentStatus.CONFIRMED);
         return Map.of("total", total, "active", active, "confirmedEnrollments", confirmed);
     }

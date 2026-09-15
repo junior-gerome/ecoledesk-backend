@@ -4,6 +4,8 @@ import com.school.platform.academic.application.dto.affectation.AffectationCreat
 import com.school.platform.academic.application.dto.affectation.AffectationDTO;
 import com.school.platform.academic.application.dto.affectation.AffectationResponse;
 import com.school.platform.academic.application.dto.affectation.AffectationUpdateRequest;
+import com.school.platform.academic.application.dto.teacher.TeacherSubjectResponse;
+import com.school.platform.academic.application.dto.teacher.TeacherScheduleResponse;
 import java.util.List;
 
 public interface AffectationService {
@@ -12,6 +14,8 @@ public interface AffectationService {
     AffectationResponse getAffectationById(Long id);
     List<AffectationDTO> getAffectationsByEnseignant(Long enseignantId);
     List<AffectationResponse> getAffectationResponsesByTeacher(Long teacherId);
+    List<TeacherSubjectResponse> getTeacherSubjects(Long teacherId);
+    List<TeacherScheduleResponse> getTeacherSchedule(Long teacherId);
     List<AffectationDTO> getAffectationsByClasse(Long classeId);
     List<AffectationResponse> getAffectationResponsesByClasse(Long classeId);
     List<AffectationResponse> getAffectationResponsesBySchoolYear(Long schoolYearId);

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.server.ResponseStatusException;
 import com.school.platform.shared.domain.exception.BadRequestException;
 import com.school.platform.shared.domain.exception.BusinessException;
@@ -185,6 +186,12 @@ public class GlobalExceptionHandler {
         HttpStatus resolvedStatus = status == null ? HttpStatus.INTERNAL_SERVER_ERROR : status;
         String message = ex.getReason() != null ? ex.getReason() : resolvedStatus.getReasonPhrase();
         return build(resolvedStatus, message);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException ex) {
+        logger.info("Resource not found: {}", ex.getResourcePath());
+        return build(HttpStatus.NOT_FOUND, "Ressource introuvable");
     }
 
     @ExceptionHandler(Exception.class)

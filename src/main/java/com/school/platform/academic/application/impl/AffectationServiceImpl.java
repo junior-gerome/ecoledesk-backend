@@ -10,6 +10,8 @@ import com.school.platform.academic.application.dto.affectation.AffectationCreat
 import com.school.platform.academic.application.dto.affectation.AffectationDTO;
 import com.school.platform.academic.application.dto.affectation.AffectationResponse;
 import com.school.platform.academic.application.dto.affectation.AffectationUpdateRequest;
+import com.school.platform.academic.application.dto.teacher.TeacherSubjectResponse;
+import com.school.platform.academic.application.dto.teacher.TeacherScheduleResponse;
 import com.school.platform.academic.application.interfaces.AffectationService;
 import com.school.platform.academic.domain.model.Affectation;
 import com.school.platform.academic.infrastructure.persistence.AffectationRepository;
@@ -72,6 +74,50 @@ public class AffectationServiceImpl implements AffectationService {
         return affectationRepository.findByTeacherId(teacherId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeacherSubjectResponse> getTeacherSubjects(Long teacherId) {
+        List<AffectationResponse> responses = teacherId != null
+                ? getAffectationResponsesByTeacher(teacherId)
+                : getAllAffectationResponses();
+        return responses.stream()
+                .map(this::toTeacherSubjectResponse)
+                .collect(Collectors.toList());
+    }
+
+    private TeacherSubjectResponse toTeacherSubjectResponse(AffectationResponse response) {
+        return TeacherSubjectResponse.builder()
+                .teacherId(response.getTeacherId())
+                .teacherName(response.getTeacherName())
+                .subjectId(response.getSubjectId())
+                .subjectName(response.getSubjectName())
+                .classId(response.getClasseId())
+                .className(response.getClasseName())
+                .schoolYear(response.getLibelleAcademicYear())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeacherScheduleResponse> getTeacherSchedule(Long teacherId) {
+        List<AffectationResponse> responses = teacherId != null
+                ? getAffectationResponsesByTeacher(teacherId)
+                : getAllAffectationResponses();
+        return responses.stream()
+                .map(this::toTeacherScheduleResponse)
+                .collect(Collectors.toList());
+    }
+
+    private TeacherScheduleResponse toTeacherScheduleResponse(AffectationResponse response) {
+        return TeacherScheduleResponse.builder()
+                .teacherId(response.getTeacherId())
+                .teacherName(response.getTeacherName())
+                .subjectId(response.getSubjectId())
+                .subjectName(response.getSubjectName())
+                .classId(response.getClasseId())
+                .className(response.getClasseName())
+                .schoolYear(response.getLibelleAcademicYear())
+                .build();
     }
 
     @Transactional(readOnly = true)
