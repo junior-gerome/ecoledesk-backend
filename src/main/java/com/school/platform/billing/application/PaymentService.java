@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -19,6 +20,8 @@ import com.school.platform.shared.domain.exception.BadRequestException;
 import com.school.platform.shared.domain.exception.BusinessException;
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import com.school.platform.billing.application.dto.PaymentDTO;
+import com.school.platform.billing.application.dto.PaymentExportRequest;
+import com.school.platform.billing.application.dto.PaymentExportRow;
 import com.school.platform.billing.application.dto.PaymentRequest;
 import com.school.platform.billing.application.dto.PaymentSummaryReport;
 import com.school.platform.billing.domain.model.TypePaiement;
@@ -57,6 +60,49 @@ public class PaymentService {
                         || status.isBlank()
                         || status.equalsIgnoreCase(String.valueOf(row.get("status"))))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentExportRow> listForExport(PaymentExportRequest request) {
+        return paiementRepository.searchExport(
+                        request.studentId(),
+                        request.classroomId(),
+                        request.academicYearId(),
+                        request.type(),
+                        request.paymentMethod(),
+                        request.startDate(),
+                        request.endDate(),
+                        request.q(),
+                        request.receiptNumber())
+                .stream()
+                .map(this::toPaymentExportRow)
+                .filter(row -> request.status() == null
+                        || request.status().isBlank()
+                        || request.status().equalsIgnoreCase(row.status()))
+                .toList();
+    }
+
+    private PaymentExportRow toPaymentExportRow(Paiement payment) {
+        Student student = payment.getStudent();
+        Enrollment enrollment = payment.getEnrollment();
+        String className = enrollment != null && enrollment.getClassroom() != null
+                ? enrollment.getClassroom().getNameClasse()
+                : null;
+        return new PaymentExportRow(
+                payment.getId(),
+                payment.getReceiptNumber(),
+                fullName(student),
+                student != null ? student.getStudentNumber() : null,
+                className,
+                payment.getTypePaiement() == null ? null : payment.getTypePaiement().name(),
+                toBigDecimal(payment.getMontantPaye()),
+                toBigDecimal(payment.getRemise()),
+                toBigDecimal(payment.getMontantRestant()),
+                paymentStatus(payment),
+                payment.getDatePaiement(),
+                payment.getDueDate(),
+                resolvePaymentMethod(null, payment.getPaymentMethod()),
+                payment.getDescription());
     }
 
     @Transactional(readOnly = true)

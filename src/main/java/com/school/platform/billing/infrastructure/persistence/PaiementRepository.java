@@ -45,4 +45,41 @@ public interface PaiementRepository extends JpaRepository<Paiement, Long> {
             @Param("type") TypePaiement type,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    /**
+     * Same search as {@link #search(Long, TypePaiement, LocalDate, LocalDate)}
+     * extended with the filters supported by the export endpoints.
+     */
+    @Query("""
+            select p from Paiement p
+            left join fetch p.student student
+            left join fetch p.enrollment enrollment
+            left join fetch enrollment.classroom classroom
+            left join fetch enrollment.academicYear academicYear
+            left join fetch p.montant montant
+            where (:studentId is null or student.id = :studentId)
+              and (:classroomId is null or classroom.id = :classroomId)
+              and (:academicYearId is null or academicYear.id = :academicYearId)
+              and (:type is null or p.typePaiement = :type)
+              and (:paymentMethod is null or p.paymentMethod = :paymentMethod)
+              and (:startDate is null or p.datePaiement >= :startDate)
+              and (:endDate is null or p.datePaiement <= :endDate)
+              and (:q is null or :q = ''
+                  or lower(coalesce(student.lastNameStudent, '')) like lower(concat('%', :q, '%'))
+                  or lower(coalesce(student.firstNameStudent, '')) like lower(concat('%', :q, '%'))
+                  or lower(coalesce(p.receiptNumber, '')) like lower(concat('%', :q, '%')))
+              and (:receiptNumber is null or :receiptNumber = ''
+                  or lower(coalesce(p.receiptNumber, '')) like lower(concat('%', :receiptNumber, '%')))
+            order by p.datePaiement desc, p.id desc
+            """)
+    List<Paiement> searchExport(
+            @Param("studentId") Long studentId,
+            @Param("classroomId") Long classroomId,
+            @Param("academicYearId") Long academicYearId,
+            @Param("type") TypePaiement type,
+            @Param("paymentMethod") String paymentMethod,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("q") String q,
+            @Param("receiptNumber") String receiptNumber);
 }

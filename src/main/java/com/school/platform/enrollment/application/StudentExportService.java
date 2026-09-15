@@ -166,7 +166,7 @@ public class StudentExportService {
         int pageNumber = 0;
         Page<Student> page;
         do {
-            page = studentRepository.findAll(PageRequest.of(pageNumber++, EXPORT_BATCH_SIZE));
+            page = studentRepository.findByActiveTrue(PageRequest.of(pageNumber++, EXPORT_BATCH_SIZE));
             page.getContent().stream()
                     .map(student -> toExportRow(student, latestByStudent.get(student.getId())))
                     .filter(row -> normalizedKeyword.isBlank() || matches(row, normalizedKeyword))
@@ -193,9 +193,11 @@ public class StudentExportService {
 
         return new StudentExportRow(
                 student.getId() == null ? 0L : student.getId(),
+                safe(student.getStudentNumber()),
                 safe(student.getLastNameStudent()),
                 safe(student.getFirstNameStudent()),
                 student.getDateOfBirth() == null ? "" : student.getDateOfBirth().format(DATE_FORMAT),
+                student.getDateOfBirth() == null ? "" : student.getDateOfBirth().toString(),
                 student.getGender() == null ? "" : student.getGender().name(),
                 className,
                 section,
@@ -204,8 +206,11 @@ public class StudentExportService {
 
     private boolean matches(StudentExportRow row, String keyword) {
         return normalize(row.id()).contains(keyword)
+                || normalize(row.studentNumber()).contains(keyword)
                 || normalize(row.lastName()).contains(keyword)
                 || normalize(row.firstName()).contains(keyword)
+                || normalize(row.birthDate()).contains(keyword)
+                || normalize(row.birthDateIso()).contains(keyword)
                 || normalize(row.className()).contains(keyword)
                 || normalize(row.section()).contains(keyword)
                 || normalize(row.guardianPhone()).contains(keyword);
@@ -229,9 +234,11 @@ public class StudentExportService {
 
     private record StudentExportRow(
             Long id,
+            String studentNumber,
             String lastName,
             String firstName,
             String birthDate,
+            String birthDateIso,
             String gender,
             String className,
             String section,

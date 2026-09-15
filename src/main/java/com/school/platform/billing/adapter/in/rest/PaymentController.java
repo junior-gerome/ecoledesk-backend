@@ -1,6 +1,8 @@
 package com.school.platform.billing.adapter.in.rest;
 
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,9 +25,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.school.platform.billing.application.dto.PaymentDTO;
+import com.school.platform.billing.application.dto.PaymentExportRequest;
 import com.school.platform.billing.application.dto.PaymentRequest;
-import com.school.platform.billing.domain.model.TypePaiement;
+import com.school.platform.billing.application.PaymentExportService;
 import com.school.platform.billing.application.PaymentService;
+import com.school.platform.billing.domain.model.TypePaiement;
 import com.school.platform.reporting.application.PdfGenerationService;
 
 import jakarta.validation.Valid;
@@ -37,6 +42,7 @@ import lombok.RequiredArgsConstructor;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final PaymentExportService paymentExportService;
     private final PdfGenerationService pdfGenerationService;
 
     @GetMapping
@@ -81,6 +87,41 @@ public class PaymentController {
             @RequestParam(required = false) String reason) {
         paymentService.cancelPayment(id, reason);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/export/excel")
+    public ResponseEntity<byte[]> exportExcel(
+            @RequestBody(required = false) PaymentExportRequest request,
+            Authentication authentication) {
+        PaymentExportRequest req = request != null ? request : PaymentExportRequest.empty();
+        String user = authentication != null ? authentication.getName() : "system";
+        PaymentExportService.ExportContext ctx = paymentExportService.resolveExportContext(req, user);
+        byte[] content = paymentExportService.generateExcel(ctx);
+        String filename = paymentExportService.exportFileName(ctx, "xlsx");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + rfc5987(filename))
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(content);
+    }
+
+    @PostMapping("/export/pdf")
+    public ResponseEntity<byte[]> exportPdf(
+            @RequestBody(required = false) PaymentExportRequest request,
+            Authentication authentication) {
+        PaymentExportRequest req = request != null ? request : PaymentExportRequest.empty();
+        String user = authentication != null ? authentication.getName() : "system";
+        PaymentExportService.ExportContext ctx = paymentExportService.resolveExportContext(req, user);
+        byte[] content = paymentExportService.generatePdf(ctx);
+        String filename = paymentExportService.exportFileName(ctx, "pdf");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + rfc5987(filename))
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(content);
+    }
+
+    private static String rfc5987(String filename) {
+        String encoded = URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+        return "filename*=UTF-8''" + encoded;
     }
 
     @GetMapping("/{id}/receipt")
