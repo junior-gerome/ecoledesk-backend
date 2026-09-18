@@ -177,8 +177,9 @@ public class ReportController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
     public ResponseEntity<byte[]> generateStudentReport(
             @Parameter(name = "studentId", description = "ID de l'eleve", in = ParameterIn.PATH) @PathVariable Long studentId,
-            @Parameter(name = "period", description = "Periode (optionnelle)", in = ParameterIn.QUERY) @RequestParam(required = false) String period) {
-        byte[] pdf = reportService.generateStudentReport(studentId, period);
+            @Parameter(name = "period", description = "Periode (optionnelle)", in = ParameterIn.QUERY) @RequestParam(required = false) String period,
+            @Parameter(name = "untilPeriod", description = "Borne cumulative (optionnelle, ex: Sequence 2)", in = ParameterIn.QUERY) @RequestParam(required = false) String untilPeriod) {
+        byte[] pdf = reportService.generateStudentReport(studentId, period, untilPeriod);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=bulletin.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
@@ -206,8 +207,18 @@ public class ReportController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
     public ResponseEntity<byte[]> generateClassBulletinsZip(
             @PathVariable Long classId,
-            @RequestParam(required = false) String period) {
+            @RequestParam(required = false) String period,
+            @RequestParam(required = false) List<Long> studentIds,
+            @RequestParam(required = false) String untilPeriod) {
         List<Enrollment> enrollments = enrollmentRepository.findByClassroomIdAndStatus(classId, EnrollmentStatus.CONFIRMED);
+
+        if (studentIds != null && !studentIds.isEmpty()) {
+            enrollments = enrollments.stream()
+                    .filter(enrollment -> enrollment.getStudent() != null
+                            && enrollment.getStudent().getId() != null
+                            && studentIds.contains(enrollment.getStudent().getId()))
+                    .collect(Collectors.toList());
+        }
 
         try {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -217,7 +228,7 @@ public class ReportController {
                         continue;
                     }
 
-                    byte[] pdf = reportService.generateStudentReport(enrollment.getStudent().getId(), period);
+                    byte[] pdf = reportService.generateStudentReport(enrollment.getStudent().getId(), period, untilPeriod);
                     String studentName = enrollment.getStudent().getLastNameStudent() + "-"
                             + enrollment.getStudent().getFirstNameStudent();
                     ZipEntry entry = new ZipEntry(sanitizeFileName("bulletin-" + studentName + ".pdf"));

@@ -90,6 +90,11 @@ public class StudentService {
 
     @Transactional(readOnly = true)
     public StudentReportDTO generateStudentReport(String studentId, String period) {
+        return generateStudentReport(studentId, period, null);
+    }
+
+    @Transactional(readOnly = true)
+    public StudentReportDTO generateStudentReport(String studentId, String period, String untilPeriod) {
         Long parsedStudentId;
         try {
             parsedStudentId = Long.parseLong(studentId);
@@ -101,7 +106,7 @@ public class StudentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Etudiant non trouve avec l'ID : " + parsedStudentId));
 
         List<Grade> grades = gradeRepository.findByStudentId(parsedStudentId).stream()
-                .filter(grade -> periodMatches(grade, period))
+                .filter(grade -> periodMatches(grade, period, untilPeriod))
                 .collect(Collectors.toList());
 
         StudentReportDTO report = new StudentReportDTO();
@@ -192,6 +197,24 @@ public class StudentService {
                 .build();
     }
 
+    private boolean periodMatches(Grade grade, String period, String untilPeriod) {
+        if (hasText(untilPeriod)) {
+            Integer targetOrder = sequenceOrder(untilPeriod);
+            if (targetOrder == null) {
+                return periodMatches(grade, period);
+            }
+
+            Integer gradeOrder = sequenceOrder(grade.getPeriod());
+            if (gradeOrder == null && grade.getSequence() != null) {
+                gradeOrder = sequenceOrder(grade.getSequence().getLibelleSequence());
+            }
+
+            return gradeOrder != null && gradeOrder <= targetOrder;
+        }
+
+        return periodMatches(grade, period);
+    }
+
     private boolean periodMatches(Grade grade, String period) {
         if (!hasText(period)) {
             return true;
@@ -202,6 +225,23 @@ public class StudentService {
         return grade.getSequence() != null
                 && hasText(grade.getSequence().getLibelleSequence())
                 && grade.getSequence().getLibelleSequence().equalsIgnoreCase(period.trim());
+    }
+
+    private Integer sequenceOrder(String label) {
+        if (!hasText(label)) {
+            return null;
+        }
+
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d+)").matcher(label);
+        if (!matcher.find()) {
+            return null;
+        }
+
+        try {
+            return Integer.parseInt(matcher.group(1));
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     private boolean hasText(String value) {

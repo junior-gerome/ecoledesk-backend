@@ -53,6 +53,7 @@ public interface PaiementRepository extends JpaRepository<Paiement, Long> {
     @Query("""
             select p from Paiement p
             left join fetch p.student student
+            left join fetch student.person person
             left join fetch p.enrollment enrollment
             left join fetch enrollment.classroom classroom
             left join fetch enrollment.academicYear academicYear
@@ -65,8 +66,8 @@ public interface PaiementRepository extends JpaRepository<Paiement, Long> {
               and (:startDate is null or p.datePaiement >= :startDate)
               and (:endDate is null or p.datePaiement <= :endDate)
               and (:q is null or :q = ''
-                  or lower(coalesce(student.lastNameStudent, '')) like lower(concat('%', :q, '%'))
-                  or lower(coalesce(student.firstNameStudent, '')) like lower(concat('%', :q, '%'))
+                  or lower(coalesce(person.lastName, '')) like lower(concat('%', :q, '%'))
+                  or lower(coalesce(person.firstName, '')) like lower(concat('%', :q, '%'))
                   or lower(coalesce(p.receiptNumber, '')) like lower(concat('%', :q, '%')))
               and (:receiptNumber is null or :receiptNumber = ''
                   or lower(coalesce(p.receiptNumber, '')) like lower(concat('%', :receiptNumber, '%')))

@@ -66,8 +66,13 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public byte[] generateStudentReport(String studentId, String period) {
+        return generateStudentReport(studentId, period, null);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generateStudentReport(String studentId, String period, String untilPeriod) {
         try {
-            StudentReportDTO report = studentService.generateStudentReport(studentId, period);
+            StudentReportDTO report = studentService.generateStudentReport(studentId, period, untilPeriod);
             return pdfGenerationService.generateReportCard(report);
         } catch (Exception e) {
             throw new BusinessException("Erreur lors de la generation du bulletin de l'etudiant", e);
@@ -77,6 +82,11 @@ public class ReportService {
     @Transactional(readOnly = true)
     public byte[] generateStudentReport(Long studentId, String period) {
         return generateStudentReport(String.valueOf(studentId), period);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] generateStudentReport(Long studentId, String period, String untilPeriod) {
+        return generateStudentReport(String.valueOf(studentId), period, untilPeriod);
     }
 
     private StudentProgressReport toStudentProgressReport(StudentReportDTO report) {
