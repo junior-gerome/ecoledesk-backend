@@ -11,4 +11,5 @@ public class PermissionBasicDTO {
     private Long id;
     private String code;
     private String description;
+    private String scope;
 }

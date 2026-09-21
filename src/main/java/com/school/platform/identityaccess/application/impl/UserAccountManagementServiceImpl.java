@@ -5,16 +5,20 @@ import com.school.platform.identityaccess.application.PasswordResetDeliveryServi
 import com.school.platform.identityaccess.application.PasswordResetRateLimitService;
 import com.school.platform.identityaccess.application.dto.UserAccountSummaryDTO;
 import com.school.platform.identityaccess.application.dto.auth.RegisterRequest;
+import com.school.platform.identityaccess.application.dto.role.RoleBasicDTO;
 import com.school.platform.identityaccess.application.interfaces.IUserAccountManagementService;
 import com.school.platform.identityaccess.domain.model.Person;
 import com.school.platform.identityaccess.domain.model.Role;
 import com.school.platform.identityaccess.domain.model.UserAccount;
+import com.school.platform.identityaccess.domain.model.UserAccountStatus;
 import com.school.platform.identityaccess.infrastructure.persistence.RoleRepository;
 import com.school.platform.identityaccess.infrastructure.persistence.UserAccountRepository;
 import com.school.platform.shared.domain.exception.BusinessException;
 import com.school.platform.shared.domain.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,8 +30,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -46,6 +53,15 @@ public class UserAccountManagementServiceImpl implements IUserAccountManagementS
     @Transactional(readOnly = true)
     public List<UserAccountSummaryDTO> getAllAccounts() {
         return userAccountRepository.findAll().stream().map(this::toDto).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserAccountSummaryDTO> searchAccounts(String search, String roleCode, String status, Pageable pageable) {
+        String normalizedSearch = (search == null || search.isBlank()) ? null : search.trim();
+        String normalizedRole = (roleCode == null || roleCode.isBlank()) ? null : normalizeRoleCode(roleCode);
+        UserAccountStatus statusFilter = parseStatus(status, null);
+        return userAccountRepository.search(normalizedSearch, normalizedRole, statusFilter, pageable).map(this::toDto);
     }
 
     @Override
@@ -74,14 +90,22 @@ public class UserAccountManagementServiceImpl implements IUserAccountManagementS
             throw new BusinessException("Username deja utilise");
         }
         account.setUsername(username);
-        account.setEnabled(!"SUSPENDED".equalsIgnoreCase(dto.getStatus()));
+        if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
+            UserAccountStatus target = parseStatus(dto.getStatus(), null);
+            UserAccountStatus current = currentStatus(account);
+            if (!current.canTransitionTo(target)) {
+                throw new BusinessException("Transition de statut non autorisee: " + current + " -> " + target);
+            }
+            account.applyStatus(target);
+        }
         if (dto.getPassword() != null && !dto.getPassword().isBlank())
             account.setPassword(passwordEncoder.encode(dto.getPassword()));
         Person person = account.getPerson();
         person.setFirstName(firstNonBlank(dto.getFirstName(), person.getFirstName()));
         person.setLastName(firstNonBlank(dto.getLastName(), person.getLastName()));
         person.setEmail(username);
-        if (dto.getRoleId() != null) account.setRoles(Set.of(findActiveRole(dto.getRoleId())));
+        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) account.setRoles(resolveRoles(dto.getRoles()));
+        else if (dto.getRoleId() != null) account.setRoles(Set.of(findActiveRole(dto.getRoleId())));
         else if (dto.getRoleCode() != null && !dto.getRoleCode().isBlank())
             account.setRoles(Set.of(findActiveRole(dto.getRoleCode())));
         return toDto(userAccountRepository.save(account));
@@ -107,7 +131,13 @@ public class UserAccountManagementServiceImpl implements IUserAccountManagementS
     @Transactional
     public UserAccountSummaryDTO updateStatus(Long id, String status) {
         UserAccount account = findAccount(id);
-        account.setEnabled(!"SUSPENDED".equalsIgnoreCase(status));
+        UserAccountStatus target = parseStatus(status, null);
+        if (target == null) throw new BusinessException("Le statut est obligatoire");
+        UserAccountStatus current = currentStatus(account);
+        if (!current.canTransitionTo(target)) {
+            throw new BusinessException("Transition de statut non autorisee: " + current + " -> " + target);
+        }
+        account.applyStatus(target);
         return toDto(userAccountRepository.save(account));
     }
 
@@ -115,7 +145,7 @@ public class UserAccountManagementServiceImpl implements IUserAccountManagementS
     @Transactional
     public void deactivateAccount(Long id) {
         UserAccount account = findAccount(id);
-        account.setEnabled(false);
+        account.applyStatus(UserAccountStatus.SUSPENDED);
         userAccountRepository.save(account);
     }
 
@@ -173,7 +203,9 @@ public class UserAccountManagementServiceImpl implements IUserAccountManagementS
         account.setPerson(person);
         account.setUsername(request.getEmail());
         account.setPassword(passwordEncoder.encode(request.getPassword()));
-        account.setEnabled(true);
+        account.applyStatus(selfRegistration
+                ? UserAccountStatus.ACTIVE
+                : parseStatus(request.getStatus(), UserAccountStatus.ACTIVE));
         account.setRoles(Set.of(role));
         return userAccountRepository.save(account);
     }
@@ -209,19 +241,59 @@ public class UserAccountManagementServiceImpl implements IUserAccountManagementS
         dto.setEmail(account.getPerson().getEmail());
         dto.setFirstName(account.getPerson().getFirstName());
         dto.setLastName(account.getPerson().getLastName());
-        Role primaryRole = account.getRoles().stream().findFirst().orElse(null);
+        Role primaryRole = primaryRole(account);
         if (primaryRole != null) {
             dto.setRoleId(primaryRole.getId());
             dto.setRoleCode(primaryRole.getCode());
             dto.setRoleLabel(primaryRole.getLabel());
         }
-        dto.setStatus(account.isEnabled() ? "ACTIVE" : "SUSPENDED");
+        dto.setRoles(account.getRoles().stream()
+                .filter(role -> role != null)
+                .sorted(Comparator.comparing(role -> role.getCode() == null ? "" : role.getCode()))
+                .map(role -> new RoleBasicDTO(role.getId(), role.getCode(), role.getLabel(),
+                        role.getScope() == null ? null : role.getScope().name()))
+                .toList());
+        dto.setStatus(currentStatus(account).name());
         dto.setPermissions(account.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
         dto.setActif(account.isEnabled());
         dto.setLastLogin(account.getLastLogin());
         dto.setLastLoginAt(account.getLastLogin());
         dto.setCreatedAt(account.getCreationDate());
         return dto;
+    }
+
+    private Role primaryRole(UserAccount account) {
+        if (account.getRoles() == null) return null;
+        return account.getRoles().stream()
+                .filter(role -> role != null)
+                .min(Comparator.comparing(role -> role.getCode() == null ? "" : role.getCode()))
+                .orElse(null);
+    }
+
+    private UserAccountStatus currentStatus(UserAccount account) {
+        if (account.getStatus() != null) return account.getStatus();
+        return account.isEnabled() ? UserAccountStatus.ACTIVE : UserAccountStatus.SUSPENDED;
+    }
+
+    private UserAccountStatus parseStatus(String status, UserAccountStatus fallback) {
+        if (status == null || status.isBlank()) return fallback;
+        try {
+            return UserAccountStatus.valueOf(status.trim().toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_'));
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("Statut invalide: " + status);
+        }
+    }
+
+    private Set<Role> resolveRoles(List<RoleBasicDTO> roles) {
+        Set<Role> resolved = new HashSet<>();
+        for (RoleBasicDTO role : roles) {
+            if (role == null) continue;
+            if (role.getId() != null) resolved.add(findActiveRole(role.getId()));
+            else if (role.getCode() != null && !role.getCode().isBlank()) resolved.add(findActiveRole(role.getCode()));
+            else throw new BusinessException("Role invalide");
+        }
+        if (resolved.isEmpty()) throw new BusinessException("Au moins un role est obligatoire");
+        return resolved;
     }
 
     private String normalizeRoleCode(String roleCode) {

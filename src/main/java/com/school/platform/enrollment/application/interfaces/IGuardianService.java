@@ -18,6 +18,7 @@ public interface IGuardianService {
     GuardianDTO getGuardianById(Long id);
     List<GuardianDTO> getAllGuardians();
     Page<GuardianDTO> getAllGuardians(Pageable pageable);
+    Page<GuardianDTO> getAllGuardians(String search, Pageable pageable);
 
     // Projections
     List<GuardianBasicDTO> getAllBasic();

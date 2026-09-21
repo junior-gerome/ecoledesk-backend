@@ -41,7 +41,8 @@ public class EnrollmentQueryController {
         String[] sortParts = sort.split(",");
         Sort.Direction direction = sortParts.length > 1 && "asc".equalsIgnoreCase(sortParts[1])
                 ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParts[0]));
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 200),
+                Sort.by(direction, sortParts[0]));
         Page<EnrollmentMediumDTO> result = queryService.getAll(pageable);
         return ResponseEntity.ok(PageResponse.from(result));
     }

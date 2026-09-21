@@ -25,4 +25,8 @@ public class Permission extends BaseEntity {
 
     @Column(name = "action", length = 50)
     private String action;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "scope", length = 30)
+    private PermissionScope scope;
 }

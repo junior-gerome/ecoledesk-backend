@@ -26,6 +26,10 @@ public class Role extends BaseEntity {
     @Column(name = "description", length = 255)
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "scope", length = 30)
+    private PermissionScope scope;
+
     @ManyToMany
     @JoinTable(
         name = "role_permissions",

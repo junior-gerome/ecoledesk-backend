@@ -44,9 +44,13 @@ public class GuardianController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT') or hasRole('ENSEIGNANT')")
     public ResponseEntity<PageResponse<GuardianDTO>> getAllGuardians(
+            @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100));
-        return ResponseEntity.ok(PageResponse.from(guardianService.getAllGuardians(pageable)));
+        PageResponse<GuardianDTO> result = search != null && !search.isBlank()
+                ? PageResponse.from(guardianService.getAllGuardians(search.trim(), pageable))
+                : PageResponse.from(guardianService.getAllGuardians(pageable));
+        return ResponseEntity.ok(result);
     }
 
     @PutMapping("/{id}")

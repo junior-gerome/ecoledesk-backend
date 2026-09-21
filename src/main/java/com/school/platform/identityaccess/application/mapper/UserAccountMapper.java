@@ -3,11 +3,13 @@ package com.school.platform.identityaccess.application.mapper;
 import com.school.platform.identityaccess.application.dto.useraccount.UserAccountBasicDTO;
 import com.school.platform.identityaccess.application.dto.useraccount.UserAccountFullDTO;
 import com.school.platform.identityaccess.application.dto.useraccount.UserAccountMediumDTO;
+import com.school.platform.identityaccess.domain.model.Role;
 import com.school.platform.identityaccess.domain.model.UserAccount;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {PersonMapper.class, RoleMapper.class}, unmappedTargetPolicy = ReportingPolicy.IGNORE)
@@ -19,9 +21,9 @@ public interface UserAccountMapper {
     @Mapping(target = "firstName", expression = "java(account.getPerson() != null ? account.getPerson().getFirstName() : null)")
     @Mapping(target = "lastName", expression = "java(account.getPerson() != null ? account.getPerson().getLastName() : null)")
     @Mapping(target = "email", expression = "java(account.getPerson() != null ? account.getPerson().getEmail() : null)")
-    @Mapping(target = "roleCode", expression = "java(account.getRoles().stream().findFirst().map(r -> r.getCode()).orElse(null))")
-    @Mapping(target = "roleLabel", expression = "java(account.getRoles().stream().findFirst().map(r -> r.getLabel()).orElse(null))")
-    @Mapping(target = "status", expression = "java(Boolean.TRUE.equals(account.getEnabled()) ? \"ACTIVE\" : \"SUSPENDED\")")
+    @Mapping(target = "roleCode", expression = "java(primaryRole(account) != null ? primaryRole(account).getCode() : null)")
+    @Mapping(target = "roleLabel", expression = "java(primaryRole(account) != null ? primaryRole(account).getLabel() : null)")
+    @Mapping(target = "status", expression = "java(account.getStatus() != null ? account.getStatus().name() : (Boolean.TRUE.equals(account.getEnabled()) ? \"ACTIVE\" : \"SUSPENDED\"))")
     UserAccountMediumDTO toMediumDTO(UserAccount account);
 
     @Mapping(target = "person", source = "person")
@@ -32,4 +34,12 @@ public interface UserAccountMapper {
     List<UserAccountBasicDTO> toBasicDTOList(List<UserAccount> accounts);
 
     List<UserAccountMediumDTO> toMediumDTOList(List<UserAccount> accounts);
+
+    default Role primaryRole(UserAccount account) {
+        if (account == null || account.getRoles() == null) return null;
+        return account.getRoles().stream()
+                .filter(role -> role != null)
+                .min(Comparator.comparing(role -> role.getCode() == null ? "" : role.getCode()))
+                .orElse(null);
+    }
 }

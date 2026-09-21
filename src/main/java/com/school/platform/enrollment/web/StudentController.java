@@ -83,7 +83,7 @@ public class StudentController {
         String[] sortParts = sort.split(",");
         Sort.Direction direction = sortParts.length > 1 && "desc".equalsIgnoreCase(sortParts[1])
                 ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, Math.min(size, 500), Sort.by(direction, sortParts[0]));
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 500), Sort.by(direction, sortParts[0]));
         Page<StudentDTO> result = studentQueryService.search(q, pageable);
         return ResponseEntity.ok(PageResponse.from(result));
     }

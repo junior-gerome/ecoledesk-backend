@@ -14,6 +14,7 @@ public class PermissionFullDTO {
     private String description;
     private String resource;
     private String action;
+    private String scope;
     private Boolean active;
     private LocalDateTime creationDate;
     private LocalDateTime updateDate;

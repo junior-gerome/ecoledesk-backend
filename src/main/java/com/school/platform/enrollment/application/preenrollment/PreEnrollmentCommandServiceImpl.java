@@ -179,6 +179,13 @@ private String contentTypeOf(String storageReference) {
     @Transactional
     public PreEnrollmentResponse submit(Long id) {
         PreEnrollment preEnrollment = find(id);
+        // A POST can be replayed after a timeout or a double click. Once the
+        // dossier has been submitted, returning its current representation is
+        // safe and prevents a duplicate request from surfacing as a workflow
+        // conflict to the user.
+        if (preEnrollment.getStatus() == PreEnrollmentStatus.SUBMITTED) {
+            return response(preEnrollment);
+        }
         if (!preEnrollment.getAcademicYear().isStatutCode()) {
             throw new BadRequestException("L'annee scolaire n'est pas ouverte : la soumission est refusee");
         }

@@ -161,4 +161,19 @@ class PreEnrollmentCommandServiceTest {
         assertThat(submitted.getStatus()).isEqualTo(PreEnrollmentStatus.SUBMITTED);
         verify(auditService).record("PRE_ENROLLMENT_SUBMITTED", "pre_enrollments", 5L);
     }
+
+    @Test
+    @DisplayName("La resoumission d'un dossier deja soumis retourne son etat sans conflit")
+    void testSubmitIsIdempotentForAnAlreadySubmittedDossier() {
+        PreEnrollment pre = draftWithGuardian(year(true));
+        pre.setId(5L);
+        pre.submit(true, true);
+        when(preRepository.findById(5L)).thenReturn(Optional.of(pre));
+
+        var submitted = service.submit(5L);
+
+        assertThat(submitted.getStatus()).isEqualTo(PreEnrollmentStatus.SUBMITTED);
+        verify(preRepository, never()).save(any());
+        verify(auditService, never()).record("PRE_ENROLLMENT_SUBMITTED", "pre_enrollments", 5L);
+    }
 }

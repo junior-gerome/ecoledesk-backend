@@ -50,6 +50,15 @@ public class PreEnrollmentQueryServiceImpl implements PreEnrollmentQueryService 
 
     @Override
     @Transactional(readOnly = true)
+    public Page<PreEnrollmentMediumDTO> getAll(String search, PreEnrollmentStatus status, Pageable pageable) {
+        // Statut et recherche optionnels, évalués en SQL (LIMIT/OFFSET réels).
+        String normalized = (search == null || search.isBlank()) ? null : search.trim();
+        return preEnrollmentRepository.findAllWithAcademicYearAndSearch(normalized, status, pageable)
+                .map(mapper::toMediumDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<PreEnrollmentBasicDTO> getByStatus(PreEnrollmentStatus status) {
         return mapper.toBasicDTOList(preEnrollmentRepository.findByStatus(status));
     }

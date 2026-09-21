@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,6 +57,9 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
     // 4. Calculs statistiques optimisÃ©s
     @Query("SELECT AVG(g.grade) FROM Grade g WHERE g.student.id = :studentId")
     Optional<Double> calculateAverageByStudentId(@Param("studentId") Long studentId);
+
+    @Query("SELECT g.student.id, AVG(g.grade) FROM Grade g WHERE g.student.id IN :studentIds GROUP BY g.student.id")
+    List<Object[]> findAverageGradeByStudentIds(@Param("studentIds") Collection<Long> studentIds);
 
     @Query(value = """
     SELECT student_rank FROM (

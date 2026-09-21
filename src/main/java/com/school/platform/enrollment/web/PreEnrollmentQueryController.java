@@ -31,11 +31,13 @@ public class PreEnrollmentQueryController {
     /**
      * GET /pre-enrollments
      * Liste paginée de toutes les pré-inscriptions (vue medium).
-     * Paramètres: page (default 0), size (default 20), sort (default creationDate,desc)
+     * Paramètres: page (default 0), size (default 10), sort (default creationDate,desc),
+     * status (optionnel), search (optionnel — numéro, nom/prénom candidat, niveau).
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
     public ResponseEntity<PageResponse<PreEnrollmentMediumDTO>> getAll(
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) PreEnrollmentStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -43,10 +45,9 @@ public class PreEnrollmentQueryController {
         String[] sortParts = sort.split(",");
         Sort.Direction direction = sortParts.length > 1 && "asc".equalsIgnoreCase(sortParts[1])
                 ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParts[0]));
-        Page<PreEnrollmentMediumDTO> result = status != null
-                ? queryService.getAll(status, pageable)
-                : queryService.getAll(pageable);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 200),
+                Sort.by(direction, sortParts[0]));
+        Page<PreEnrollmentMediumDTO> result = queryService.getAll(search, status, pageable);
         return ResponseEntity.ok(PageResponse.from(result));
     }
 

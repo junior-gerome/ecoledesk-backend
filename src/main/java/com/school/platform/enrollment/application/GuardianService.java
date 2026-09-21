@@ -42,6 +42,12 @@ public class GuardianService implements com.school.platform.enrollment.applicati
         return guardianRepository.findAll(pageable).map(mapper::toDto);
     }
 
+    @Transactional(readOnly = true)
+    public Page<GuardianDTO> getAllGuardians(String search, Pageable pageable) {
+        String normalized = (search == null || search.isBlank()) ? null : search.trim();
+        return guardianRepository.findWithSearch(normalized, pageable).map(mapper::toDto);
+    }
+
     @Transactional
     @CacheEvict(value = "guardians", key = "#id")
     public GuardianDTO updateGuardian(Long id, GuardianDTO dto) {

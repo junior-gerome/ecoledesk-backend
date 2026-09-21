@@ -12,6 +12,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -21,6 +23,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.EqualsAndHashCode;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -50,6 +53,11 @@ public class UserAccount extends BaseEntity implements UserDetails {
     @Column(name = "enabled")
     private Boolean enabled = true;
 
+    @Setter(AccessLevel.NONE)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private UserAccountStatus status = UserAccountStatus.ACTIVE;
+
     @Column(name = "email_verified")
     private Boolean emailVerified = false;
 
@@ -70,6 +78,15 @@ public class UserAccount extends BaseEntity implements UserDetails {
     public String getPassword() { return passwordHash; }
 
     public void setPassword(String passwordHash) { this.passwordHash = passwordHash; }
+
+    /**
+     * Applique un statut de compte en synchronisant le drapeau {@code enabled}
+     * utilise par Spring Security ({@link #isEnabled()}).
+     */
+    public void applyStatus(UserAccountStatus nextStatus) {
+        this.status = nextStatus == null ? UserAccountStatus.ACTIVE : nextStatus;
+        this.enabled = this.status.allowsLogin();
+    }
 
     public String getResetToken() { return resetTokenHash; }
 

@@ -23,6 +23,7 @@ public interface RoleMapper {
     RoleFullDTO toFullDTO(Role role);
 
     @Mapping(target = "permissions", ignore = true)
+    @Mapping(target = "scope", ignore = true)
     Role toEntity(RoleFullDTO dto);
 
     List<RoleBasicDTO> toBasicDTOList(List<Role> roles);

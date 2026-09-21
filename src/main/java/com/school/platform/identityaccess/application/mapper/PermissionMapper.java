@@ -5,6 +5,7 @@ import com.school.platform.identityaccess.application.dto.permission.PermissionF
 import com.school.platform.identityaccess.application.dto.permission.PermissionMediumDTO;
 import com.school.platform.identityaccess.domain.model.Permission;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public interface PermissionMapper {
 
     PermissionFullDTO toFullDTO(Permission permission);
 
+    @Mapping(target = "scope", ignore = true)
     Permission toEntity(PermissionFullDTO dto);
 
     List<PermissionBasicDTO> toBasicDTOList(List<Permission> permissions);

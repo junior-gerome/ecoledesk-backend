@@ -47,6 +47,34 @@ public interface PreEnrollmentRepository extends JpaRepository<PreEnrollment, Lo
            countQuery = "SELECT COUNT(p) FROM PreEnrollment p")
     Page<PreEnrollment> findAllWithAcademicYear(Pageable pageable);
 
+    /**
+     * Version paginée avec JOIN FETCH, filtre par statut et recherche libre
+     * (numéro de dossier, nom/prénom du candidat, niveau demandé).
+     * Search et status sont optionnels ; countQuery séparé obligatoire.
+     */
+    @Query(value = """
+            SELECT p FROM PreEnrollment p JOIN FETCH p.academicYear
+            WHERE (:status IS NULL OR p.status = :status)
+              AND (:search IS NULL OR :search = ''
+                  OR LOWER(COALESCE(p.number.value, '')) LIKE LOWER(CONCAT('%', :search, '%'))
+                  OR LOWER(COALESCE(p.applicant.firstName, '')) LIKE LOWER(CONCAT('%', :search, '%'))
+                  OR LOWER(COALESCE(p.applicant.lastName, '')) LIKE LOWER(CONCAT('%', :search, '%'))
+                  OR LOWER(COALESCE(p.requestedLevel, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+            """,
+           countQuery = """
+            SELECT COUNT(p) FROM PreEnrollment p
+            WHERE (:status IS NULL OR p.status = :status)
+              AND (:search IS NULL OR :search = ''
+                  OR LOWER(COALESCE(p.number.value, '')) LIKE LOWER(CONCAT('%', :search, '%'))
+                  OR LOWER(COALESCE(p.applicant.firstName, '')) LIKE LOWER(CONCAT('%', :search, '%'))
+                  OR LOWER(COALESCE(p.applicant.lastName, '')) LIKE LOWER(CONCAT('%', :search, '%'))
+                  OR LOWER(COALESCE(p.requestedLevel, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+            """)
+    Page<PreEnrollment> findAllWithAcademicYearAndSearch(
+            @Param("search") String search,
+            @Param("status") PreEnrollmentStatus status,
+            Pageable pageable);
+
     @Query("SELECT p FROM PreEnrollment p WHERE p.academicYear.id = :academicYearId ORDER BY p.creationDate DESC")
     List<PreEnrollment> findByAcademicYearId(@Param("academicYearId") Long academicYearId);
 

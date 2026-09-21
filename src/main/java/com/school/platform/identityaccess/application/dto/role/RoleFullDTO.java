@@ -15,6 +15,7 @@ public class RoleFullDTO {
     private String code;
     private String label;
     private String description;
+    private String scope;
     private Set<PermissionBasicDTO> permissions;
     private Integer usersCount;
     private Boolean active;

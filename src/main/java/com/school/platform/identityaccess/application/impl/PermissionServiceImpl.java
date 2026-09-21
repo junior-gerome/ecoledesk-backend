@@ -4,6 +4,7 @@ import com.school.platform.identityaccess.application.dto.permission.PermissionF
 import com.school.platform.identityaccess.application.interfaces.IPermissionService;
 import com.school.platform.identityaccess.application.mapper.PermissionMapper;
 import com.school.platform.identityaccess.domain.model.Permission;
+import com.school.platform.identityaccess.domain.model.PermissionScope;
 import com.school.platform.identityaccess.infrastructure.persistence.PermissionRepository;
 import com.school.platform.shared.domain.exception.compat.NotFoundException;
 import com.school.platform.shared.domain.exception.compat.ValidationException;
@@ -31,6 +32,7 @@ public class PermissionServiceImpl implements IPermissionService {
         }
         Permission permission = permissionMapper.toEntity(dto);
         permission.setCode(code);
+        permission.setScope(resolveScope(dto.getScope(), permission.getResource()));
         if (permission.getActive() == null) permission.setActive(true);
         return permissionMapper.toFullDTO(permissionRepository.save(permission));
     }
@@ -49,6 +51,11 @@ public class PermissionServiceImpl implements IPermissionService {
         permission.setDescription(dto.getDescription());
         permission.setResource(dto.getResource());
         permission.setAction(dto.getAction());
+        if (dto.getScope() != null && !dto.getScope().isBlank()) {
+            permission.setScope(resolveScope(dto.getScope(), permission.getResource()));
+        } else if (permission.getScope() == null) {
+            permission.setScope(PermissionScope.fromResource(permission.getResource()));
+        }
         if (dto.getActive() != null) permission.setActive(dto.getActive());
         return permissionMapper.toFullDTO(permissionRepository.save(permission));
     }
@@ -72,6 +79,15 @@ public class PermissionServiceImpl implements IPermissionService {
                 .orElseThrow(() -> new NotFoundException("Permission non trouvee"));
         permission.setActive(false);
         permissionRepository.save(permission);
+    }
+
+    private PermissionScope resolveScope(String scope, String resource) {
+        if (scope == null || scope.isBlank()) return PermissionScope.fromResource(resource);
+        try {
+            return PermissionScope.valueOf(scope.trim().toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_'));
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Scope invalide: " + scope);
+        }
     }
 
     private String normalizeCode(String code) {

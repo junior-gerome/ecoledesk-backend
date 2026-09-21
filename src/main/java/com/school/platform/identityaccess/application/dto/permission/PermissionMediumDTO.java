@@ -13,5 +13,6 @@ public class PermissionMediumDTO {
     private String description;
     private String resource;
     private String action;
+    private String scope;
     private Boolean active;
 }

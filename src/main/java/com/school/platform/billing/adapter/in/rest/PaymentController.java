@@ -4,9 +4,12 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,6 +34,7 @@ import com.school.platform.billing.application.PaymentExportService;
 import com.school.platform.billing.application.PaymentService;
 import com.school.platform.billing.domain.model.TypePaiement;
 import com.school.platform.reporting.application.PdfGenerationService;
+import com.school.platform.shared.web.PageResponse;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +50,7 @@ public class PaymentController {
     private final PdfGenerationService pdfGenerationService;
 
     @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> list(
+    public ResponseEntity<PageResponse<Map<String, Object>>> list(
             @RequestParam(required = false) Long studentId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) TypePaiement type,
@@ -55,8 +59,28 @@ public class PaymentController {
             LocalDate startDate,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate endDate) {
-        return ResponseEntity.ok(paymentService.listPayments(studentId, status, type, startDate, endDate));
+            LocalDate endDate,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String receiptNumber,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "datePaiement,desc") String sort) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 200), paymentSort(sort));
+        Page<Map<String, Object>> result = paymentService.listPaymentsPage(
+                studentId, status, type, startDate, endDate, q, receiptNumber, pageable);
+        return ResponseEntity.ok(PageResponse.from(result));
+    }
+
+    private static Sort paymentSort(String sort) {
+        String[] parts = sort.split(",");
+        String property = parts[0];
+        String mapped = switch (property) {
+            case "id", "datePaiement", "receiptNumber", "montantPaye" -> property;
+            default -> "datePaiement";
+        };
+        Sort.Direction direction = parts.length > 1 && "asc".equalsIgnoreCase(parts[1])
+                ? Sort.Direction.ASC : Sort.Direction.DESC;
+        return Sort.by(direction, mapped);
     }
 
     @GetMapping("/summary")

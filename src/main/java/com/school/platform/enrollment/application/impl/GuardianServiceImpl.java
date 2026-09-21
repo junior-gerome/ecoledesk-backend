@@ -55,6 +55,13 @@ public class GuardianServiceImpl implements IGuardianService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<GuardianDTO> getAllGuardians(String search, Pageable pageable) {
+        String normalized = (search == null || search.isBlank()) ? null : search.trim();
+        return guardianRepository.findWithSearch(normalized, pageable).map(mapper::toDto);
+    }
+
+    @Override
     @Transactional
     @CacheEvict(value = "guardians", key = "#id")
     public GuardianDTO updateGuardian(Long id, GuardianDTO dto) {

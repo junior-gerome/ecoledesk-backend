@@ -5,8 +5,12 @@ import com.school.platform.identityaccess.application.dto.auth.RegisterRequest;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 public interface IUserAccountManagementService {
     List<UserAccountSummaryDTO> getAllAccounts();
+    Page<UserAccountSummaryDTO> searchAccounts(String search, String roleCode, String status, Pageable pageable);
     boolean existsByUsername(String username);
     UserAccountSummaryDTO getAccountById(Long id);
     UserAccountSummaryDTO registerAccount(RegisterRequest request);

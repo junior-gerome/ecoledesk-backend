@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -44,6 +46,12 @@ public class UserAccountManagementService implements IUserAccountManagementServi
     @Transactional(readOnly = true)
     public List<UserAccountSummaryDTO> getAllAccounts() {
         return userAccountRepository.findAll().stream().map(this::toDto).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserAccountSummaryDTO> searchAccounts(String search, String roleCode, String status, Pageable pageable) {
+        return userAccountRepository.findAll(pageable).map(this::toDto);
     }
 
     @Override

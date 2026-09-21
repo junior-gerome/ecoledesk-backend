@@ -11,4 +11,5 @@ public class RoleBasicDTO {
     private Long id;
     private String code;
     private String label;
+    private String scope;
 }

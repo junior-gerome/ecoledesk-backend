@@ -107,11 +107,31 @@ public class Student extends BaseEntity {
      * can add several {@link StudentGuardian} links directly.
      */
     public void setGuardian(Guardian guardian) {
-        studentGuardians.forEach(link -> link.getGuardian().getStudentGuardians().remove(link));
-        studentGuardians.clear();
         if (guardian == null) {
+            removeAllGuardianLinks();
             return;
         }
+
+        StudentGuardian existingLink = studentGuardians.stream()
+                .filter(link -> isLinkedTo(link, guardian))
+                .findFirst()
+                .orElse(null);
+
+        // Updating a student commonly supplies its current guardian again. Reuse
+        // that persistent link instead of replacing it: replacing it can make
+        // Hibernate insert the same (student_id, guardian_id) pair before the
+        // orphan removal is flushed, violating the database uniqueness rule.
+        if (existingLink != null) {
+            studentGuardians.stream()
+                    .filter(link -> link != existingLink)
+                    .toList()
+                    .forEach(this::removeGuardianLink);
+            existingLink.setPrimaryContact(true);
+            existingLink.getGuardian().getStudentGuardians().add(existingLink);
+            return;
+        }
+
+        removeAllGuardianLinks();
 
         StudentGuardian link = new StudentGuardian();
         link.setStudent(this);
@@ -120,6 +140,26 @@ public class Student extends BaseEntity {
         link.setPrimaryContact(true);
         studentGuardians.add(link);
         guardian.getStudentGuardians().add(link);
+    }
+
+    private boolean isLinkedTo(StudentGuardian link, Guardian guardian) {
+        if (link.getGuardian() == guardian) {
+            return true;
+        }
+        return link.getGuardian() != null
+                && link.getGuardian().getId() != null
+                && link.getGuardian().getId().equals(guardian.getId());
+    }
+
+    private void removeAllGuardianLinks() {
+        studentGuardians.stream().toList().forEach(this::removeGuardianLink);
+    }
+
+    private void removeGuardianLink(StudentGuardian link) {
+        studentGuardians.remove(link);
+        if (link.getGuardian() != null) {
+            link.getGuardian().getStudentGuardians().remove(link);
+        }
     }
 
     private Person ensurePerson() {

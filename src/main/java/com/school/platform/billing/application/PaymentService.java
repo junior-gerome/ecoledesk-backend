@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +62,28 @@ public class PaymentService {
                         || status.isBlank()
                         || status.equalsIgnoreCase(String.valueOf(row.get("status"))))
                 .toList();
+    }
+
+    /**
+     * Version paginee de {@link #listPayments(Long, String, TypePaiement, LocalDate, LocalDate)}.
+     * Le statut, la recherche libre et le numero de recu sont evalues en SQL
+     * (voir {@code PaiementRepository.searchPage}) afin que chaque page soit
+     * coherente avec la base complete.
+     */
+    @Transactional(readOnly = true)
+    public Page<Map<String, Object>> listPaymentsPage(
+            Long studentId,
+            String status,
+            TypePaiement type,
+            LocalDate startDate,
+            LocalDate endDate,
+            String q,
+            String receiptNumber,
+            Pageable pageable) {
+        String resolvedStatus = (status == null || status.isBlank()) ? null : status.trim().toUpperCase();
+        return paiementRepository
+                .searchPage(studentId, type, resolvedStatus, startDate, endDate, q, receiptNumber, pageable)
+                .map(this::toPaymentResponse);
     }
 
     @Transactional(readOnly = true)
@@ -110,9 +134,21 @@ public class PaymentService {
         BigDecimal paidAmount = BigDecimal.ZERO;
         BigDecimal pendingAmount = BigDecimal.ZERO;
         BigDecimal lateAmount = BigDecimal.ZERO;
+        long totalReceipts = 0;
+        long numberedReceipts = 0;
+        long pendingReceiptGeneration = 0;
 
         for (Paiement payment : paiementRepository.search(null, null, null, null)) {
             String status = paymentStatus(payment);
+            boolean hasReceipt = hasText(payment.getReceiptNumber());
+            totalReceipts++;
+            if (hasReceipt) {
+                numberedReceipts++;
+            }
+            if ("PAID".equals(status) && !hasReceipt) {
+                pendingReceiptGeneration++;
+            }
+
             if ("CANCELLED".equals(status)) {
                 continue;
             }
@@ -134,7 +170,10 @@ public class PaymentService {
                 "totalAmount", total,
                 "paidAmount", paidAmount,
                 "pendingAmount", pendingAmount,
-                "lateAmount", lateAmount);
+                "lateAmount", lateAmount,
+                "totalReceipts", BigDecimal.valueOf(totalReceipts),
+                "numberedReceipts", BigDecimal.valueOf(numberedReceipts),
+                "pendingReceiptGeneration", BigDecimal.valueOf(pendingReceiptGeneration));
     }
 
     @Transactional(readOnly = true)

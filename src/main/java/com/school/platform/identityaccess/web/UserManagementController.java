@@ -1,6 +1,5 @@
 package com.school.platform.identityaccess.web;
 
-import java.util.List;
 import java.util.Map;
 
 import com.school.platform.identityaccess.application.interfaces.IUserAccountManagementService;
@@ -9,9 +8,12 @@ import com.school.platform.identityaccess.application.dto.auth.PasswordResetRequ
 import com.school.platform.identityaccess.application.dto.auth.PasswordResetTokenRequest;
 import com.school.platform.identityaccess.application.dto.auth.RegisterRequest;
 import com.school.platform.shared.web.ClientIpResolver;
+import com.school.platform.shared.web.PageResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -34,8 +37,14 @@ public class UserManagementController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
-    public ResponseEntity<List<UserAccountSummaryDTO>> getAllAccounts() {
-        return ResponseEntity.ok(usersService.getAllAccounts());
+    public ResponseEntity<PageResponse<UserAccountSummaryDTO>> getAllAccounts(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String roleCode,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100));
+        return ResponseEntity.ok(PageResponse.from(usersService.searchAccounts(search, roleCode, status, pageable)));
     }
 
     @GetMapping("/{id}")

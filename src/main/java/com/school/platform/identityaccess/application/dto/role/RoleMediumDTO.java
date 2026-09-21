@@ -12,5 +12,6 @@ public class RoleMediumDTO {
     private String code;
     private String label;
     private String description;
+    private String scope;
     private Boolean active;
 }

@@ -58,7 +58,7 @@ public class GradeController {
             @Parameter(name = "period", description = "Periode (ex: TRIMESTRE1) - optionnelle, toutes les notes si absente", in = ParameterIn.QUERY) @RequestParam(required = false) String period,
             @Parameter(name = "page", description = "Numero de page (commence a 0)", in = ParameterIn.QUERY) @RequestParam(defaultValue = "0") int page,
             @Parameter(name = "size", description = "Taille de la page", in = ParameterIn.QUERY) @RequestParam(defaultValue = "10") int size) {
-        Page<GradeResponseDTO> gradePage = gradeQueryService.findByClassIdAndPeriod(classId, period, PageRequest.of(page, size));
+        Page<GradeResponseDTO> gradePage = gradeQueryService.findByClassIdAndPeriod(classId, period, PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 500)));
         return ResponseEntity.ok(PageResponse.from(gradePage));
     }
 
@@ -74,7 +74,7 @@ public class GradeController {
             @Parameter(name = "studentId", description = "ID de l'eleve", in = ParameterIn.PATH) @PathVariable Long studentId,
             @Parameter(name = "page", description = "Numero de page (commence a 0)", in = ParameterIn.QUERY) @RequestParam(defaultValue = "0") int page,
             @Parameter(name = "size", description = "Taille de la page", in = ParameterIn.QUERY) @RequestParam(defaultValue = "10") int size) {
-        Page<GradeResponseDTO> gradePage = gradeQueryService.findByStudentId(studentId, PageRequest.of(page, size));
+        Page<GradeResponseDTO> gradePage = gradeQueryService.findByStudentId(studentId, PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 500)));
         return ResponseEntity.ok(PageResponse.from(gradePage));
     }
 

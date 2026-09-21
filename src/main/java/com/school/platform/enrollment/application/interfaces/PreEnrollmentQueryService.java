@@ -17,6 +17,8 @@ public interface PreEnrollmentQueryService {
 
     Page<PreEnrollmentMediumDTO> getAll(PreEnrollmentStatus status, Pageable pageable);
 
+    Page<PreEnrollmentMediumDTO> getAll(String search, PreEnrollmentStatus status, Pageable pageable);
+
     List<PreEnrollmentBasicDTO> getByStatus(PreEnrollmentStatus status);
 
     List<PreEnrollmentBasicDTO> getByAcademicYear(Long academicYearId);

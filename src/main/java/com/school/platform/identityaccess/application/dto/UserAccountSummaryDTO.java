@@ -3,6 +3,9 @@ package com.school.platform.identityaccess.application.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.school.platform.identityaccess.application.dto.role.RoleBasicDTO;
+
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,8 +21,10 @@ public class UserAccountSummaryDTO {
     private String lastName;
     private String email;
     private Long roleId;
+    @JsonAlias("roleType")
     private String roleCode;
     private String roleLabel;
+    private List<RoleBasicDTO> roles;
     private String status;
     private List<String> permissions;
     private Boolean actif;

@@ -57,7 +57,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register", "/auth/refresh").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register", "/auth/refresh", "/auth/logout").permitAll()
                             .requestMatchers(HttpMethod.GET, "/auth/health").permitAll()
                             .requestMatchers("/api/ws", "/api/ws/**", "/ws", "/ws/**").permitAll()
                             .requestMatchers(HttpMethod.POST, "/users/password-reset-request").permitAll()

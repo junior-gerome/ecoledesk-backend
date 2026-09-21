@@ -3,6 +3,7 @@ package com.school.platform.reporting.infrastructure.persistence;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,5 +16,5 @@ public interface LogActiviteRepository extends JpaRepository<LogActivite, Long> 
     List<LogActivite> findByDateActionBetween(LocalDateTime debut, LocalDateTime fin);
     List<LogActivite> findByTableCible(String tableCible);
     List<LogActivite> findByReferenceId(Long referenceId);
-    List<LogActivite> findAllByOrderByDateActionDesc(Pageable pageable);
+    Page<LogActivite> findAllByOrderByDateActionDesc(Pageable pageable);
 }

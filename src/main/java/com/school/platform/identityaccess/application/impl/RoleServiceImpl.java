@@ -5,6 +5,7 @@ import com.school.platform.identityaccess.application.dto.role.RoleFullDTO;
 import com.school.platform.identityaccess.application.interfaces.IRoleService;
 import com.school.platform.identityaccess.application.mapper.RoleMapper;
 import com.school.platform.identityaccess.domain.model.Permission;
+import com.school.platform.identityaccess.domain.model.PermissionScope;
 import com.school.platform.identityaccess.domain.model.Role;
 import com.school.platform.identityaccess.infrastructure.persistence.PermissionRepository;
 import com.school.platform.identityaccess.infrastructure.persistence.RoleRepository;
@@ -35,6 +36,7 @@ public class RoleServiceImpl implements IRoleService {
         if (roleRepository.existsByCodeIgnoreCase(code)) throw new ValidationException("Code role deja utilise");
         Role role = roleMapper.toEntity(dto);
         role.setCode(code);
+        role.setScope(resolveScope(dto.getScope(), code));
         if (role.getActive() == null) role.setActive(true);
         role.setPermissions(resolvePermissions(dto.getPermissions()));
         return roleMapper.toFullDTO(roleRepository.save(role));
@@ -53,6 +55,7 @@ public class RoleServiceImpl implements IRoleService {
         }
         role.setLabel(dto.getLabel());
         role.setDescription(dto.getDescription());
+        if (dto.getScope() != null && !dto.getScope().isBlank()) role.setScope(resolveScope(dto.getScope(), role.getCode()));
         if (dto.getActive() != null) role.setActive(dto.getActive());
         if (dto.getPermissions() != null) role.setPermissions(resolvePermissions(dto.getPermissions()));
         return roleMapper.toFullDTO(roleRepository.save(role));
@@ -100,6 +103,15 @@ public class RoleServiceImpl implements IRoleService {
                         .orElseThrow(() -> new NotFoundException("Permission non trouvee: " + dto.getCode()));
             throw new ValidationException("Permission invalide");
         }).collect(Collectors.toSet());
+    }
+
+    private PermissionScope resolveScope(String scope, String roleCode) {
+        if (scope == null || scope.isBlank()) return PermissionScope.fromRoleCode(roleCode);
+        try {
+            return PermissionScope.valueOf(scope.trim().toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_'));
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Scope invalide: " + scope);
+        }
     }
 
     private String normalizeRoleCode(String code) {

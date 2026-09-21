@@ -33,6 +33,7 @@ public class RegisterRequest {
     private String roleCode;
     private Long roleId;
     private Long referenceId;
+    private String status;
 
     @JsonSetter
     public void setReferenceId(String referenceId) {
