@@ -176,4 +176,21 @@ class PreEnrollmentCommandServiceTest {
         verify(preRepository, never()).save(any());
         verify(auditService, never()).record("PRE_ENROLLMENT_SUBMITTED", "pre_enrollments", 5L);
     }
+
+    @Test
+    @DisplayName("Le submit sur un dossier deja avance retourne son etat sans conflit")
+    void testSubmitIsIdempotentForAnAdvancedDossier() {
+        PreEnrollment pre = draftWithGuardian(year(true));
+        pre.setId(5L);
+        pre.submit(true, true);
+        pre.startReview(1L);
+
+        when(preRepository.findById(5L)).thenReturn(Optional.of(pre));
+
+        var result = service.submit(5L);
+
+        assertThat(result.getStatus()).isEqualTo(PreEnrollmentStatus.UNDER_REVIEW);
+        verify(preRepository, never()).save(any());
+        verify(auditService, never()).record("PRE_ENROLLMENT_SUBMITTED", "pre_enrollments", 5L);
+    }
 }

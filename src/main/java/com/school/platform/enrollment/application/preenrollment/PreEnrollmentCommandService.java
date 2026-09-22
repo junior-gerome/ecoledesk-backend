@@ -41,7 +41,7 @@ public interface PreEnrollmentCommandService {
   public PreEnrollmentResponse reject(Long id, Long reviewedBy, String reason);
 
   //Commencer l’étude 
- // public PreEnrollmentResponse response(PreEnrollment preEnrollment);
+  public PreEnrollmentResponse response(PreEnrollment preEnrollment);
 
 
 }

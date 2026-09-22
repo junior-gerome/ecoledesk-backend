@@ -178,12 +178,13 @@ private String contentTypeOf(String storageReference) {
     @Override
     @Transactional
     public PreEnrollmentResponse submit(Long id) {
-        PreEnrollment preEnrollment = find(id);
-        // A POST can be replayed after a timeout or a double click. Once the
-        // dossier has been submitted, returning its current representation is
-        // safe and prevents a duplicate request from surfacing as a workflow
-        // conflict to the user.
-        if (preEnrollment.getStatus() == PreEnrollmentStatus.SUBMITTED) {
+PreEnrollment preEnrollment = find(id);
+        // A POST can be replayed after a timeout or a double click, and some
+        // update flows legitimately call submit on a dossier that has already
+        // progressed through the workflow. Returning its current representation
+        // is then safe and prevents a duplicate request from surfacing as a
+        // workflow conflict to the user.
+        if (preEnrollment.getStatus() != PreEnrollmentStatus.DRAFT) {
             return response(preEnrollment);
         }
         if (!preEnrollment.getAcademicYear().isStatutCode()) {
